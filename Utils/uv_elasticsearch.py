@@ -16,6 +16,9 @@ class UnveillanceElasticsearch(UVE_Stub):
 		self.els_pid_file = os.path.join(MONITOR_ROOT, "els.pid.txt")
 		self.els_log_file = os.path.join(MONITOR_ROOT, "els.log.txt")
 		
+		self.first_use = False
+		if argv[1] == "-firstuse": self.first_use = True
+		
 	def startElasticsearch(self, catch=True):
 		startDaemon(self.els_log_file, self.els_pid_file)
 		
@@ -36,7 +39,7 @@ class UnveillanceElasticsearch(UVE_Stub):
 				with open(self.els_status_file, 'wb+') as f: f.write("True")
 				sleep(1)
 				
-				if argv[1] == "-firstuse": self.initElasticsearch()
+				self.first_use: self.initElasticsearch()
 				break
 		
 			data = p.stdout.readline()

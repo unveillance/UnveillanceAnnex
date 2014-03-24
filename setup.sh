@@ -50,10 +50,6 @@ echo "**************************************************"
 echo "Installing other python dependencies..."
 pip install --upgrade -r requirements.txt
 
-cd lib/python-gnupg
-make install
-cd $OLD_DIR
-
 ANNEX_EXTRAS_DIR=$OLD_DIR/annex_extras
 has_extras=$(find $OLD_DIR -type -d -name "annex_extras")
 if [[ -z "$has_extras" ]]
@@ -74,3 +70,4 @@ else
 	fi
 	
 	cd $OLD_DIR
+fi

@@ -1,6 +1,6 @@
 FROM ubuntu:12.04
 RUN apt-get update
-RUN apt-get install -y openssh-server software-properties-common wget subversion python-software-properties
+RUN apt-get install -y openssh-server software-properties-common wget subversion python-software-properties openjdk-7-jre-headless
 RUN add-apt-repository ppa:fmarier/git-annex
 RUN apt-get update
 RUN apt-get install -y gcc build-essential yasm pkg-config python-dev lsof python-pip git git-annex
