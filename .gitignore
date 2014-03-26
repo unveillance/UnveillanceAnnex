@@ -1,0 +1,12 @@
+*.DS_Store
+*.pyc
+test.py
+
+.monitor/
+lib/elasticsearch*/
+forms/
+
+conf/user.config.yaml
+conf/*.asc
+conf/*.p12
+conf/*.json
