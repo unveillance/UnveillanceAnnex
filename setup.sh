@@ -53,3 +53,17 @@ pip install --upgrade -r requirements.txt
 cd lib/python-gnupg
 make install
 cd $OLD_DIR
+
+ANNEX_EXTRAS_DIR=$OLD_DIR/annex_extras
+has_extras=`find -type d -name "$ANNEX_EXTRAS_DIR"`
+if [[ -z "$has_extras" ]]
+then
+	echo "(no external packages to add to Annex...)"
+else
+	echo "**************************************************"
+	echo "Running external configurations (-PRE)..."
+
+	cd $ANNEX_EXTRAS_DIR
+	chmod +x init_annex_extras_pre.sh
+	./init_annex_extras_pre.sh $OLD_DIR
+	cd $OLD_DIR
