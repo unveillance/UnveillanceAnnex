@@ -1,7 +1,7 @@
 #! /bin/bash
 OLD_DIR=`pwd`
 
-USER_CONFIG=$OLD_DIR/conf/user.config.yaml
+USER_CONFIG=$OLD_DIR/conf/annex.config.yaml
 ANNEX_DIR=/home/unveillance_remote
 
 mkdir $OLD_DIR/.monitor

@@ -4,9 +4,7 @@ test.py
 
 .monitor/
 lib/elasticsearch*/
-forms/
+annex_extras/
 
-conf/user.config.yaml
+conf/*.config.yaml
 conf/*.asc
-conf/*.p12
-conf/*.json

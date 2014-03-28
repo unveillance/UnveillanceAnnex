@@ -20,7 +20,7 @@ class UnveillanceElasticsearch(UVE_Stub):
 		startDaemon(self.els_log_file, self.els_pid_file)
 		
 		cmd = [ELS_ROOT, '-Des.max-open-files=true', 
-			'Des.config=%s' % os.path.join(CONF_ROOT, "elasticsearch.yaml")]
+			'Des.config=%s' % os.path.join(CONF_ROOT, "els.settings.yaml")]
 		
 		print "elasticsearch running in daemon."
 		print cmd
