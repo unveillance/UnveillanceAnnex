@@ -13,10 +13,12 @@ def evaluateDocument(task):
 	
 	import os
 	from conf import ANNEX_DIR, UUID
+	
 	from lib.Worker.vars import MimeTypes
 	from lib.Worker.Models.uv_task import UnveillanceTask
-	from lib.Worker.Utils.funcs import getFileType
+	
 	from lib.Core.Utils.funcs import hashEntireFile
+	from lib.Worker.Utils.funcs import getFileType 
 	from Models.uv_object import UnveillanceObject
 	
 	document = UnveillanceObject()
