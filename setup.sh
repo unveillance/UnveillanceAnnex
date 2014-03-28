@@ -55,7 +55,7 @@ make install
 cd $OLD_DIR
 
 ANNEX_EXTRAS_DIR=$OLD_DIR/annex_extras
-has_extras=`find -type d -name "$ANNEX_EXTRAS_DIR"`
+has_extras=$(find $OLD_DIR -type -d -name "annex_extras")
 if [[ -z "$has_extras" ]]
 then
 	echo "(no external packages to add to Annex...)"
