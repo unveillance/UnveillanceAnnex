@@ -62,8 +62,15 @@ then
 else
 	echo "**************************************************"
 	echo "Running external configurations (-PRE)..."
-
 	cd $ANNEX_EXTRAS_DIR
-	chmod +x init_annex_extras_pre.sh
-	./init_annex_extras_pre.sh $OLD_DIR
+
+	has_pre_script=$(find . -type -f -name "init_annex_extras_pre.sh")
+	if [[ -z "$has_pre_script" ]]
+	then
+		echo "(no pre-script found.)"
+	else
+		chmod +x init_annex_extras_pre.sh
+		./init_annex_extras_pre.sh $OLD_DIR
+	fi
+	
 	cd $OLD_DIR
