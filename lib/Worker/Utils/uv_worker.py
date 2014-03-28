@@ -26,15 +26,14 @@ class UnveillanceWorker():
 		printAsLog("STARTING CELERY WORKER!")
 
 		from lib.Worker.vars import TASKS_ROOT, buildCeleryTaskList, ALL_WORKERS
-		celery_tasks = buildCeleryTaskList()
-		
+		self.celery_tasks = buildCeleryTaskList()
 		
 		sys.argv.extend(['worker', '-l', 'info', '-Q', ",".join([ALL_WORKERS, UUID])])
 		print sys.argv
 		
 		startDaemon(self.worker_log_file, self.worker_pid_file)
 		self.celery_app = Celery(TASKS_ROOT, broker='amqp://', 
-			backend='amqp://', include=celery_tasks)
+			backend='amqp://', include=self.celery_tasks)
 		
 		self.celery_app.start()
 	
