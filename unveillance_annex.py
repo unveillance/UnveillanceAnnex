@@ -60,7 +60,8 @@ class UnveillanceAnnex(tornado.web.Application, UnveillanceAPI):
 					# TODO: set content-type
 					self.finish(file.read())
 				return
-
+			
+			# TODO: log this: we want to know who/why is requesting non-entities
 			else: self.set_status(404)
 			res = Result()
 			self.finish(res.emit())

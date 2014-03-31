@@ -17,6 +17,10 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		UnveillanceWorker.__init__(self)
 	
 	def fileExistsInAnnex(self, file_path, auto_add=True):
+		if file_path == ".gitignore" :
+			# WHO IS TRYING TO DO THIS????!
+			return False
+			
 		old_dir = os.getcwd()
 		
 		os.chdir(ANNEX_DIR)
