@@ -4,9 +4,9 @@ from time import sleep
 
 from lib.Core.Utils.funcs import stopDaemon, startDaemon
 from Utils.funcs import printAsLog
-from conf import MONITOR_ROOT, CONF_ROOT, ELS_ROOT
+from conf import MONITOR_ROOT, CONF_ROOT, ELS_ROOT, DEBUG
 
-class UnveillanceElasticsearch(object):
+class UnveillanceElasticsearch(object, UnveillanceElasticsearchHandler):
 	def __init__(self):		
 		self.els_status_file = os.path.join(MONITOR_ROOT, "els.status.txt")
 		self.els_pid_file = os.path.join(MONITOR_ROOT, "els.pid.txt")
@@ -14,6 +14,8 @@ class UnveillanceElasticsearch(object):
 		
 		self.first_use = False
 		if argv[1] == "-firstuse": self.first_use = True
+		
+		UnveillanceElasticsearchHandler.__init__(self)
 		
 	def startElasticsearch(self, catch=True):
 		startDaemon(self.els_log_file, self.els_pid_file)
@@ -50,7 +52,7 @@ class UnveillanceElasticsearch(object):
 		with open(self.els_status_file, 'wb+') as f: f.write("False")
 	
 	def initElasticsearch(self):
-		print "INITING ELASTICSEARCH"
+		if DEBUG: print "INITING ELASTICSEARCH"
 		mappings = {
 			"documents" : {
 				"properties": {
@@ -75,7 +77,7 @@ class UnveillanceElasticsearch(object):
 		
 		try:
 			res = self.sendELSRequest(data=index, to_root=True, method="put")
-			print "INITIALIZED NEW MAPPING:"
+			if DEBUG: print "INITIALIZED NEW MAPPING:"
 			print res
 			
 			if not res['acknowledged']: return False
@@ -83,7 +85,11 @@ class UnveillanceElasticsearch(object):
 		except Exception as e:
 			printAsLog(e, as_error=True)
 			return False
-	
+
+class UnveillanceElasticsearchHandler(object):
+	def __init__(self):
+		if DEBUG: print "elasticsearch handler inited"
+		
 	def get(self, _id):
 		print "getting thing"
 		

@@ -20,3 +20,4 @@ with open(os.path.join(CONF_ROOT, "annex.settings.yaml"), 'rb') as C:
 	config = yaml.load(C.read())
 	API_PORT = config['api.port']
 	NUM_PROCESSES = config['api.num_processes']
+	DEBUG = config['flags.debug']
