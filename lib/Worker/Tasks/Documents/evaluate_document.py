@@ -11,34 +11,23 @@ def evaluateDocument(task):
 		print "THIS FILE DOES NOT EXIST"
 		return
 	
-	import os
-	from conf import ANNEX_DIR, UUID
+	from Models.uv_document import UnveillanceDocument
+	from conf import DEBUG
 	
-	from lib.Worker.vars import MimeTypes
-	from lib.Worker.Models.uv_task import UnveillanceTask
+	document = UnveillanceDocument(inflate={ 'file_name' : task.file_name }) 
+	if DEBUG: print document.emit()
 	
-	from lib.Core.Utils.funcs import hashEntireFile
-	from lib.Worker.Utils.funcs import getFileType 
-	from Models.uv_object import UnveillanceObject
-	
-	doc_inflate = {
-		'file_name' : task.file_name,
-		'_id' : hashEntireFile(os.path.join(ANNEX_DIR, task.file_name)),
-		'mime_type' : getFileType(os.path.join(ANNEX_DIR, task.file_name))
-	}
-	
-	document = UnveillanceObject(inflate=doc_inflate) 
-	print document.emit()
-	
-	if document.mime_type not in MimeTypes.EVALUATE:
-		print "COULD NOT IDENTIFY MIME TYPE AS USABLE"
+	if document.invalid:
+		print "\n\n************** DOCUMENT EVALUATION [INVALID] ******************\n"
 		return
 	
-	document.farm = UUID
+	from lib.Worker.vars import AssetTypes
+	from lib.Worker.Models.uv_task import UnveillanceTask
+	
 	document.addAsset(task.file_name, None, as_original=True,
 		description="original version of document", tags=[AssetTypes.ORIG])
 
 	# Iterate through task manifest to find establish route?
 		
-	print document.emit()
+	if DEBUG: print document.emit()
 	print "\n\n************** DOCUMENT EVALUATION [END] ******************\n"

@@ -1,16 +1,17 @@
 from Models.uv_object import UnveillanceObject
+from Models.vars import EmitSentinel
 from Utils.funcs import printAsLog
 
 class UnveillanceTask(UnveillanceObject):
-	def __init__(self, ctx, is_private=True, **extras):
-		super(UnveillanceTask, self).__init__()
-		
-		self.ctx = ctx
-		self.is_private = is_private
-		
-		print extras
-		for k,v in extras.iteritems():
-			setattr(self, k, v)
-		
-		
-		print self.emit()
+	def __init__(self, args**):
+		try:
+			self.ctx = ctx
+		except Exception as e:
+			print e
+			return
+			
+		if inflate is not None:
+			inflate['_id'] = generateMD5Hash()
+			
+		super(UnveillanceTask, self).__init__(_id=_id, inflate=inflate, emit_sentinels=[
+			EmitSentinel("ctx", "Worker", None)])

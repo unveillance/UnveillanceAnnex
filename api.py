@@ -7,11 +7,11 @@ from Models.uv_elasticsearch import UnveillanceElasticsearch
 from Models.uv_worker import UnveillanceWorker
 from lib.Worker.Models.uv_task import UnveillanceTask
 
-from conf import API_PORT, HOST, ANNEX_DIR, MONITOR_ROOT
+from conf import API_PORT, HOST, ANNEX_DIR, MONITOR_ROOT, DEBUG
 
 class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 	def __init__(self):
-		print "API started..."
+		if DEBUG: print "API started..."
 		
 		UnveillanceElasticsearch.__init__(self)
 		sleep(1)
@@ -73,18 +73,27 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		return False
 	
 	def syncAnnex(self):
-		new_file_rx = r'\s*create mode (?:\d+) ([a-zA-Z0-9_\-\./]+)'
+		create_rx = r'\s*create mode (?:\d+) ([a-zA-Z0-9_\-\./]+)'
 		cmd = ['git', 'annex', 'sync']
 		p = Popen(cmd0, stdout=PIPE, close_fds=True)
 		data = p.stdout.readline()
+		
+		tasks = []
 
 		while data:
 			print data.strip()
-			new_file = re.match(new_file_rx, data.strip())
-			if len(new_file) == 1:
+			create = re.match(create_rx, data.strip())
+			if len(create) == 1:
 				# init new file. here it starts.
-				print "INIT NEW FILE: %s" % new_file[0]				
-				self.setTask(UnveillanceTask("evaluateDocument", file_name=new_file[0]))
+				if DEBUG: print "INIT NEW FILE: %s" % create[0]
+				
+				tasks.append({
+					'task_name' : "evaluateDocument",
+					'file_name' : create[0]
+				})
 				
 			data = p.stdout.readline()
 		p.stdout.close()
+		
+		if len(tasks) > 0:
+			for task in tasks: self.setTask(inflate=task)
