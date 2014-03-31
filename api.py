@@ -4,8 +4,8 @@ from multiprocessing import Process
 from time import sleep
 
 from conf import API_PORT, HOST, ANNEX_DIR, MONITOR_ROOT
-from Utils.uv_elasticsearch import UnveillanceElasticsearch
-from lib.Worker.Utils.uv_worker import UnveillanceWorker
+from Models.uv_elasticsearch import UnveillanceElasticsearch
+from Models.uv_worker import UnveillanceWorker
 from lib.Worker.Models.uv_task import UnveillanceTask
 
 class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):

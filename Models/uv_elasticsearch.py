@@ -6,12 +6,8 @@ from lib.Core.Utils.funcs import stopDaemon, startDaemon
 from Utils.funcs import printAsLog
 from conf import MONITOR_ROOT, CONF_ROOT, ELS_ROOT
 
-from lib.Core.Utils.uv_elasticsearch import UnveillanceElasticsearch as UVE_Stub
-
-class UnveillanceElasticsearch(UVE_Stub):
-	def __init__(self):
-		super(UnveillanceElasticsearch, self).__init__()
-		
+class UnveillanceElasticsearch(object):
+	def __init__(self):		
 		self.els_status_file = os.path.join(MONITOR_ROOT, "els.status.txt")
 		self.els_pid_file = os.path.join(MONITOR_ROOT, "els.pid.txt")
 		self.els_log_file = os.path.join(MONITOR_ROOT, "els.log.txt")
@@ -87,6 +83,21 @@ class UnveillanceElasticsearch(UVE_Stub):
 		except Exception as e:
 			printAsLog(e, as_error=True)
 			return False
+	
+	def get(self, _id):
+		print "getting thing"
+		
+		res = self.sendELSRequest(endpoint=_id)
+		try:
+			if res['exists']: return res['_source']
+		except KeyError as e: pass
+		
+		return None
+	
+	def query(self, args):
+		print "OH A QUERY"
+		
+		return None
 	
 	def update(self, _id, args):
 		print "updating thing"

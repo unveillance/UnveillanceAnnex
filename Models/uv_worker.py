@@ -9,7 +9,7 @@ from conf import MONITOR_ROOT, UUID, SERVER_HOST
 from Utils.funcs import printAsLog
 from lib.Core.Utils.funcs import startDaemon, stopDaemon
 
-class UnveillanceWorker():
+class UnveillanceWorker(object):
 	def __init__(self):		
 		self.worker_pid_file = os.path.join(MONITOR_ROOT, "worker.pid.txt")
 		self.worker_log_file = os.path.join(MONITOR_ROOT, "worker.log.txt")
@@ -32,7 +32,6 @@ class UnveillanceWorker():
 		print sys.argv
 		
 		startDaemon(self.worker_log_file, self.worker_pid_file)
-		# on SERVER_HOST!
 		self.celery_app = Celery(TASKS_ROOT, 
 			broker='amqp://guest@%s' % SERVER_HOST, include=self.celery_tasks)
 		
