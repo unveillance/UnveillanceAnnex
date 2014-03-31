@@ -3,10 +3,11 @@ from subprocess import Popen, PIPE
 from multiprocessing import Process
 from time import sleep
 
-from conf import API_PORT, HOST, ANNEX_DIR, MONITOR_ROOT
 from Models.uv_elasticsearch import UnveillanceElasticsearch
 from Models.uv_worker import UnveillanceWorker
 from lib.Worker.Models.uv_task import UnveillanceTask
+
+from conf import API_PORT, HOST, ANNEX_DIR, MONITOR_ROOT
 
 class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 	def __init__(self):

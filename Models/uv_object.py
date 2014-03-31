@@ -3,6 +3,7 @@ from json import dumps
 from subprocess import Popen, PIPE
 
 from lib.Core.Models.uv_object import UnveillanceObject as UVO_Stub
+from lib.Core.vars import EmitSentinel
 from Models.uv_elasticsearch import UnveillanceElasticsearchHandler
 from conf import ANNEX_DIR
 
@@ -25,10 +26,7 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 		try: self.inflate(self.get(_id))
 		except Exception as e:
 			print e
-	
-	def inflate(self, inflate):
-		super(UnveillanceObject, self).inflate(inflate)
-	
+		
 	def addFile(self, asset_path, data):
 		"""
 			git annex add [file]

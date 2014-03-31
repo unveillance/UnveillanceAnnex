@@ -7,7 +7,7 @@ import tornado.web
 import tornado.httpserver
 
 from api import UnveillanceAPI
-from lib.Core.Utils.uv_result import Result
+from lib.Core.vars import Result
 from lib.Core.Utils.funcs import startDaemon, stopDaemon
 
 from conf import ANNEX_DIR, API_PORT, NUM_PROCESSES, HOST, MONITOR_ROOT
