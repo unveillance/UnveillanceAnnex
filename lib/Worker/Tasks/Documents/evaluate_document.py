@@ -8,6 +8,7 @@ def evaluateDocument(task):
 	print "evaluating document at %s" % task.file_name
 	
 	if not task.ctx.fileExistsInAnnex(task.file_name, auto_add=False):
+		print "\n\n************** DOCUMENT EVALUATION [INVALID] ******************\n"
 		print "THIS FILE DOES NOT EXIST"
 		return
 	
@@ -19,6 +20,7 @@ def evaluateDocument(task):
 	
 	if document.invalid:
 		print "\n\n************** DOCUMENT EVALUATION [INVALID] ******************\n"
+		print "DOCUMENT INVALID"
 		return
 	
 	from lib.Core.vars import AssetTypes
