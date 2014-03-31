@@ -1,8 +1,9 @@
 import os, yaml
 from collections import namedtuple
 
-HOST = os.getenv('UV_SERVER_HOST')
+SERVER_HOST = os.getenv('UV_SERVER_HOST')
 UUID = os.getenv('UV_UUID')
+HOST = "localhost"
 
 this_dir = os.path.abspath(os.path.join(__file__, os.pardir))
 CONF_ROOT = os.path.join(this_dir, "conf")

@@ -21,20 +21,21 @@ def evaluateDocument(task):
 	from lib.Worker.Utils.funcs import getFileType 
 	from Models.uv_object import UnveillanceObject
 	
-	document = UnveillanceObject()
-	document.file_name = task.file_name
-	document.id = hashEntireFile(os.path.join(ANNEX_DIR, document.file_name))
-	document.mime_type = getFileType(os.path.join(ANNEX_DIR, document.file_name))
+	doc_inflate = {
+		'file_name' : task.file_name,
+		'_id' : hashEntireFile(os.path.join(ANNEX_DIR, task.file_name)),
+		'mime_type' : getFileType(os.path.join(ANNEX_DIR, task.file_name))
+	}
+	
+	document = UnveillanceObject(inflate=doc_inflate) 
 	print document.emit()
 	
 	if document.mime_type not in MimeTypes.EVALUATE:
 		print "COULD NOT IDENTIFY MIME TYPE AS USABLE"
 		return
 	
-	# DOING THIS THE HARD WAY: UUID MUST BE TRANSLATED IN NGINX TO CORRECT FARM ?
-	# DRIZZLE (http://wiki.nginx.org/NginxHttpDrizzleModule)
 	document.farm = UUID
-	document.addAsset(task.file_name, None, 
+	document.addAsset(task.file_name, None, as_original=True,
 		description="original version of document", tags=[AssetTypes.ORIG])
 
 	# Iterate through task manifest to find establish route?
