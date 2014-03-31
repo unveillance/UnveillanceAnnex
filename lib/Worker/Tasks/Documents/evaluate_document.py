@@ -11,7 +11,7 @@ def evaluateDocument(task):
 		print "THIS FILE DOES NOT EXIST"
 		return
 	
-	from Models.uv_document import UnveillanceDocument
+	from lib.Worker.Models.uv_document import UnveillanceDocument
 	from conf import DEBUG
 	
 	document = UnveillanceDocument(inflate={ 'file_name' : task.file_name }) 
@@ -21,7 +21,7 @@ def evaluateDocument(task):
 		print "\n\n************** DOCUMENT EVALUATION [INVALID] ******************\n"
 		return
 	
-	from lib.Worker.vars import AssetTypes
+	from lib.Core.vars import AssetTypes
 	from lib.Worker.Models.uv_task import UnveillanceTask
 	
 	document.addAsset(task.file_name, None, as_original=True,

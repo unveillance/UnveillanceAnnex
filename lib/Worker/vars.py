@@ -9,12 +9,6 @@ CELERY_TASKS = None
 CELERY_STUB = Celery(None, broker='amqp://', backend='amqp://')
 ALL_WORKERS = "all_workers"
 
-mime_types = namedtuple("mime_types", "TEXT EVALUATE")
-MimeTypes = mime_types("plain/txt", ["plain/txt"])
-
-asset_tags = namedtuple("asset_tags", "ORIG F_MD")
-AssetTags = asset_tags("original_document", "metadata_fingerprint")
-
 def buildCeleryTaskList():
 	CELERY_TASKS = []	
 	

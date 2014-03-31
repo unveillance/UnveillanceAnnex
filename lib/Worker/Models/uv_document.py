@@ -1,4 +1,7 @@
 from Models.uv_object import UnveillanceObject
+from lib.Core.vars import MimeTypes
+from lib.Core.funcs import hashEntireFile
+from lib.Worker.funcs import getFileType
 
 class UnveillanceDocument(UnveillanceObject):
 	def __init__(self, args**):
