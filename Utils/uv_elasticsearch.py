@@ -35,7 +35,6 @@ class UnveillanceElasticsearch(UVE_Stub):
 			print data
 			if re.match(r'.*started$', data):
 				print "STARTED: %s" % data
-				self.status = True
 				with open(self.els_status_file, 'wb+') as f: f.write("True")
 				sleep(1)
 				
@@ -52,7 +51,6 @@ class UnveillanceElasticsearch(UVE_Stub):
 		printAsLog("stopping elasticsearch")
 		stopDaemon(self.els_pid_file)
 		
-		self.status = False
 		with open(self.els_status_file, 'wb+') as f: f.write("False")
 	
 	def initElasticsearch(self):
@@ -89,10 +87,23 @@ class UnveillanceElasticsearch(UVE_Stub):
 		except Exception as e:
 			printAsLog(e, as_error=True)
 			return False
+	
+	def update(self, _id, args):
+		print "updating thing"
+		
+		res = self.sendELSRequest(endpoint=_id, data=args, method="put")
+
+		try: return res['ok']
+		except KeyError as e: pass
+		
+		return False
+	
+	def create(self, _id, args):
+		print "creating thing"
+		return self.update(_id, args)
 		
 	def delete(self, _id):
 		print "deleting thing"
-		if not self.status: return False
 		
 		res = self.sendELSRequest(endpoint=_id, method="delete")
 		

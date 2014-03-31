@@ -4,6 +4,7 @@ from collections import namedtuple
 SERVER_HOST = os.getenv('UV_SERVER_HOST')
 UUID = os.getenv('UV_UUID')
 HOST = "localhost"
+ELS_PORT = 9200
 
 this_dir = os.path.abspath(os.path.join(__file__, os.pardir))
 CONF_ROOT = os.path.join(this_dir, "conf")
