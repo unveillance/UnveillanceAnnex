@@ -22,6 +22,7 @@ class UnveillanceTask(UnveillanceObject):
 		# i.e. "lib.Worker.Tasks.Documents.evaluate_document"
 		func = __import__(".".join([TASKS_ROOT, self.task_path]))
 
+		# i.e. processImageMetadata.apply_sync((new_task,), queue=UUID)
 		# func.apply_sync((task,) queue=queue_name)	
 		args = [(self,), ({queue : self.queue})]
 		# or: args = [(self,), (queue : self.queue)] ?
@@ -29,6 +30,10 @@ class UnveillanceTask(UnveillanceObject):
 					
 		p = Process(target=func.apply_sync, args=args)
 		p.start()
+	
+	def finish(self):
+		if DEBUG: print "task finished!"
+		self.setStatus(200)
 	
 	def setStatus(self, status):
 		self.status = status
