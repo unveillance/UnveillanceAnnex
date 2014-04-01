@@ -1,12 +1,14 @@
 from multiprocessing import Process
 
 from Models.uv_object import UnveillanceObject
-from Models.vars import EmitSentinel
+from lib.Core.vars import EmitSentinel
 from Utils.funcs import printAsLog
 from lib.Worker.vars import TASKS_ROOT
 
+from conf import DEBUG
+
 class UnveillanceTask(UnveillanceObject):
-	def __init__(self, args**):
+	def __init__(self, **args):
 		if inflate is not None:
 			inflate['_id'] = generateMD5Hash()
 			inflate['status'] = 404
@@ -18,9 +20,13 @@ class UnveillanceTask(UnveillanceObject):
 		self.ctx = ctx
 		
 		# i.e. "lib.Worker.Tasks.Documents.evaluate_document"
-		module = __import__(".".join([TASKS_ROOT, self.task_path]))
-				
-		p = Process(target=module.apply_sync, args=((self,), queue=self.queue)
+		func = __import__(".".join([TASKS_ROOT, self.task_path]))
+
+		# func.apply_sync((task,) queue=queue_name)	
+		args = [(self,), (queue,self.queue)]
+		if DEBUG: print args
+					
+		p = Process(target=func.apply_sync, args=args)
 		p.start()
 	
 	def setStatus(self, status):

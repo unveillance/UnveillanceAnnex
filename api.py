@@ -90,7 +90,7 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 				tasks.append(UnveillanceTask(inflate={
 					'task_path' : "Documents.evaluateDocument",
 					'file_name' : create[0]
-				})
+				}))
 				
 			data = p.stdout.readline()
 		p.stdout.close()
