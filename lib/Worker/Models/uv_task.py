@@ -23,7 +23,8 @@ class UnveillanceTask(UnveillanceObject):
 		func = __import__(".".join([TASKS_ROOT, self.task_path]))
 
 		# func.apply_sync((task,) queue=queue_name)	
-		args = [(self,), (queue,self.queue)]
+		args = [(self,), ({queue : self.queue})]
+		# or: args = [(self,), (queue : self.queue)] ?
 		if DEBUG: print args
 					
 		p = Process(target=func.apply_sync, args=args)
