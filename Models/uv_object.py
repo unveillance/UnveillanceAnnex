@@ -5,7 +5,8 @@ from subprocess import Popen, PIPE
 from lib.Core.Models.uv_object import UnveillanceObject as UVO_Stub
 from lib.Core.vars import EmitSentinel
 from Models.uv_elasticsearch import UnveillanceElasticsearchHandler
-from conf import ANNEX_DIR
+
+from conf import ANNEX_DIR, DEBUG
 
 class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 	def __init__(self, **args):
@@ -16,7 +17,7 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 			emit_sentinels=emit_sentinels)
 		
 	def save(self):
-		print "SAVING AS ANNEX/WORKER OBJECT"
+		if DEBUG: print "SAVING AS ANNEX/WORKER OBJECT"
 		if self.addFile(self.manifest, self.emit()):
 			return self.update(self._id, self.emit())
 		
@@ -25,7 +26,10 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 	def getObject(self, _id):
 		try: self.inflate(self.get(_id))
 		except Exception as e:
-			print e
+			if DEBUG: print e
+			self.invalidate(error="Object does not exist in Elasticsearch")
+		
+		if DEBUG: print self.emit()
 		
 	def addFile(self, asset_path, data):
 		"""

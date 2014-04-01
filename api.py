@@ -87,8 +87,8 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 				# init new file. here it starts.
 				if DEBUG: print "INIT NEW FILE: %s" % create[0]
 				
-				tasks.append({
-					'task_name' : "evaluateDocument",
+				tasks.append(UnveillanceTask(inflate={
+					'task_path' : "Documents.evaluateDocument",
 					'file_name' : create[0]
 				})
 				
@@ -96,4 +96,4 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		p.stdout.close()
 		
 		if len(tasks) > 0:
-			for task in tasks: self.setTask(inflate=task)
+			for task in tasks: task.run(self)
