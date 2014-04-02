@@ -120,6 +120,10 @@ class UnveillanceElasticsearch(UnveillanceElasticsearchHandler):
 		mappings = {
 			"uv_document" : {
 				"properties": {
+					"uv_type": {
+						"type" : "string",
+						"store" : True
+					},
 					"assets": {
 						"type" : "nested",
 						"include_in_parent": True,
