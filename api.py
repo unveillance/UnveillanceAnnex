@@ -5,6 +5,7 @@ from time import sleep
 
 from Models.uv_elasticsearch import UnveillanceElasticsearch
 from Models.uv_worker import UnveillanceWorker
+from lib.Core.Utils.funcs import parseRequestEntity
 from lib.Worker.Models.uv_task import UnveillanceTask
 
 from conf import API_PORT, HOST, ANNEX_DIR, MONITOR_ROOT, DEBUG
@@ -16,6 +17,37 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		UnveillanceElasticsearch.__init__(self)
 		sleep(1)
 		UnveillanceWorker.__init__(self)
+	
+	def do_list(self, request):
+		# dont waste time
+		if request.method != "GET": return None
+		
+		args = parseRequestEntity(request.query)
+		if len(args.keys()) == 0: pass
+		
+		query = {}
+		return self.query(query)
+	
+	def do_document(self, request):
+		"""
+			get, update, delete a document
+		"""
+		method=request.method
+		
+		query = None
+		if method == "GET": query = parseRequestEntity(request.query)
+		elif method == "POST": query = parseRequestEntity(request.body)
+		
+		if query is None: return None
+		if '_id' not in query.keys(): return None
+		
+		document = self.get(_id=query['_id'])
+
+		if method == "GET": return document
+		elif method == "POST":
+			print "post..."
+		
+		return None
 	
 	def fileExistsInAnnex(self, file_path, auto_add=True):
 		if file_path == ".gitignore" :
