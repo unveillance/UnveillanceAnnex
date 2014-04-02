@@ -4,7 +4,9 @@ test.py
 
 .monitor/
 lib/elasticsearch*/
+lib/anaconda*
 annex_extras/
 
 conf/*.config.yaml
 conf/*.asc
+.bashrc
