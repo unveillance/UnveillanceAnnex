@@ -11,7 +11,7 @@ class UnveillanceElasticsearchHandler(object):
 		if DEBUG: print "elasticsearch handler inited"
 		
 	def get(self, _id):
-		print "getting thing"
+		if DEBUG: print "getting thing"
 		
 		res = self.sendELSRequest(endpoint=_id)
 		try:
@@ -21,12 +21,12 @@ class UnveillanceElasticsearchHandler(object):
 		return None
 	
 	def query(self, args):
-		print "OH A QUERY"
+		if DEBUG: print "OH A QUERY"
 		
 		return None
 	
 	def update(self, _id, args):
-		print "updating thing"
+		if DEBUG: print "updating thing"
 		
 		res = self.sendELSRequest(endpoint=_id, data=args, method="put")
 
@@ -36,11 +36,11 @@ class UnveillanceElasticsearchHandler(object):
 		return False
 	
 	def create(self, _id, args):
-		print "creating thing"
+		if DEBUG: print "creating thing"
 		return self.update(_id, args)
 		
 	def delete(self, _id):
-		print "deleting thing"
+		if DEBUG: print "deleting thing"
 		
 		res = self.sendELSRequest(endpoint=_id, method="delete")
 		

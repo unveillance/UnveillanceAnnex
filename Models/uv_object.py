@@ -24,10 +24,11 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 		return False
 	
 	def getObject(self, _id):
-		try: self.inflate(self.get(_id))
-		except Exception as e:
-			if DEBUG: print e
-			self.invalidate(error="Object does not exist in Elasticsearch")
+		if super(UnveillanceObject, self).getObject(_id):
+			try: self.inflate(self.get(_id))
+			except Exception as e:
+				if DEBUG: print e
+				self.invalidate(error="Object does not exist in Elasticsearch")
 		
 		if DEBUG: print self.emit()
 		
