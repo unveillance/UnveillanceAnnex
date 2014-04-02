@@ -1,4 +1,4 @@
-import subprocess, os, json, re
+import subprocess, os, json, re, requests
 from sys import argv
 from time import sleep
 
@@ -52,20 +52,19 @@ class UnveillanceElasticsearchHandler(object):
 	def sendELSRequest(self, data=None, to_root=False, endpoint=None, method="get"):
 		url = "http://localhost:9200/unveillance/"
 
-		if not to_root:
-			url += "documents/"
-			if endpoint is not None:
-				url += endpoint
-		
-		if data is not None:
-			data = json.dumps(data)
+		if not to_root: url += "uv_document/"
+		if endpoint is not None: url += endpoint
+		if data is not None: data = json.dumps(data)
+		if DEBUG: 
+			print data
+			print url
 			
 		if method == "get":
 			r = requests.get(url, data=data)
 		elif method == "post":
 			r = requests.post(url, data=data)
 		elif method == "put":
-			r = requests.post(url, data=data)
+			r = requests.put(url, data=data)
 		elif method == "delete":
 			r = requests.delete(url, data=data)
 		
@@ -86,7 +85,7 @@ class UnveillanceElasticsearch(UnveillanceElasticsearchHandler):
 		startDaemon(self.els_log_file, self.els_pid_file)
 		
 		cmd = [ELS_ROOT, '-Des.max-open-files=true', 
-			'Des.config=%s' % os.path.join(CONF_ROOT, "els.settings.yaml")]
+			'-Des.config=%s' % os.path.join(CONF_ROOT, "els.settings.yaml")]
 		
 		print "elasticsearch running in daemon."
 		print cmd
@@ -119,7 +118,7 @@ class UnveillanceElasticsearch(UnveillanceElasticsearchHandler):
 	def initElasticsearch(self):
 		if DEBUG: print "INITING ELASTICSEARCH"
 		mappings = {
-			"documents" : {
+			"uv_document" : {
 				"properties": {
 					"assets": {
 						"type" : "nested",
@@ -130,8 +129,8 @@ class UnveillanceElasticsearch(UnveillanceElasticsearchHandler):
 			}
 		}
 		
-		index = {'mappings': mappings}
-		
+		index = { "mappings": mappings }
+
 		try:
 			res = self.sendELSRequest(to_root=True, method="delete")
 			if res['error'] == "IndexMissingException[[compass] missing]": pass
