@@ -92,7 +92,7 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 							print data2.strip()
 							# TODO: handle error
 							data2 = p2.stdout.readline()
-						p2.stdout().close()
+						p2.stdout.close()
 				
 				p0.stdout.close()
 				os.chdir(old_dir)
