@@ -82,7 +82,7 @@ class UnveillanceAnnex(tornado.web.Application, UnveillanceAPI):
 			# else, return 404 (file not found)
 
 			if self.application.fileExistsInAnnex(file_path):
-				with open(file_path, 'rb') as file:
+				with open(os.path.join(ANNEX_DIR, file_path), 'rb') as file:
 					# TODO: set content-type
 					self.finish(file.read())
 				return
