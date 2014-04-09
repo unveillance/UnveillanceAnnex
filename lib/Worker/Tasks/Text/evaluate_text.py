@@ -48,6 +48,6 @@ def evaluateText(task):
 		from lib.Worker.Models.uv_task import UnveillanceTask
 		new_task = UnveillanceTask(inflate={
 			'doc_id' : document._id,
-			'task_path' : ,
+			'task_path' : task_path,
 			'queue' : UUID})
 		new_task.run(task)
