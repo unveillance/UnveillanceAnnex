@@ -84,6 +84,7 @@ class UnveillanceAnnex(tornado.web.Application, UnveillanceAPI):
 			if self.application.fileExistsInAnnex(file_path):
 				with open(os.path.join(ANNEX_DIR, file_path), 'rb') as file:
 					# TODO: set content-type
+					self.set_header("Content-Type", "application/octet-stream")
 					self.finish(file.read())
 				return
 			
@@ -105,7 +106,7 @@ class UnveillanceAnnex(tornado.web.Application, UnveillanceAPI):
 			self.finish(res.emit())
 	
 	def startRESTAPI(self):
-		#startDaemon(self.api_log_file, self.api_pid_file)
+		startDaemon(self.api_log_file, self.api_pid_file)
 		
 		rr_group = r"/(?:(?!%s))([a-zA-Z0-9_/]*/$)?" % "|".join(self.reserved_routes)
 		self.routes.append((re.compile(rr_group).pattern, self.RouteHandler))
