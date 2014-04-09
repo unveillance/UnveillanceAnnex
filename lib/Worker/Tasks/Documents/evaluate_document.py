@@ -14,18 +14,18 @@ def evaluateDocument(task):
 	document = UnveillanceDocument(inflate={'file_name' : task.file_name})
 	if DEBUG: print document.emit()
 	
-	if document.invalid:
+	if hasattr(document, 'invalid') and document.invalid:
 		print "\n\n************** DOCUMENT EVALUATION [INVALID] ******************\n"
 		print "DOCUMENT INVALID"
 		
 		task.invalidate(error="DOCUMUENT INVALID")
 		return
 	
-	from lib.Core.vars import AssetTypes
+	from lib.Core.vars import AssetTags
 	from lib.Worker.Models.uv_task import UnveillanceTask
 	
 	document.addAsset(task.file_name, None, as_original=True,
-		description="original version of document", tags=[AssetTypes.ORIG])
+		description="original version of document", tags=[AssetTags.ORIG])
 
 	# Iterate through task manifest to find establish route?
 		

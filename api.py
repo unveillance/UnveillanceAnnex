@@ -62,6 +62,7 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		data0 = p0.stdout.readline()
 
 		while data0:
+			if DEBUG: print data0
 			if data0.strip() == file_path:
 				if auto_add:
 					web_match_found = False

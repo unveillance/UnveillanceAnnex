@@ -1,5 +1,5 @@
 from Models.uv_object import UnveillanceObject
-from lib.Core.vars import MimeTypes, UVDocType
+from lib.Core.vars import UVDocType
 from lib.Core.Utils.funcs import hashEntireFile
 from lib.Worker.Utils.funcs import getFileType
 
@@ -22,10 +22,4 @@ class UnveillanceDocument(UnveillanceObject):
 				return
 				
 			self.mime_type = getFileType(os.path.join(ANNEX_DIR, self.file_name))
-			if DEBUG:
-				print "MIME TYPE?"
-				print self.mime_type
-			
-			if self.mime_type not in MimeTypes.EVALUATE:
-				print "COULD NOT IDENTIFY MIME TYPE AS USABLE!!!"
-				self.invalidate(error="COULD NOT IDENTIFY MIME TYPE AS USABLE")
+			self.save()
