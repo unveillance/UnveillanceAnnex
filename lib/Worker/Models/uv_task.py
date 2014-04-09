@@ -31,10 +31,11 @@ class UnveillanceTask(UnveillanceObject):
 			args = [(self,), ({'queue' :self.queue})]
 			if DEBUG: print args
 			
-			#from lib.Worker.Tasks.Documents.evaluate_document import evaluateDocument
-			#evaluateDocument.apply_async((self,), {'queue' : self.queue})
-			p = Process(target=func.apply_async, args=args)
-			p.start()
+			from lib.Worker.Tasks.Documents.evaluate_document import evaluateDocument
+			evaluateDocument(self)
+			
+			#p = Process(target=func.apply_async, args=args)
+			#p.start()
 		except Exception as e:
 			printAsLog(e)
 	

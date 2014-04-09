@@ -35,28 +35,50 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 				self.invalidate(error="Object does not exist in Elasticsearch")
 		
 		if DEBUG: print self.emit()
+	
+	def getFile(self, asset_path):
+		this_dir = os.getcwd()
+		os.chdir(ANNEX_DIR)
+		
+		res = False
+		try:
+			p = Popen(['git', 'annex', 'unlock', asset_path])
+			p.wait()
+			res =  True
+		except Exception as e: print e
+		
+		os.chdir(this_dir)
+		return res
 		
 	def addFile(self, asset_path, data):
 		"""
 			git annex add [file]
 		"""
+		if not self.getFile(asset_path): return False
+		
+		this_dir = os.getcwd()
+		os.chdir(ANNEX_DIR)
+		
 		try:
 			with open(os.path.join(ANNEX_DIR, asset_path), 'wb+') as file:
 				file.write(data)
 
-			this_dir = os.getcwd()
-			os.chdir(ANNEX_DIR)
-			
 			p = Popen(['git', 'annex', 'add', asset_path])
 			p.wait()
-			
+		except Exception as e:
+			print e
 			os.chdir(this_dir)
+			return False
+		
+		try:
+			p = Popen(['git', 'commit', asset_path, '-m', '"saved asset"'])
+			p.wait()
+		except Exception as e:
+			print e
+		
+		os.chdir(this_dir)
+		return True
 			
-			return True
-				
-		except Exception as e: print e
-		return False
-	
 	def addAsset(self, data, file_name, as_original=False, as_literal=True, **metadata):
 		print "ADDING ASSET AS ANNEX/WORKER OBJECT"
 		if not as_original: asset_path = os.path.join(self.base_path, file_name)

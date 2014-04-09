@@ -11,8 +11,7 @@ def evaluateDocument(task):
 	from lib.Worker.Models.uv_document import UnveillanceDocument
 	from conf import DEBUG, UUID
 	
-	document = UnveillanceDocument(inflate={ 'file_name' : task.file_name,
-		'queue' : UUID })
+	document = UnveillanceDocument(inflate={'file_name' : task.file_name})
 	if DEBUG: print document.emit()
 	
 	if document.invalid:

@@ -100,8 +100,7 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 				"""
 					THIS IS A TEST:
 				"""
-				self.testImport(file_path)
-				
+				if DEBUG: self.testImport(file_path)
 				return True
 		
 			data0 = p0.stdout.readline()
