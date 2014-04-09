@@ -14,8 +14,9 @@ class UnveillanceElasticsearchHandler(object):
 		if DEBUG: print "getting thing"
 		
 		res = self.sendELSRequest(endpoint=_id)
+		print res
 		try:
-			if res['exists']: return res['_source']
+			if res['found']: return res['_source']
 		except KeyError as e: pass
 		
 		return None

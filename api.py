@@ -97,11 +97,6 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 				
 				p0.stdout.close()
 				os.chdir(old_dir)
-				
-				"""
-					THIS IS A TEST:
-				"""
-				if DEBUG: self.testImport(file_path)
 				return True
 		
 			data0 = p0.stdout.readline()
@@ -109,16 +104,7 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		p0.stdout.close()
 		os.chdir(old_dir)
 		return False
-	
-	def testImport(self, file_path):
-		print UUID
 		
-		task = UnveillanceTask(inflate={
-			'task_path' : "Documents.evaluate_document.evaluateDocument",
-			'file_name' : file_path,
-			'queue' : UUID})
-		task.run(self)
-	
 	def syncAnnex(self):
 		create_rx = r'\s*create mode (?:\d+) ([a-zA-Z0-9_\-\./]+)'
 		cmd = ['git', 'annex', 'sync']

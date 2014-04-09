@@ -1,14 +1,13 @@
 from Models.uv_object import UnveillanceObject
-from lib.Core.vars import UVDocType
-from lib.Core.Utils.funcs import hashEntireFile
-from lib.Worker.Utils.funcs import getFileType
 
 class UnveillanceDocument(UnveillanceObject):
 	def __init__(self, _id=None, inflate=None):
 	
 		if inflate is not None:
 			import os
+			from lib.Core.Utils.funcs import hashEntireFile
 			from conf import ANNEX_DIR, UUID, DEBUG
+			from vars import UVDocType
 		
 			inflate['_id'] = hashEntireFile(os.path.join(ANNEX_DIR, inflate['file_name']))
 			inflate['farm'] = UUID
@@ -21,5 +20,6 @@ class UnveillanceDocument(UnveillanceObject):
 				self.invalidate(error="COULD NOT GET DOCUMENT FROM ANNEX")
 				return
 				
+			from lib.Worker.Utils.funcs import getFileType
 			self.mime_type = getFileType(os.path.join(ANNEX_DIR, self.file_name))
 			self.save()

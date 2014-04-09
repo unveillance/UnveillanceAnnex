@@ -3,10 +3,9 @@ from importlib import import_module
 from multiprocessing import Process
 
 from Models.uv_object import UnveillanceObject
-from lib.Core.vars import EmitSentinel, UVDocType
 from Utils.funcs import printAsLog
-from lib.Worker.vars import TASKS_ROOT
 
+from vars import EmitSentinel, UVDocType, TASKS_ROOT
 from conf import DEBUG, BASE_DIR
 
 class UnveillanceTask(UnveillanceObject):
@@ -29,13 +28,12 @@ class UnveillanceTask(UnveillanceObject):
 			module = import_module(p)
 			func = getattr(module, f)
 			args = [(self,), ({'queue' :self.queue})]
+			#args = [self]
 			if DEBUG: print args
 			
-			from lib.Worker.Tasks.Documents.evaluate_document import evaluateDocument
-			evaluateDocument(self)
-			
-			#p = Process(target=func.apply_async, args=args)
-			#p.start()
+			p = Process(target=func.apply_async, args=args)
+			#p = Process(target=func, args=args)
+			p.start()
 		except Exception as e:
 			printAsLog(e)
 	

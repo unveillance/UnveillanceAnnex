@@ -30,3 +30,7 @@ def buildCeleryTaskList():
 		except AttributeError as e: pass
 	
 	return CELERY_TASKS
+
+MIME_TYPE_TASKS = {
+	'text/plain' : ['Text.evaluate_text.evaluateText']
+}
