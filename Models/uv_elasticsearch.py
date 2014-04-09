@@ -52,20 +52,19 @@ class UnveillanceElasticsearchHandler(object):
 	def sendELSRequest(self, data=None, to_root=False, endpoint=None, method="get"):
 		url = "http://localhost:9200/unveillance/"
 
-		if not to_root:
-			url += "documents/"
-			if endpoint is not None:
-				url += endpoint
-		
-		if data is not None:
-			data = json.dumps(data)
+		if not to_root: url += "uv_document/"
+		if endpoint is not None: url += endpoint
+		if data is not None: data = json.dumps(data)
+		if DEBUG: 
+			print data
+			print url
 			
 		if method == "get":
 			r = requests.get(url, data=data)
 		elif method == "post":
 			r = requests.post(url, data=data)
 		elif method == "put":
-			r = requests.post(url, data=data)
+			r = requests.put(url, data=data)
 		elif method == "delete":
 			r = requests.delete(url, data=data)
 		
@@ -118,8 +117,12 @@ class UnveillanceElasticsearch(UnveillanceElasticsearchHandler):
 	def initElasticsearch(self):
 		if DEBUG: print "INITING ELASTICSEARCH"
 		mappings = {
-			"documents" : {
+			"uv_document" : {
 				"properties": {
+					"uv_type": {
+						"type" : "string",
+						"store" : True
+					},
 					"assets": {
 						"type" : "nested",
 						"include_in_parent": True,
@@ -129,8 +132,8 @@ class UnveillanceElasticsearch(UnveillanceElasticsearchHandler):
 			}
 		}
 		
-		index = {'mappings': mappings}
-		
+		index = { "mappings": mappings }
+
 		try:
 			res = self.sendELSRequest(to_root=True, method="delete")
 			

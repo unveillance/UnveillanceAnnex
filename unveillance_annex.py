@@ -1,6 +1,7 @@
-import signal, os, logging
+import signal, os, logging, re, json
 from sys import exit, argv
 from multiprocessing import Process
+from time import sleep
 
 import tornado.ioloop
 import tornado.web
@@ -10,7 +11,7 @@ from api import UnveillanceAPI
 from lib.Core.vars import Result
 from lib.Core.Utils.funcs import startDaemon, stopDaemon
 
-from conf import ANNEX_DIR, API_PORT, NUM_PROCESSES, HOST, MONITOR_ROOT
+from conf import ANNEX_DIR, API_PORT, NUM_PROCESSES, HOST, MONITOR_ROOT, DEBUG
 
 def terminationHandler(signal, frame): exit(0)
 signal.signal(signal.SIGINT, terminationHandler)
@@ -20,26 +21,51 @@ class UnveillanceAnnex(tornado.web.Application, UnveillanceAPI):
 		self.api_pid_file = os.path.join(MONITOR_ROOT, "api.pid.txt")
 		self.api_log_file = os.path.join(MONITOR_ROOT, "api.log.txt")
 		
+		self.reserved_routes = ["files", "sync"]
 		self.routes = [
 			(r"/files/(\S+)", self.FileHandler), 
-			(r"/sync/", self.SyncHandler),
-			(r"/(?:(?!files/|sync/))([a-zA-Z0-9_/]*/$)?", self.APIHandler)]
+			(r"/sync/", self.SyncHandler)]
 		
 		UnveillanceAPI.__init__(self)
 	
-	class APIHandler(tornado.web.RequestHandler):
+	class RouteHandler(tornado.web.RequestHandler):
 		@tornado.web.asynchronous
-		def get(self, route):
-			res = Result()
-			
-			self.finish(res.emit())
+		def get(self, route):  self.routeRequest(route)
 		
 		@tornado.web.asynchronous
 		def post(self, route):
+			"""
+				these must be authenticated.
+				TBD
+			"""
+			self.routeRequest(route)
+		
+		def routeRequest(self, route):
 			res = Result()
+		
+			if route is not None:
+				route = [r_ for r_ in route.split("/") if r_ != '']				
+				func_name = "do_%s" % route[0]
+				
+				if hasattr(self.application, func_name):
+					if DEBUG : print "doing %s" % func_name
+					func = getattr(self.application, func_name)
 			
+					res.result = 200
+					res.data = func(self.request)
+				else:
+					if DEBUG : print "could not find function %s" % func_name
+
+				try:
+					if res.data is None: 
+						del res.data
+						res.result = 412
+				except AttributeError as e: pass
+			
+			if DEBUG : print res.emit()
+			
+			self.set_status(res.result)					
 			self.finish(res.emit())
-			
 	
 	class SyncHandler(tornado.web.RequestHandler):
 		@tornado.web.asynchronous
@@ -56,7 +82,7 @@ class UnveillanceAnnex(tornado.web.Application, UnveillanceAPI):
 			# else, return 404 (file not found)
 
 			if self.application.fileExistsInAnnex(file_path):
-				with open(file_path, 'rb') as file:
+				with open(os.path.join(ANNEX_DIR, file_path), 'rb') as file:
 					# TODO: set content-type
 					self.finish(file.read())
 				return
@@ -77,10 +103,12 @@ class UnveillanceAnnex(tornado.web.Application, UnveillanceAPI):
 			else: self.set_status(405)
 			
 			self.finish(res.emit())
-
+	
 	def startRESTAPI(self):
 		#startDaemon(self.api_log_file, self.api_pid_file)
 		
+		rr_group = r"/(?:(?!%s))([a-zA-Z0-9_/]*/$)?" % "|".join(self.reserved_routes)
+		self.routes.append((re.compile(rr_group).pattern, self.RouteHandler))
 		tornado.web.Application.__init__(self, self.routes)
 		
 		server = tornado.httpserver.HTTPServer(self)
