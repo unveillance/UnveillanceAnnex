@@ -13,3 +13,20 @@ def evaluateText(task):
 	
 	document = UnveillanceDocument(_id=task.doc_id)
 	if DEBUG: print document.emit()
+	
+	"""
+		limited choices: json, pgp, or txt
+	"""
+	if not document.getFile(document.file_name): return
+	
+	content = document.loadAsset(document.file_name)
+	
+	import json
+	try:
+		json_txt = json.loads(content)
+		document.mime_type = "application/json"
+		document.save()
+		
+		print "THIS IS JSON"
+	except Exception as e:
+		print "NOT JSON: %s" % e
