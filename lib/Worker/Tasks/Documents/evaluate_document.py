@@ -8,13 +8,6 @@ def evaluateDocument(task):
 	print "evaluating document at %s" % task.file_name
 	task.setStatus(412)
 	
-	if not task.ctx.fileExistsInAnnex(task.file_name, auto_add=False):
-		print "\n\n************** DOCUMENT EVALUATION [INVALID] ******************\n"
-		print "THIS FILE DOES NOT EXIST"
-		
-		task.invalidate(error="THIS FILE DOES NOT EXIST")
-		return
-	
 	from lib.Worker.Models.uv_document import UnveillanceDocument
 	from conf import DEBUG, UUID
 	

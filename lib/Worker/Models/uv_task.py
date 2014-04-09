@@ -20,16 +20,14 @@ class UnveillanceTask(UnveillanceObject):
 		super(UnveillanceTask, self).__init__(_id=_id, inflate=inflate, emit_sentinels=[
 			EmitSentinel("ctx", "Worker", None)])
 	
-	def run(self, ctx):
-		self.ctx = ctx
-		
+	def run(self, ctx):		
 		# i.e. "lib.Worker.Tasks.Documents.evaluate_document"
 		task_path = ".".join([TASKS_ROOT, self.task_path])
 		p, f = task_path.rsplit(".", 1)
 		module = import_module(p)
 		try:
 			func = getattr(module, f)
-			args = [(self,), { 'queue' : self.queue}]
+			args = [(self,), ({'queue' :self.queue})]
 			# or: args = [(self,), (queue : self.queue)] ?
 			if DEBUG: print args
 					
