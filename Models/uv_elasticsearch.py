@@ -1,4 +1,4 @@
-import subprocess, os, json, re
+import subprocess, os, json, re, requests
 from sys import argv
 from time import sleep
 
@@ -83,10 +83,8 @@ class UnveillanceElasticsearch(UnveillanceElasticsearchHandler):
 		UnveillanceElasticsearchHandler.__init__(self)
 		
 	def startElasticsearch(self, catch=True):
-		startDaemon(self.els_log_file, self.els_pid_file)
-		
 		cmd = [ELS_ROOT, '-Des.max-open-files=true', 
-			'Des.config=%s' % os.path.join(CONF_ROOT, "els.settings.yaml")]
+			'-Des.config=%s' % os.path.join(CONF_ROOT, "els.settings.yaml")]
 		
 		print "elasticsearch running in daemon."
 		print cmd
@@ -107,6 +105,7 @@ class UnveillanceElasticsearch(UnveillanceElasticsearchHandler):
 			data = p.stdout.readline()
 		p.stdout.close()
 		
+		startDaemon(self.els_log_file, self.els_pid_file)
 		if catch:
 			while True: sleep(1)
 	
@@ -134,16 +133,19 @@ class UnveillanceElasticsearch(UnveillanceElasticsearchHandler):
 		
 		try:
 			res = self.sendELSRequest(to_root=True, method="delete")
-			if res['error'] == "IndexMissingException[[compass] missing]": pass
-		except KeyError as e: pass
-		
-		print "DELETED OLD MAPPING:"
-		print res
-		
+			
+			if DEBUG:
+				print "DELETED OLD MAPPING:"
+				print res
+		except Exception as e: 
+			if DEBUG: print e
+			printAsLog(e, as_error=True)
+				
 		try:
 			res = self.sendELSRequest(data=index, to_root=True, method="put")
-			if DEBUG: print "INITIALIZED NEW MAPPING:"
-			print res
+			if DEBUG:
+				print "INITIALIZED NEW MAPPING:"
+				print res
 			
 			if not res['acknowledged']: return False
 					

@@ -7,7 +7,7 @@ from Models.uv_elasticsearch import UnveillanceElasticsearch
 from Models.uv_worker import UnveillanceWorker
 from lib.Worker.Models.uv_task import UnveillanceTask
 
-from conf import API_PORT, HOST, ANNEX_DIR, MONITOR_ROOT, DEBUG
+from conf import API_PORT, HOST, ANNEX_DIR, MONITOR_ROOT, UUID, DEBUG
 
 class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 	def __init__(self):
@@ -60,10 +60,16 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 							print data2.strip()
 							# TODO: handle error
 							data2 = p2.stdout.readline()
-						p2.stdout().close()
+						p2.stdout.close()
 				
 				p0.stdout.close()
 				os.chdir(old_dir)
+				
+				"""
+					THIS IS A TEST:
+				"""
+				self.testImport(file_path)
+				
 				return True
 		
 			data0 = p0.stdout.readline()
@@ -72,24 +78,34 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		os.chdir(old_dir)
 		return False
 	
+	def testImport(self, file_path):
+		print UUID
+		
+		task = UnveillanceTask(inflate={
+			'task_path' : "Documents.evaluate_document.evaluateDocument",
+			'file_name' : file_path,
+			'queue' : UUID})
+		task.run(self)
+	
 	def syncAnnex(self):
 		create_rx = r'\s*create mode (?:\d+) ([a-zA-Z0-9_\-\./]+)'
 		cmd = ['git', 'annex', 'sync']
-		p = Popen(cmd0, stdout=PIPE, close_fds=True)
+		p = Popen(cmd, stdout=PIPE, close_fds=True)
 		data = p.stdout.readline()
 		
 		tasks = []
 
 		while data:
 			print data.strip()
-			create = re.match(create_rx, data.strip())
+			create = re.findall(create_rx, data.strip())
 			if len(create) == 1:
 				# init new file. here it starts.
 				if DEBUG: print "INIT NEW FILE: %s" % create[0]
 				
 				tasks.append(UnveillanceTask(inflate={
-					'task_path' : "Documents.evaluateDocument",
-					'file_name' : create[0]
+					'task_path' : "Documents.evaluate_document.evaluateDocument",
+					'file_name' : create[0],
+					'queue' : UUID
 				}))
 				
 			data = p.stdout.readline()

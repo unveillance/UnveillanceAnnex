@@ -79,7 +79,7 @@ class UnveillanceAnnex(tornado.web.Application, UnveillanceAPI):
 			self.finish(res.emit())
 
 	def startRESTAPI(self):
-		startDaemon(self.api_log_file, self.api_pid_file)
+		#startDaemon(self.api_log_file, self.api_pid_file)
 		
 		tornado.web.Application.__init__(self, self.routes)
 		

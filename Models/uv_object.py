@@ -9,16 +9,20 @@ from Models.uv_elasticsearch import UnveillanceElasticsearchHandler
 from conf import ANNEX_DIR, DEBUG
 
 class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
-	def __init__(self, **args):
+	def __init__(self, _id=None, inflate=None, emit_sentinels=None):
 		UnveillanceElasticsearchHandler.__init__(self)
-		emit_sentinels = [EmitSentinel("elasticsearch", "UnveillanceElasticsearch", None)]		
+		
+		if emit_sentinels is None: emit_sentinels = []
+		emit_sentinels.extend([
+			EmitSentinel("elasticsearch", "UnveillanceElasticsearch", None)])
 		
 		super(UnveillanceObject, self).__init__(_id=_id, inflate=inflate,
 			emit_sentinels=emit_sentinels)
 		
 	def save(self):
 		if DEBUG: print "SAVING AS ANNEX/WORKER OBJECT"
-		if self.addFile(self.manifest, self.emit()):
+		if self.addFile(self.manifest, dumps(self.emit())):
+			if DEBUG: print self.emit()
 			return self.update(self._id, self.emit())
 		
 		return False
