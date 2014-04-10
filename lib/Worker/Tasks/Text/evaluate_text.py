@@ -51,3 +51,6 @@ def evaluateText(task):
 			'task_path' : task_path,
 			'queue' : UUID})
 		new_task.run(task)
+	
+	task.finish()
+	print "\n\n************** TEXT EVALUATION [END] ******************\n"

@@ -33,7 +33,7 @@ def evaluateDocument(task):
 			'doc_id' : document._id,
 			'queue' : task.queue})
 	
-	task.finish()
 	if new_task is not None: new_task.run(task)
+	task.finish()
 	print "\n\n************** DOCUMENT EVALUATION [END] ******************\n"
 	
