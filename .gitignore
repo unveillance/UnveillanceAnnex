@@ -2,6 +2,10 @@
 *.pyc
 *test*
 
+lib/Worker/Tasks/*
+!lib/Worker/Tasks/Documents
+!lib/Worker/Tasks/Text
+
 .bashrc
 .monitor/
 lib/elasticsearch*/

@@ -25,7 +25,6 @@ def evaluateDocument(task):
 	asset = document.addAsset(None, task.file_name, as_original=True,
 		description="original version of document", tags=[AssetTags.ORIG])
 	
-	# Iterate through task manifest to find establish route to task
 	new_task = None
 	if document.mime_type in MIME_TYPE_TASKS.keys():
 		new_task = UnveillanceTask(inflate={
@@ -36,4 +35,3 @@ def evaluateDocument(task):
 	if new_task is not None: new_task.run(task)
 	task.finish()
 	print "\n\n************** DOCUMENT EVALUATION [END] ******************\n"
-	
