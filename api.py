@@ -29,25 +29,13 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		return self.query(query)
 	
 	def do_document(self, request):
-		"""
-			get, update, delete a document
-		"""
-		method=request.method
+		if request.method != "GET": return None
 		
-		query = None
-		if method == "GET": query = parseRequestEntity(request.query)
-		elif method == "POST": query = parseRequestEntity(request.body)
-		
+		query = parseRequestEntity(request.query)
 		if query is None: return None
 		if '_id' not in query.keys(): return None
 		
-		document = self.get(_id=query['_id'])
-
-		if method == "GET": return document
-		elif method == "POST":
-			print "post..."
-		
-		return None
+		return self.get(_id=query['_id'])
 	
 	def fileExistsInAnnex(self, file_path, auto_add=True):
 		if file_path == ".gitignore" :
@@ -55,8 +43,8 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 			return False
 			
 		old_dir = os.getcwd()
-		
 		os.chdir(ANNEX_DIR)
+		
 		cmd0 = ['git', 'annex', 'find', file_path]			
 		p0 = Popen(cmd0, stdout=PIPE, close_fds=True)
 		data0 = p0.stdout.readline()
@@ -108,6 +96,10 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 	def syncAnnex(self):
 		create_rx = r'\s*create mode (?:\d+) ([a-zA-Z0-9_\-\./]+)'
 		cmd = ['git', 'annex', 'sync']
+		
+		old_dir = os.getcwd()
+		os.chdir(ANNEX_DIR)
+		
 		p = Popen(cmd, stdout=PIPE, close_fds=True)
 		data = p.stdout.readline()
 		
@@ -128,6 +120,8 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 				
 			data = p.stdout.readline()
 		p.stdout.close()
+		
+		os.chdir(old_dir)
 		
 		if len(tasks) > 0:
 			for task in tasks: task.run(self)

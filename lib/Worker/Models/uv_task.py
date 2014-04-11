@@ -27,12 +27,12 @@ class UnveillanceTask(UnveillanceObject):
 		try:
 			module = import_module(p)
 			func = getattr(module, f)
-			args = [(self,), ({'queue' :self.queue})]
-			#args = [self]
+			#args = [(self,), ({'queue' :self.queue})]
+			args = [self]
 			if DEBUG: print args
 			
-			p = Process(target=func.apply_async, args=args)
-			#p = Process(target=func, args=args)
+			#p = Process(target=func.apply_async, args=args)
+			p = Process(target=func, args=args)
 			p.start()
 		except Exception as e:
 			printAsLog(e)
