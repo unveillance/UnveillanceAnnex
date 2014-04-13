@@ -6,11 +6,12 @@ lib/Worker/Tasks/*
 !lib/Worker/Tasks/Documents
 !lib/Worker/Tasks/Text
 
-.bashrc
-.monitor/
-lib/elasticsearch*/
+lib/git-annex*
 lib/anaconda*
-annex_extras/
+lib/elasticsearch*
+
+.monitor
+.bashrc
 
 conf/*
 !conf/*.settings.yaml

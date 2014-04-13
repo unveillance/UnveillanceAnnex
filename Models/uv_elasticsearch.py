@@ -12,17 +12,39 @@ class UnveillanceElasticsearchHandler(object):
 		
 	def get(self, _id):
 		if DEBUG: print "getting thing"
-		
 		res = self.sendELSRequest(endpoint=_id)
-		print res
 		try:
 			if res['found']: return res['_source']
 		except KeyError as e: pass
 		
 		return None
 	
-	def query(self, args):
-		if DEBUG: print "OH A QUERY"
+	def query(self, args, count_only=False):
+		if DEBUG: 
+			print "OH A QUERY"
+			print args
+		
+		query = {
+			'query' : args,
+			'from' : 0,
+			'size' : 50,
+			'sort' : [{"uv_document.date_added" : {"order" : "desc"}}]
+		}
+		
+		res = self.sendELSRequest(endpoint="_search", data=query, method="post")
+		if DEBUG: print res
+		
+		try:
+			if len(res['hits']['hits']) > 0:
+				if count_only: return res['hits']['total']
+				else: 
+					return { 
+						'count' : res['hits']['total'], 
+						'documents' : [h['_source'] for h in res['hits']['hits']]
+					}
+	
+		except Exception as e:
+			if DEBUG: print "ERROR ON SEARCH:\n%s" % e
 		
 		return None
 	

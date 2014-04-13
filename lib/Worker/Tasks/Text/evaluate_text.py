@@ -19,9 +19,10 @@ def evaluateText(task):
 	"""
 	if not document.getFile(document.file_name): return
 	
-	content = document.loadAsset(document.file_name)
-	new_mime_type = None
+	content = document.loadFile(document.file_name)
+	if content is None: return
 	
+	new_mime_type = None
 	import json
 	try:
 		json_txt = json.loads(content)

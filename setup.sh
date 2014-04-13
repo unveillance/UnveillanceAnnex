@@ -1,27 +1,45 @@
 #! /bin/bash
-OLD_DIR=`pwd`
+THIS_DIR=`pwd`
+USER_CONFIG=$THIS_DIR/conf/annex.config.yaml
+echo base_dir: $THIS_DIR >> $USER_CONFIG
 
-USER_CONFIG=$OLD_DIR/conf/annex.config.yaml
-ANNEX_DIR=/home/unveillance_remote
+if [ $# -eq 0 ]
+then
+	echo "no initial args"
+	OLD_DIR=$THIS_DIR
+	ANNEX_DIR=/home/unveillance_remote
+	ANACONDA_DIR=/home/anaconda
+else
+	OLD_DIR=$1
+	ANNEX_DIR=$2
+	ANACONDA_DIR=$3
+	echo "inital args: $1 $2 $3"
+fi
 
-mkdir $OLD_DIR/.monitor
+mkdir $THIS_DIR/.monitor
 mkdir $ANNEX_DIR
-mkdir /var/run/sshd
 
 echo annex_dir: $ANNEX_DIR >> $USER_CONFIG
-echo base_dir: $OLD_DIR >> $USER_CONFIG
 
 echo "**************************************************"
-echo "Installing ELASTICSEARCH"
+echo "Installing ELASTICSEARCH and GIT-ANNEX"
 wget -O lib/elasticsearch.tar.gz https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-1.0.1.tar.gz
-
 tar -xvzf lib/elasticsearch.tar.gz -C lib
 rm lib/elasticsearch.tar.gz
+
+wget -O lib/git-annex.tar.gz http://downloads.kitenet.net/git-annex/linux/current/git-annex-standalone-amd64.tar.gz
+tar -xvzf lib/git-annex.tar.gz -C lib
+rm lib/git-annex.tar.gz
 
 for f in lib/*
 do
 	if echo "$f" | grep '^lib/elasticsearch*' >/dev/null ; then
 		echo els_root: $f/bin/elasticsearch >> $USER_CONFIG
+		break
+	fi
+	
+	if echo "$f" | grep '^lib/git-annex*' >/dev/null ; then
+		echo export PATH=$PATH:$THIS_DIR/$f >> .bashrc
 		break
 	fi
 done
@@ -36,38 +54,16 @@ sleep 10
 echo "**************************************************"
 echo "NOTE:  WHEN PROMPTED, SET ANACONDA'S INSTALL PATH TO"
 echo ""
-echo "/home/anaconda"
+echo $ANACONDA_DIR
 echo ""
 echo "DO NOT SET THE ~/.bashrc VARIABLE.  IT IS DONE FOR YOU."
 echo "**************************************************"
 
 ./lib/anaconda.sh
 
-echo export PATH=/home/anaconda/bin:$PATH >> .bashrc
+echo export PATH=$ANACONDA_DIR/bin:$PATH >> .bashrc
 source .bashrc
 
 echo "**************************************************"
 echo "Installing other python dependencies..."
 pip install --upgrade -r requirements.txt
-
-ANNEX_EXTRAS_DIR=$OLD_DIR/annex_extras
-has_extras=$(find $OLD_DIR -type -d -name "annex_extras")
-if [[ -z "$has_extras" ]]
-then
-	echo "(no external packages to add to Annex...)"
-else
-	echo "**************************************************"
-	echo "Running external configurations (-PRE)..."
-	cd $ANNEX_EXTRAS_DIR
-
-	has_pre_script=$(find . -type -f -name "init_annex_extras_pre.sh")
-	if [[ -z "$has_pre_script" ]]
-	then
-		echo "(no pre-script found.)"
-	else
-		chmod +x init_annex_extras_pre.sh
-		./init_annex_extras_pre.sh $OLD_DIR
-	fi
-	
-	cd $OLD_DIR
-fi

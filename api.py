@@ -21,11 +21,28 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 	def do_list(self, request):
 		# dont waste time
 		if request.method != "GET": return None
-		
+				
+		query = {
+			"bool": {
+				"must" : [
+					{"query_string" : {
+						"default_field" : "uv_document.uv_doc_type",
+						"query" : "UV_DOCUMENT" 
+					}}
+				],
+				"must_not" : [
+					{ "constant_score" : {"filter" : {
+						"missing" : {"field": "uv_document.mime_type"}
+					}}}
+				]
+			}
+		}
+
 		args = parseRequestEntity(request.query)
-		if len(args.keys()) == 0: pass
-		
-		query = {}
+		if len(args.keys()) > 0:
+			print "ALSO SOME MORE PARAMETERS..."
+
+
 		return self.query(query)
 	
 	def do_document(self, request):
@@ -94,7 +111,7 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		return False
 		
 	def syncAnnex(self):
-		create_rx = r'\s*create mode (?:\d+) ([a-zA-Z0-9_\-\./]+)'
+		create_rx = r'\s*create mode (?:\d+) (?:(?!\.data/.*))([a-zA-Z0-9_\-\./]+)'
 		cmd = ['git', 'annex', 'sync']
 		
 		old_dir = os.getcwd()

@@ -44,10 +44,23 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 			p = Popen(['git', 'annex', 'unlock', asset_path])
 			p.wait()
 			res =  True
-		except Exception as e: print e
+		except Exception as e: 
+			print "COULD NOT GET FILE:"
+			print e
 		
 		os.chdir(this_dir)
 		return res
+	
+	def loadFile(self, asset_path):
+		if self.getFile(asset_path):
+			try:
+				with open(os.path.join(ANNEX_DIR, asset_path), 'rb') as file:
+					return file.read()
+			except IOError as e:
+				print "COULD NOT LOAD FILE:"
+				print e
+		
+		return None
 		
 	def addFile(self, asset_path, data):
 		"""
