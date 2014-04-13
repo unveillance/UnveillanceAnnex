@@ -5,7 +5,7 @@ from multiprocessing import Process
 from Models.uv_object import UnveillanceObject
 from Utils.funcs import printAsLog
 
-from vars import EmitSentinel, UVDocType, TASKS_ROOT
+from vars import EmitSentinel, UV_DOC_TYPE, TASKS_ROOT
 from conf import DEBUG, BASE_DIR
 
 class UnveillanceTask(UnveillanceObject):
@@ -13,13 +13,13 @@ class UnveillanceTask(UnveillanceObject):
 		if inflate is not None:
 			from lib.Core.Utils.funcs import generateMD5Hash
 			inflate['_id'] = generateMD5Hash()
-			inflate['uv_doc_type'] = UVDocType.TASK
+			inflate['uv_doc_type'] = UV_DOC_TYPE['TASK']
 			inflate['status'] = 404
 			
 		super(UnveillanceTask, self).__init__(_id=_id, inflate=inflate, 
 			emit_sentinels=[EmitSentinel("ctx", "Worker", None)])
 	
-	def run(self, ctx):
+	def run(self):
 		# i.e. "lib.Worker.Tasks.Documents.evaluate_document"
 		task_path = ".".join([TASKS_ROOT, self.task_path])
 		p, f = task_path.rsplit(".", 1)

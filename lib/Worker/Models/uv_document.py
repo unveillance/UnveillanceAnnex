@@ -1,4 +1,5 @@
 from Models.uv_object import UnveillanceObject
+from conf import DEBUG
 
 class UnveillanceDocument(UnveillanceObject):
 	def __init__(self, _id=None, inflate=None):
@@ -6,12 +7,12 @@ class UnveillanceDocument(UnveillanceObject):
 		if inflate is not None:
 			import os
 			from lib.Core.Utils.funcs import hashEntireFile
-			from conf import ANNEX_DIR, UUID, DEBUG
-			from vars import UVDocType
+			from conf import ANNEX_DIR, UUID
+			from vars import UV_DOC_TYPE
 		
 			inflate['_id'] = hashEntireFile(os.path.join(ANNEX_DIR, inflate['file_name']))
 			inflate['farm'] = UUID
-			inflate['uv_doc_type'] = UVDocType.DOC
+			inflate['uv_doc_type'] = UV_DOC_TYPE['DOC']
 		
 		super(UnveillanceDocument, self).__init__(_id=_id, inflate=inflate)
 		

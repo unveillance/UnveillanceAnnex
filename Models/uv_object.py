@@ -21,20 +21,14 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 		
 	def save(self):
 		if DEBUG: print "SAVING AS ANNEX/WORKER OBJECT"
-		if self.addFile(self.manifest, dumps(self.emit())):
-			if DEBUG: print self.emit()
-			return self.update(self._id, self.emit())
+		return self.update(self._id, self.emit())
 		
-		return False
-	
 	def getObject(self, _id):
 		try: self.inflate(self.get(_id))
 		except Exception as e:
-			if DEBUG: print e
+			if DEBUG: print "ERROR GETTING OBJECT: %s" % e
 			self.invalidate(error="Object does not exist in Elasticsearch")
-	
-		if DEBUG: print self.emit()
-	
+		
 	def getFile(self, asset_path):
 		this_dir = os.getcwd()
 		os.chdir(ANNEX_DIR)
@@ -62,7 +56,7 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 		
 		return None
 		
-	def addFile(self, asset_path, data):
+	def addFile(self, asset_path, data, sync=False):
 		"""
 			git annex add [file]
 		"""
@@ -72,31 +66,35 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 		os.chdir(ANNEX_DIR)
 		
 		try:
-			with open(os.path.join(ANNEX_DIR, asset_path), 'wb+') as file:
-				file.write(data)
-
-			p = Popen(['git', 'annex', 'add', asset_path])
-			p.wait()
+			with open(os.path.join(ANNEX_DIR, asset_path), 'wb+') as f: f.write(data)
 		except Exception as e:
 			print e
 			os.chdir(this_dir)
 			return False
 		
-		try:
-			p = Popen(['git', 'commit', asset_path, '-m', '"saved asset"'])
-			p.wait()
-		except Exception as e:
-			print e
+		if sync:
+			try:
+				p = Popen(['git', 'annex', 'add', asset_path])
+				p.wait()
+			except Exception as e:
+				print e
+				os.chdir(this_dir)
+				return False
+		
+			try:
+				p = Popen(['git', 'commit', asset_path, '-m', '"saved asset"'])
+				p.wait()
+			except Exception as e:
+				print e
 		
 		os.chdir(this_dir)
 		return True
 			
-	def addAsset(self, data, file_name, as_original=False, as_literal=True, **metadata):
+	def addAsset(self, data, file_name, as_literal=True, **metadata):
 		print "ADDING ASSET AS ANNEX/WORKER OBJECT"
-		if not as_original: asset_path = os.path.join(self.base_path, file_name)
-		else: asset_path = file_name			
+		asset_path = os.path.join(self.base_path, file_name)
 		
-		asset_path = super(UnveillanceObject, self).addAsset(data, file_name, asset_path,
+		asset_path = super(UnveillanceObject, self).addAsset(file_name, asset_path,
 			as_literal=as_literal, **metadata)
 		
 		if data is not None and asset_path:

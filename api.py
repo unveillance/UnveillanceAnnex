@@ -9,6 +9,7 @@ from lib.Core.Utils.funcs import parseRequestEntity
 from lib.Worker.Models.uv_task import UnveillanceTask
 
 from conf import API_PORT, HOST, ANNEX_DIR, MONITOR_ROOT, UUID, DEBUG
+from vars import QUERY_KEYS
 
 class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 	def __init__(self):
@@ -18,10 +19,10 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		sleep(1)
 		UnveillanceWorker.__init__(self)
 	
-	def do_list(self, request):
-		# dont waste time
-		if request.method != "GET": return None
-				
+	def do_list(self, request):		
+		count_only = False
+		limit = None
+		
 		query = {
 			"bool": {
 				"must" : [
@@ -40,19 +41,61 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 
 		args = parseRequestEntity(request.query)
 		if len(args.keys()) > 0:
-			print "ALSO SOME MORE PARAMETERS..."
+			if DEBUG:
+				print "ALSO SOME MORE PARAMETERS..."
+				print args
+			
+			operator = 'must'
+			try:
+				count_only = args['count']
+				del args['count']
+			except KeyError as e: pass
+			
+			try:
+				limit = args['limit']
+				del args['limit']
+			except KeyError as e: pass
+			
+			try:
+				operator = args['operator']
+				del args['operator']
+			except KeyError as e: pass
+			
+			for a in args.keys():
+				if a in QUERY_KEYS[operator]['query_string']:
+					query['bool'][operator].append({
+						"query_string": {
+							"default_field" : "uv_document.%s" % a,
+							"query" : args[a]
+						}
+					})
 
-
-		return self.query(query)
+		return self.query(query, count_only=count_only, limit=limit)
 	
 	def do_document(self, request):
-		if request.method != "GET": return None
-		
 		query = parseRequestEntity(request.query)
 		if query is None: return None
 		if '_id' not in query.keys(): return None
 		
 		return self.get(_id=query['_id'])
+		
+	def do_reindex(self, request):
+		query = parseRequestEntity(request.query)
+		if query is None: return None
+		if '_id' not in query.keys(): return None
+		
+		document = self.get(_id=query['_id'])
+		if document is None: return None
+				
+		from vars import MIME_TYPE_TASKS
+		task = UnveillanceTask(inflate={
+			'task_path' : MIME_TYPE_TASKS[document['mime_type']][0],
+			'doc_id' : document['_id'],
+			'queue' : UUID
+		})
+		
+		task.run()
+		return True
 	
 	def fileExistsInAnnex(self, file_path, auto_add=True):
 		if file_path == ".gitignore" :
@@ -141,4 +184,4 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		os.chdir(old_dir)
 		
 		if len(tasks) > 0:
-			for task in tasks: task.run(self)
+			for task in tasks: task.run()

@@ -32,14 +32,6 @@ class UnveillanceAnnex(tornado.web.Application, UnveillanceAPI):
 		@tornado.web.asynchronous
 		def get(self, route):  self.routeRequest(route)
 		
-		@tornado.web.asynchronous
-		def post(self, route):
-			"""
-				these must be authenticated.
-				TBD
-			"""
-			self.routeRequest(route)
-		
 		def routeRequest(self, route):
 			res = Result()
 		

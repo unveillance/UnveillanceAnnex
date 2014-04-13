@@ -4,3 +4,4 @@ tornado
 pyyaml
 filemagic
 Celery
+gensim

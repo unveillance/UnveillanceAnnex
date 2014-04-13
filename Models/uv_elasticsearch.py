@@ -1,4 +1,5 @@
-import subprocess, os, json, re, requests
+import os, json, re, requests
+from subprocess import Popen, PIPE
 from sys import argv
 from time import sleep
 
@@ -19,16 +20,23 @@ class UnveillanceElasticsearchHandler(object):
 		
 		return None
 	
-	def query(self, args, count_only=False):
+	def query(self, args, count_only=False, limit=None, sort=None, from_=None):
 		if DEBUG: 
 			print "OH A QUERY"
 			print args
 		
+		if limit is None: limit = 50
+		if from_ is None: from_ = 0
+
+		if sort is None: sort = [{"uv_document.date_added" : {"order" : "desc"}}]
+		else:
+			if type(sort) is not list: sort = [sort]
+		
 		query = {
 			'query' : args,
-			'from' : 0,
-			'size' : 50,
-			'sort' : [{"uv_document.date_added" : {"order" : "desc"}}]
+			'from' : from_,
+			'size' : limit,
+			'sort' : sort
 		}
 		
 		res = self.sendELSRequest(endpoint="_search", data=query, method="post")
@@ -111,7 +119,7 @@ class UnveillanceElasticsearch(UnveillanceElasticsearchHandler):
 		print "elasticsearch running in daemon."
 		print cmd
 		
-		p = subprocess.Popen(cmd, stdout=subprocess.PIPE, close_fds=True)
+		p = Popen(cmd, stdout=PIPE, close_fds=True)
 		data = p.stdout.readline()
 	
 		while data:
@@ -133,29 +141,25 @@ class UnveillanceElasticsearch(UnveillanceElasticsearchHandler):
 	
 	def stopElasticsearch(self):
 		printAsLog("stopping elasticsearch")
-		stopDaemon(self.els_pid_file)
 		
+		p = Popen(['lsof', '-t', '-i:9200'], stdout=PIPE, close_fds=True)
+		data = p.stdout.readline()
+		
+		while data:			
+			p_ = Popen(['kill', data.strip()])
+			p_.wait()
+			
+			data = p.stdout.readline()
+		
+		p.stdout.close()
+		stopDaemon(self.els_pid_file)
 		with open(self.els_status_file, 'wb+') as f: f.write("False")
 	
 	def initElasticsearch(self):
 		if DEBUG: print "INITING ELASTICSEARCH"
-		mappings = {
-			"uv_document" : {
-				"properties": {
-					"uv_type": {
-						"type" : "string",
-						"store" : True
-					},
-					"assets": {
-						"type" : "nested",
-						"include_in_parent": True,
-						"include_in_root": True
-					}
-				}
-			}
-		}
 		
-		index = { "mappings": mappings }
+		from vars import ELASTICSEARCH_MAPPINGS
+		index = { "mappings": ELASTICSEARCH_MAPPINGS }
 
 		try:
 			res = self.sendELSRequest(to_root=True, method="delete")

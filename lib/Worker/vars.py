@@ -32,5 +32,8 @@ def buildCeleryTaskList():
 	return CELERY_TASKS
 
 MIME_TYPE_TASKS = {
-	'text/plain' : ['Text.evaluate_text.evaluateText']
+	'text/plain' : [
+		'Text.evaluate_text.evaluateText',
+		'Text.preprocess_nlp.preprocessNLP'
+	]
 }
