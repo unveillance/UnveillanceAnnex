@@ -1,7 +1,9 @@
-import sys, pkgutil
+import sys, pkgutil, os
 from collections import namedtuple
 from inspect import getmembers, ismodule, isfunction
 from celery import Celery
+
+from conf import BASE_DIR
 
 MAX_PAGES = 300
 TASKS_ROOT = "lib.Worker.Tasks"

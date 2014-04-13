@@ -6,6 +6,10 @@ lib/Worker/Tasks/*
 !lib/Worker/Tasks/Documents
 !lib/Worker/Tasks/Text
 
+lib/Worker/Models/*
+!lib/Worker/Models/__init__.py
+!lib/Worker/Models/uv_*.py
+
 lib/git-annex*
 lib/anaconda*
 lib/elasticsearch*
