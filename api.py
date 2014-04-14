@@ -88,6 +88,8 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		if document is None: return None
 				
 		from vars import MIME_TYPE_TASKS
+		print MIME_TYPE_TASKS
+		
 		task = UnveillanceTask(inflate={
 			'task_path' : MIME_TYPE_TASKS[document['mime_type']][0],
 			'doc_id' : document['_id'],

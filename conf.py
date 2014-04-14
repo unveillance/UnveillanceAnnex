@@ -26,3 +26,10 @@ with open(os.path.join(CONF_ROOT, "annex.config.yaml"), 'rb') as C:
 		VARS_EXTRAS = config['vars_extras']
 	except KeyError as e:
 		if DEBUG: print "DON'T WORRY: no variable extras..."
+
+def getConfig(key):
+	with open(os.path.join(CONF_ROOT, "annex.config.yaml"), 'rb') as C:
+		config = yaml.load(C.read())
+		try:
+			return config[key]
+		except Exception as e: raise e
