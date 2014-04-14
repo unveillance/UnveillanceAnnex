@@ -1,5 +1,25 @@
+from json import loads
+
 from lib.Core.vars import *
 from lib.Worker.vars import *
+
+from conf import DEBUG
+lcl = locals()
+
+def inflateVars(path):
+	with open(path, 'rb') as VE:
+		from json import loads
+		try:
+			vars_extras = loads(VE.read())
+		except Exception as e: return
+	
+	for k in vars_extras.keys():
+		try:
+			lcl[k].update(vars_extras[k])
+			if DEBUG: print "updating var: %s" % lcl[k]
+		except KeyError as e:
+			if DEBUG: print "don't worry, don't have %s" % k
+			continue
 
 QUERY_KEYS = {
 	'must' : {
@@ -27,3 +47,9 @@ ELASTICSEARCH_MAPPINGS = {
 		}
 	}
 }
+
+try:
+	from conf import VARS_EXTRAS
+	inflateVars(VARS_EXTRAS)
+except ImportError as e:
+	if DEBUG: print "no, really, don't worry about vars extras"
