@@ -4,4 +4,4 @@ tornado
 pyyaml
 filemagic
 Celery
-gensim
+python-levenshtein
