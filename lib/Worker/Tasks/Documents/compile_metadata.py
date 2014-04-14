@@ -69,6 +69,10 @@ def compileMetadata(task):
 				labels.append(key)
 				values.append(value)
 		
+		if DEBUG:
+			print "labels %s" % labels
+			print "values %s" % values
+			
 		from cStringIO import StringIO
 		
 		md_csv_file = StringIO()

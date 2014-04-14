@@ -65,12 +65,13 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 		this_dir = os.getcwd()
 		os.chdir(ANNEX_DIR)
 		
-		try:
-			with open(os.path.join(ANNEX_DIR, asset_path), 'wb+') as f: f.write(data)
-		except Exception as e:
-			print e
-			os.chdir(this_dir)
-			return False
+		if data is not None:
+			try:
+				with open(os.path.join(ANNEX_DIR, asset_path), 'wb+') as f: f.write(data)
+			except Exception as e:
+				print e
+				os.chdir(this_dir)
+				return False
 		
 		if sync:
 			try:
@@ -82,7 +83,7 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 				return False
 		
 			try:
-				p = Popen(['git', 'commit', asset_path, '-m', '"saved asset"'])
+				p = Popen(['git', 'commit', asset_path, '-m', '"saved and synced asset"'])
 				p.wait()
 			except Exception as e:
 				print e

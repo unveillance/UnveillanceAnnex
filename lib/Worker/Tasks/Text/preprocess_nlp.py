@@ -25,7 +25,7 @@ def preprocessNLP(task):
 	#	1. get all the words (bag of words)
 	try:
 		texts = loads(document.loadAsset("doc_texts.json"))
-		print "TEXTS:%s" % texts
+		if DEBUG: print "TEXTS:%s" % texts
 	except Exception as e:
 		print "ERROR GETTING DOC-TEXTS: %s" % e
 		print "\n\n************** TEXT NLP PREPROCESSING [ERROR] ******************\n"
