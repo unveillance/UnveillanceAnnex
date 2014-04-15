@@ -9,7 +9,7 @@ from lib.Core.Utils.funcs import parseRequestEntity
 from lib.Worker.Models.uv_task import UnveillanceTask
 
 from conf import API_PORT, HOST, ANNEX_DIR, MONITOR_ROOT, UUID, DEBUG
-from vars import QUERY_KEYS
+from vars import QUERY_KEYS, QUERY_DEFAULTS
 
 class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 	def __init__(self):
@@ -31,7 +31,7 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 				print "ALSO SOME MORE PARAMETERS..."
 				print args
 				
-		list = self.do_list((request={'query' : query }, ))
+		list = self.do_documents((request={'query' : query }, ))
 		if list is None: return None
 		
 		"""
@@ -40,28 +40,29 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		"""
 		
 		return None
+
+	def do_tasks(self, request):
+		args = parseRequestEntity(request.query)
+		
+		if len(args.keys()) == 1 and '_id' in args.keys():
+			return self.get(_id=args['_id'])
+		
+		return self.do_list(request, query=QUERY_DEFAULTS['UV_TASK'])
 	
-	def do_list(self, request):		
+	def do_documents(self, request):
+		args = parseRequestEntity(request.query)
+		if len(args.keys()) == 1 and '_id' in args.keys():
+			return self.get(_id=args['_id'])
+		
+		return self.do_list(request)
+		
+	def do_list(self, request, query=None):
 		count_only = False
 		limit = None
 		
-		query = {
-			"bool": {
-				"must" : [
-					{"query_string" : {
-						"default_field" : "uv_document.uv_doc_type",
-						"query" : "UV_DOCUMENT" 
-					}}
-				],
-				"must_not" : [
-					{ "constant_score" : {"filter" : {
-						"missing" : {"field": "uv_document.mime_type"}
-					}}}
-				]
-			}
-		}
+		if query is None:
+			query = QUERY_DEFAULTS['UV_DOCUMENT']
 
-		args = parseRequestEntity(request.query)
 		if len(args.keys()) > 0:
 			if DEBUG:
 				print "ALSO SOME MORE PARAMETERS..."
@@ -94,13 +95,6 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 
 		return self.query(query, count_only=count_only, limit=limit)
 	
-	def do_document(self, request):
-		query = parseRequestEntity(request.query)
-		if query is None: return None
-		if '_id' not in query.keys(): return None
-		
-		return self.get(_id=query['_id'])
-		
 	def do_reindex(self, request):
 		query = parseRequestEntity(request.query)
 		if query is None: return None

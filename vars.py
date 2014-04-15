@@ -32,6 +32,34 @@ QUERY_KEYS = {
 	}
 }
 
+QUERY_DEFAULTS = {
+	'UV_DOCUMENT' : {
+		"bool": {
+			"must" : [
+				{"query_string" : {
+					"default_field" : "uv_document.uv_doc_type",
+					"query" : "UV_DOCUMENT" 
+				}}
+			],
+			"must_not" : [
+				{ "constant_score" : {"filter" : {
+					"missing" : {"field": "uv_document.mime_type"}
+				}}}
+			]
+		}
+	},
+	'UV_TASK' : {
+		"bool": {
+			"must" : [
+				{"query_string" : {
+					"default_field" : "uv_document.uv_doc_type",
+					"query" : "UV_TASK" 
+				}}
+			]
+		}
+	}
+}
+
 ELASTICSEARCH_MAPPINGS = {
 	"uv_document" : {
 		"properties": {
