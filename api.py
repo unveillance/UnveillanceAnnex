@@ -19,6 +19,28 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		sleep(1)
 		UnveillanceWorker.__init__(self)
 	
+	def do_cluster(self, request):
+		"""
+			request must be inflated with 
+			must !missing asset.tags.file_metadata/key_words/topics, etc.
+		"""
+		query = {}
+		args = parseRequestEntity(request.query)
+		if len(args.keys()) > 0:
+			if DEBUG:
+				print "ALSO SOME MORE PARAMETERS..."
+				print args
+				
+		list = self.do_list((request={'query' : query }, ))
+		if list is None: return None
+		
+		"""
+			for whatever the cluster document is,
+			generate cluster of those
+		"""
+		
+		return None
+	
 	def do_list(self, request):		
 		count_only = False
 		limit = None
@@ -44,8 +66,7 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 			if DEBUG:
 				print "ALSO SOME MORE PARAMETERS..."
 				print args
-			
-			operator = 'must'
+
 			try:
 				count_only = args['count']
 				del args['count']
@@ -56,6 +77,7 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 				del args['limit']
 			except KeyError as e: pass
 			
+			operator = 'must'
 			try:
 				operator = args['operator']
 				del args['operator']

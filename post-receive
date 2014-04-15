@@ -1,9 +1,1 @@
-LOG=/home/unveillance/posts.log
-echo POST_RECEIVE >> $LOG
-read oldrev newrev refname
-echo "OLD REV: $oldrev" >> $LOG
-echo "NEW REV: $newrev" >> $LOG
-echo "REF NAME: $refname" >> $LOG
-echo "SYNC: " >> $LOG
-echo $(curl -X GET http://localhost:8888/sync/) >> $LOG
-echo "************************************************"
+curl -X GET http://localhost:8888/sync/
