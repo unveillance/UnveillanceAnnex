@@ -85,9 +85,8 @@ class UnveillanceElasticsearchHandler(object):
 		if not to_root: url += "uv_document/"
 		if endpoint is not None: url += endpoint
 		if data is not None: data = json.dumps(data)
-		if DEBUG: 
-			print data
-			print url
+
+		if DEBUG: print "at %s" % url
 			
 		if method == "get":
 			r = requests.get(url, data=data)

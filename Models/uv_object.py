@@ -14,7 +14,18 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 		
 		if emit_sentinels is None: emit_sentinels = []
 		emit_sentinels.extend([
-			EmitSentinel("elasticsearch", "UnveillanceElasticsearch", None)])
+			EmitSentinel("elasticsearch", "UnveillanceElasticsearch", None),
+			EmitSentinel("already_exists", "str", None)])
+		
+		if inflate is not None:
+			print "HEY INFLATE"
+			if self.get(inflate['_id']) is not None:
+				if DEBUG: 
+					print "this object already exists. use it instead of re-creating it."
+
+				_id = inflate['_id']
+				self.already_exists = True
+				inflate = None
 		
 		super(UnveillanceObject, self).__init__(_id=_id, inflate=inflate,
 			emit_sentinels=emit_sentinels)

@@ -5,18 +5,23 @@ class UnveillanceCluster(UnveillanceObject):
 	def __init__(self, _id=None, inflate=None):
 	
 		if inflate is not None:
+			print "INFLATING CLUSTER"
 			from lib.Core.Utils.funcs import generateMD5Hash
 			inflate['_id'] = generateMD5Hash(content="".join(inflate['documents']),
 				salt=inflate['asset_tag'])
 			
-		super(UnveillanceObject, self).__init__(_id=_id, inflate=inflate)
-		
-		if inflate is not None: self.build()
+		super(UnveillanceCluster, self).__init__(_id=_id, inflate=inflate)			
+	
+	def inflate(self, inflate):
+		super(UnveillanceCluster, self).inflate(inflate)
+		if not hasattr(self, "already_exists") or not self.already_exists: self.build()
 	
 	def build(self):
 		"""
 			get all those assets and burn them to a csv or json document
 		"""
+		if DEBUG: print "BUILDING CLUSTER"
+		
 		from lib.Worker.Models.uv_document import UnveillanceDocument
 		from cStringIO import StringIO
 		import csv, json
