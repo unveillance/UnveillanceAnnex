@@ -40,7 +40,6 @@ class UnveillanceElasticsearchHandler(object):
 		}
 		
 		res = self.sendELSRequest(endpoint="_search", data=query, method="post")
-		if DEBUG: print res
 		
 		try:
 			if len(res['hits']['hits']) > 0:

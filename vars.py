@@ -1,4 +1,5 @@
 from json import loads
+from collections import namedtuple
 
 from lib.Core.vars import *
 from lib.Worker.vars import *
@@ -21,9 +22,14 @@ def inflateVars(path):
 			if DEBUG: print "don't worry, don't have %s" % k
 			continue
 
+QueryBatchRequestStub = namedtuple("QueryBatchRequestStub", "query")
+class QueryBatchStub(object):
+	def __init__(self, query):
+		self.request = QueryBatchRequestStub(query)
+
 QUERY_KEYS = {
 	'must' : {
-		'query_string' : ['mime_type'],
+		'query_string' : ['mime_type', 'assets.tags'],
 		'filter' : []
 	},
 	'must_not' : {

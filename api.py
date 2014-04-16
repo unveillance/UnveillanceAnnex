@@ -7,9 +7,10 @@ from Models.uv_elasticsearch import UnveillanceElasticsearch
 from Models.uv_worker import UnveillanceWorker
 from lib.Core.Utils.funcs import parseRequestEntity
 from lib.Worker.Models.uv_task import UnveillanceTask
+from lib.Worker.Models.uv_cluster import UnveillanceCluster
 
 from conf import API_PORT, HOST, ANNEX_DIR, MONITOR_ROOT, UUID, DEBUG
-from vars import QUERY_KEYS, QUERY_DEFAULTS
+from vars import QUERY_KEYS, QUERY_DEFAULTS, QueryBatchRequestStub
 
 class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 	def __init__(self):
@@ -24,22 +25,28 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 			request must be inflated with 
 			must !missing asset.tags.file_metadata/key_words/topics, etc.
 		"""
-		query = {}
 		args = parseRequestEntity(request.query)
-		if len(args.keys()) > 0:
-			if DEBUG:
-				print "ALSO SOME MORE PARAMETERS..."
-				print args
+		if len(args.keys()) == 0: return None
+		
+		if len(args.keys()) == 1 and '_id' in args.keys():
+			return self.get(_id=args['_id'])
+					
+		if 'around' not in args.keys(): return None
+		asset_tag = args['around']
+		del args['around']
+		
+		query = "assets.tags=%s" % asset_tag
 				
-		list = self.do_documents((request={'query' : query }, ))
+		list = self.do_documents(QueryBatchRequestStub(query))
 		if list is None: return None
+			
+		cluster = UnveillanceCluster(inflate={
+			'documents' : [d['_id'] for d in list['documents']],
+			'asset_tag' : asset_tag
+		})
+		if cluster is None: return None
 		
-		"""
-			for whatever the cluster document is,
-			generate cluster of those
-		"""
-		
-		return None
+		return list
 
 	def do_tasks(self, request):
 		args = parseRequestEntity(request.query)
@@ -63,11 +70,8 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		if query is None:
 			query = QUERY_DEFAULTS['UV_DOCUMENT']
 
+		args = parseRequestEntity(request.query)
 		if len(args.keys()) > 0:
-			if DEBUG:
-				print "ALSO SOME MORE PARAMETERS..."
-				print args
-
 			try:
 				count_only = args['count']
 				del args['count']
@@ -118,6 +122,7 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 	def fileExistsInAnnex(self, file_path, auto_add=True):
 		if file_path == ".gitignore" :
 			# WHO IS TRYING TO DO THIS????!
+			print "SOMEONE TRIED .gitignore"
 			return False
 			
 		old_dir = os.getcwd()
