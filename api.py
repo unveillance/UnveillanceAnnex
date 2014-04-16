@@ -37,17 +37,22 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		del args['around']
 		
 		query = "assets.tags=%s" % asset_tag
-				
-		list = self.do_documents(QueryBatchRequestStub(query))
-		if list is None: return None
+		
+		if '_ids' in args.keys():
+			documents = args['_ids'].split(",")	
+		else:	
+			list = self.do_documents(QueryBatchRequestStub(query))
+			if list is None: return None
+			
+			documents = [d['_id'] for d in list['documents']]
 			
 		cluster = UnveillanceCluster(inflate={
-			'documents' : [d['_id'] for d in list['documents']],
+			'documents' : documents,
 			'asset_tag' : asset_tag
 		})
 		if cluster is None: return None
 		
-		return list
+		return cluster.emit()
 
 	def do_tasks(self, request):
 		args = parseRequestEntity(request.query)
