@@ -2,6 +2,7 @@ import re, sys, os
 from subprocess import Popen, PIPE
 from multiprocessing import Process
 from time import sleep
+from copy import deepcopy
 
 from Models.uv_elasticsearch import UnveillanceElasticsearch
 from Models.uv_worker import UnveillanceWorker
@@ -54,7 +55,7 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		if len(args.keys()) == 1 and '_id' in args.keys():
 			return self.get(_id=args['_id'])
 		
-		return self.do_list(request, query=QUERY_DEFAULTS['UV_TASK'])
+		return self.do_list(request, query=deepcopy(QUERY_DEFAULTS['UV_TASK']))
 	
 	def do_documents(self, request):
 		args = parseRequestEntity(request.query)
@@ -68,7 +69,7 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		limit = None
 		
 		if query is None:
-			query = QUERY_DEFAULTS['UV_DOCUMENT']
+			query = deepcopy(QUERY_DEFAULTS['UV_DOCUMENT'])
 
 		args = parseRequestEntity(request.query)
 		if len(args.keys()) > 0:
