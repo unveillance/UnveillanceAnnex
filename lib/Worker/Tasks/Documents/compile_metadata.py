@@ -4,7 +4,8 @@ from vars import CELERY_STUB as celery_app
 
 @celery_app.task
 def compileMetadata(task):
-	print "\n\n************** COMPILING METADATA [START] ******************\n"
+	task_tag = "COMPILING METADATA"
+	print "\n\n************** %s [START] ******************\n" task_tag
 	print "compiling metadata for %s" % task.doc_id
 	task.setStatus(412)
 	
@@ -14,13 +15,13 @@ def compileMetadata(task):
 	document = UnveillanceDocument(_id=task.doc_id)
 	if document is None:
 		print "DOC IS NONE"
-		print "\n\n************** COMPILING METADATA [ERROR] ******************\n"
+		print "\n\n************** %s [ERROR] ******************\n" % task_tag
 		return
 	
 	metadata = document.loadAsset(task.md_file)
 	if metadata is None:
 		print "NO METADATA FILE"
-		print "\n\n************** COMPILING METADATA [ERROR] ******************\n"
+		print "\n\n************** %s [ERROR] ******************\n" % task_tag
 		return
 	
 	import csv, re
@@ -88,10 +89,10 @@ def compileMetadata(task):
 			description="CSV representation of %s" % task.md_file)
 			
 		task.finish()
-		print "\n\n************** COMPILING METADATA [END] ******************\n"
+		print "\n\n************** %s [END] ******************\n" % task_tag
 			
 	except KeyError as e:
 		if DEBUG: print e
 		print "No metadata aspects for %s" % task.md_namespace
-		print "\n\n************** COMPILING METADATA [ERROR] ******************\n"
+		print "\n\n************** %s [ERROR] ******************\n" % task_tag
 		return

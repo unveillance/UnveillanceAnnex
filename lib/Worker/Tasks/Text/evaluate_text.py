@@ -4,7 +4,8 @@ from vars import CELERY_STUB as celery_app
 
 @celery_app.task
 def evaluateText(task):
-	print "\n\n************** TEXT EVALUATION [START] ******************\n"
+	task_tag = "TEXT EVALUATION"
+	print "\n\n************** %s [START] ******************\n" % task_tag
 	print "evaluating text at %s" % task.doc_id
 	task.setStatus(412)
 	
@@ -76,4 +77,4 @@ def evaluateText(task):
 		new_task.run()
 	
 	task.finish()
-	print "\n\n************** TEXT EVALUATION [END] ******************\n"
+	print "\n\n************** %s [END] ******************\n" % task_tag

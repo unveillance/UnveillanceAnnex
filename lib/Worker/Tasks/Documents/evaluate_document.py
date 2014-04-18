@@ -4,7 +4,8 @@ from vars import CELERY_STUB as celery_app
 
 @celery_app.task
 def evaluateDocument(task):
-	print "\n\n************** DOCUMENT EVALUATION [START] ******************\n"
+	task_tag = "DOCUMENT EVALUATION"
+	print "\n\n************** %s [START] ******************\n" % task_tag
 	print "evaluating document at %s" % task.file_name
 	task.setStatus(412)
 	
@@ -13,7 +14,7 @@ def evaluateDocument(task):
 	
 	document = UnveillanceDocument(inflate={'file_name' : task.file_name})	
 	if hasattr(document, 'invalid') and document.invalid:
-		print "\n\n************** DOCUMENT EVALUATION [INVALID] ******************\n"
+		print "\n\n************** %s [INVALID] ******************\n" % task_tag
 		print "DOCUMENT INVALID"
 		
 		task.invalidate(error="DOCUMUENT INVALID")
@@ -23,8 +24,9 @@ def evaluateDocument(task):
 	from vars import MIME_TYPE_TASKS
 	
 	if document.mime_type in MIME_TYPE_TASKS.keys():
-		print "mime type usable..."
-		if DEBUG: print MIME_TYPE_TASKS[document.mime_type][0]
+		if DEBUG:
+			print "mime type usable..."
+			print MIME_TYPE_TASKS[document.mime_type][0]
 		
 		new_task = UnveillanceTask(inflate={
 			'task_path' : MIME_TYPE_TASKS[document.mime_type][0],
@@ -39,4 +41,4 @@ def evaluateDocument(task):
 		if DEBUG: print "mime type not important"
 	
 	task.finish()
-	print "\n\n************** DOCUMENT EVALUATION [END] ******************\n"
+	print "\n\n************** %s [END] ******************\n" % task_tag

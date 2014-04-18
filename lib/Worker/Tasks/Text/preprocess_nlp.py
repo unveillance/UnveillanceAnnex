@@ -4,7 +4,8 @@ from vars import CELERY_STUB as celery_app
 
 @celery_app.task
 def preprocessNLP(task):
-	print "\n\n************** TEXT NLP PREPROCESSING [START] ******************\n"
+	task_tag = "TEXT NLP PREPROCESSING"
+	print "\n\n************** %s [START] ******************\n" % task_tag
 	print "nlp preprocessing text at %s" % task.doc_id
 	task.setStatus(412)
 	
@@ -25,10 +26,10 @@ def preprocessNLP(task):
 	#	1. get all the words (bag of words)
 	try:
 		texts = loads(document.loadAsset("doc_texts.json"))
-		if DEBUG: print "TEXTS:%s" % texts
+		if DEBUG: print "TEXTS:\n%s" % texts
 	except Exception as e:
 		print "ERROR GETTING DOC-TEXTS: %s" % e
-		print "\n\n************** TEXT NLP PREPROCESSING [ERROR] ******************\n"
+		print "\n\n************** %s [ERROR] ******************\n" % task_tag
 		return
 	
 	word_groups = [cleanAndSplitLine(text) for text in texts]
@@ -47,4 +48,4 @@ def preprocessNLP(task):
 			tags=ASSET_TAGS['KW'])
 
 	task.finish()
-	print "\n\n************** TEXT NLP PREPROCESSING [END] ******************\n"
+	print "\n\n************** %s [END] ******************\n" % task_tag
