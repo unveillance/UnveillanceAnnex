@@ -5,7 +5,7 @@ from vars import CELERY_STUB as celery_app
 @celery_app.task
 def compileMetadata(task):
 	task_tag = "COMPILING METADATA"
-	print "\n\n************** %s [START] ******************\n" task_tag
+	print "\n\n************** %s [START] ******************\n" %  task_tag
 	print "compiling metadata for %s" % task.doc_id
 	task.setStatus(412)
 	
@@ -39,7 +39,7 @@ def compileMetadata(task):
 		for mda in METADATA_ASPECTS[task.md_namespace]:
 			labels.append(mda['label'])
 			pattern = re.compile(task.md_rx % (mda['tag_position'], mda['label']))
-			if DEBUG: print pattern
+			if DEBUG: print pattern.pattern
 			
 			value = missing_value
 			ideal = mda['ideal']
@@ -50,11 +50,20 @@ def compileMetadata(task):
 				elif mda['type'] == "int":
 					ideal = int(numbers)
 			
+			print "IDEAL FOR TAG: %s" % ideal
+			
 			for line in metadata.splitlines():
 				match = re.findall(pattern, line.strip())
 				if len(match) == 1:
+					if DEBUG: print "VALUE FOUND: %s (%s)" % (match[0], type(match[0]))
+					
 					if mda['type'] == "str":
-						value = "%.9f" % ratio(ideal, str(match[0].replace("\"", '')))
+						try:
+							value = "%.9f" % ratio(ideal, str(value.replace("\"", '')))
+						except TypeError as e:
+							if DEBUG: print e
+							value = 0
+
 					elif mda['type'] == "int":
 						value = ideal/float(match[0].replace("\"", ''))
 					break
@@ -78,16 +87,16 @@ def compileMetadata(task):
 		
 		md_csv_file = StringIO()
 		md_csv = csv.writer(md_csv_file, 
-			delimter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+			delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
 
 		md_csv.writerow(labels)
 		md_csv.writerow(values)
-		md_csv_file.close()
 		
 		document.addAsset(md_csv_file.getvalue(), "file_metadata.csv", 
-			tags=[ASSET_TAGS["MD_F"]], 
+			tags=[ASSET_TAGS["F_MD"]], 
 			description="CSV representation of %s" % task.md_file)
-			
+		
+		md_csv_file.close()	
 		task.finish()
 		print "\n\n************** %s [END] ******************\n" % task_tag
 			

@@ -8,11 +8,14 @@ from conf import DEBUG
 lcl = locals()
 
 def inflateVars(path):
+	print "INFLATING EXTRA VARS..."
 	with open(path, 'rb') as VE:
 		from json import loads
 		try:
 			vars_extras = loads(VE.read())
-		except Exception as e: return
+		except Exception as e: 
+			if DEBUG: print "error inflating vars: %s" % e
+			return
 	
 	for k in vars_extras.keys():
 		try:

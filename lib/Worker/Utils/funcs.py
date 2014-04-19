@@ -1,5 +1,8 @@
 import magic, gzip
 from cStringIO import StringIO
+from json import loads
+
+from conf import DEBUG
 
 def getFileType(file, as_buffer=False):
 	m = magic.Magic(flags=magic.MAGIC_MIME_TYPE)
@@ -10,6 +13,18 @@ def getFileType(file, as_buffer=False):
 			mime_type = m.id_buffer(file)
 
 		m.close()
+		if mime_type == "text/plain":
+			content = file
+			if not as_buffer:
+				with open(file, 'rb') as C:
+					content = C.read()
+			
+			try:
+				loads(content)
+				mime_type = "application/json"
+			except Exception as e:
+				if DEBUG: print "NOT JSON"
+			
 		return mime_type
 		
 	except: pass

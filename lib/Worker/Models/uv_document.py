@@ -2,7 +2,7 @@ from Models.uv_object import UnveillanceObject
 from conf import DEBUG
 
 class UnveillanceDocument(UnveillanceObject):
-	def __init__(self, _id=None, inflate=None):
+	def __init__(self, _id=None, inflate=None, emit_sentinels=None):
 	
 		if inflate is not None:
 			import os
@@ -14,7 +14,8 @@ class UnveillanceDocument(UnveillanceObject):
 			inflate['farm'] = UUID
 			inflate['uv_doc_type'] = UV_DOC_TYPE['DOC']
 		
-		super(UnveillanceDocument, self).__init__(_id=_id, inflate=inflate)
+		super(UnveillanceDocument, self).__init__(_id=_id, inflate=inflate,
+			emit_sentinels=emit_sentinels)
 		
 		if inflate is not None:
 			if not self.getFile(self.file_name):
