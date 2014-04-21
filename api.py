@@ -184,6 +184,8 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		
 	def syncAnnex(self):
 		create_rx = r'\s*create mode (?:\d+) (?:(?!\.data/.*))([a-zA-Z0-9_\-\./]+)'
+		task_update_rx = r'\s*create mode (?:\d+) (.data/[a-zA-Z0-0]{32}/.*)'
+		
 		cmd = ['git', 'annex', 'sync']
 		
 		old_dir = os.getcwd()
@@ -206,6 +208,25 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 					'file_name' : create[0],
 					'queue' : UUID
 				}))
+			
+			task_update = re.findall(task_update_rx, data.strip())
+			if len(task_update) == 1:
+				if DEBUG: print "UPDATING TASK BY PATH %s" % task_update[0]
+				
+				matching_tasks = self.do_tasks(QueryBatchRequestStub(
+					"update_file=%s" % task_update[0]))
+				print matching_tasks
+				if matching_tasks is not None:
+					matching_task = matching_tasks['documents'][0]			
+					try:
+						tasks.append(UnveillanceTask(inflate={
+							'task_path' : matching_task['on_update'],
+							'file_name' : task_update[0],
+							'doc_id' : matching_task['doc_id'],
+							'queue' : UUID
+						}))
+					except KeyError as e:
+						print e
 				
 			data = p.stdout.readline()
 		p.stdout.close()
