@@ -20,10 +20,28 @@ def evaluateFile(task):
 		print "\n\n************** %s [ERROR] ******************\n" % task_tag
 		return
 	
-	if not document.getFile(document.file_name):
-		print "NO DOCUMENT CONTENT"
+	if not document.getFile(task.file_name):
+		print "NO FILE CONTENT"
+		print "\n\n************** %s [ERROR] ******************\n" % task_tag
+		return
+		
+	from lib.Worker.Models.uv_task import UnveillanceTask
+	from lib.Worker.Utils.funcs import getFileType
+	from vars import MIME_TYPE_TASKS
+	from conf import ANNEX_DIR
+	
+	try:
+		mime_type = getFileType(os.path.join(ANNEX_DIR, task.file_name))
+		new_task = UnveillanceTask(inflate={
+			'task_path' : MIME_TYPE_TASKS[mime_type][0],
+			'doc_id' : document._id,
+			'file_name' : task.file_name
+		})
+		new_task.run()
+	except IndexError as e:
+		print "NO NEXT TASK: %s" % e
 		print "\n\n************** %s [ERROR] ******************\n" % task_tag
 		return
 	
-	content = document.loadFile(document.file_name)
-	if content is None: return
+	task.finish()
+	print "\n\n************** %s [END] ******************\n" % task_tag

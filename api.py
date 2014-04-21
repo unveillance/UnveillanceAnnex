@@ -52,7 +52,7 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		})
 		if cluster is None: return None
 		
-		return cluster.emit()
+		return cluster._id
 
 	def do_tasks(self, request):
 		args = parseRequestEntity(request.query)

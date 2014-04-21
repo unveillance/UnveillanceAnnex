@@ -1,5 +1,6 @@
 from Models.uv_object import UnveillanceObject
 from conf import DEBUG
+from vars import ASSET_TAGS
 
 class UnveillanceCluster(UnveillanceObject):
 	def __init__(self, _id=None, inflate=None):
@@ -44,19 +45,19 @@ class UnveillanceCluster(UnveillanceObject):
 				if DEBUG: print "Cluster doc has no content"
 				continue
 			
-			"""
-				what type of cluster are we creating?
-				csv? json array? some other type?
-			"""
+			if DEBUG: print content
 			if cluster_type == "csv":
-				try:
-					content_csv = csv.reader(content)
-					for r, row in content_csv:
-						# if idx == 0, we can include the labels
-						if r == 0 and d != 0: continue
-						whole_cluster.write(row)
-				except ValueError as e:
-					if DEBUG: print e
-					continue
+				for r, row in enumerate(content.splitlines()):
+					# if idx == 0, we can include the labels
+					if DEBUG: print row
 					
-			elif cluster_type == "jarray": continue
+					if r == 0 and d != 0: continue
+					whole_cluster.write(row + "\n")
+					
+			elif cluster_type == "json": continue
+			
+		self.addAsset(whole_cluster.getvalue(), "cluster_data.%s" % cluster_type,
+			tags=[ASSET_TAGS["F_MD"]],
+			description="%s aggregation of all cluster data" % cluster_type)
+		
+		whole_cluster.close()
