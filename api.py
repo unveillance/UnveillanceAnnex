@@ -52,7 +52,15 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		})
 		if cluster is None: return None
 		
-		return cluster._id
+		try:
+			return {
+				'_id' : cluster._id, 
+				'cluster' : cluster.getAssetsByTagName("metadata_fingerprint")[0]
+			}
+		
+		except Exception as e:
+			if DEBUG: print e
+			return None
 
 	def do_tasks(self, request):
 		args = parseRequestEntity(request.query)

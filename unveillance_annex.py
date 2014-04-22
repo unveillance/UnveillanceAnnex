@@ -76,7 +76,7 @@ class UnveillanceAnnex(tornado.web.Application, UnveillanceAPI):
 			if self.application.fileExistsInAnnex(file_path):
 				with open(os.path.join(ANNEX_DIR, file_path), 'rb') as file:
 					# TODO: set content-type
-					self.set_header("Content-Type", "application/octet-stream")
+					#self.set_header("Content-Type", "application/octet-stream")
 					self.finish(file.read())
 				return
 			

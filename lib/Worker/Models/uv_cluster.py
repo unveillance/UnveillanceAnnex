@@ -55,9 +55,11 @@ class UnveillanceCluster(UnveillanceObject):
 					whole_cluster.write(row + "\n")
 					
 			elif cluster_type == "json": continue
-			
-		self.addAsset(whole_cluster.getvalue(), "cluster_data.%s" % cluster_type,
+		
+		
+		asset = self.addAsset(whole_cluster.getvalue(), "cluster_data.%s" % cluster_type,
 			tags=[ASSET_TAGS["F_MD"]],
 			description="%s aggregation of all cluster data" % cluster_type)
 		
 		whole_cluster.close()
+		if asset is not None: addFile(self, asset, None, sync=True)
