@@ -62,4 +62,4 @@ class UnveillanceCluster(UnveillanceObject):
 			description="%s aggregation of all cluster data" % cluster_type)
 		
 		whole_cluster.close()
-		if asset is not None: addFile(self, asset, None, sync=True)
+		if asset is not None: self.addFile(asset, None, sync=True)
