@@ -13,16 +13,20 @@ def evaluateText(task):
 	from conf import DEBUG
 	from vars import MIME_TYPE_TASKS
 	
-	document = UnveillanceDocument(_id=task.doc_id)
-	if DEBUG: print document.emit()
-	
+	document = UnveillanceDocument(_id=task.doc_id)	
 	"""
 		limited choices: json, pgp, or txt
 	"""
-	if not document.getFile(document.file_name): return
+
+	if hasattr(task, "text_file"):
+		content = document.loadAsset(task.text_file)
+	else:
+		content = document.loadFile(document.file_name)	
 	
-	content = document.loadFile(document.file_name)
-	if content is None: return
+	if content is None:
+		print "no text to evaluate :("
+		print "\n\n************** %s [ERROR] ******************\n" % task_tag
+		return
 	
 	new_mime_type = None
 	import json
