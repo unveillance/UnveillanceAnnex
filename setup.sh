@@ -7,8 +7,8 @@ if [ $# -eq 0 ]
 then
 	echo "no initial args"
 	OLD_DIR=$THIS_DIR
-	ANNEX_DIR=/home/unveillance_remote
-	ANACONDA_DIR=/home/anaconda
+	ANNEX_DIR=/home/danse/unveillance_remote
+	ANACONDA_DIR=/home/danse/anaconda
 else
 	OLD_DIR=$1
 	ANNEX_DIR=$2
@@ -31,6 +31,8 @@ wget -O lib/git-annex.tar.gz http://downloads.kitenet.net/git-annex/linux/curren
 tar -xvzf lib/git-annex.tar.gz -C lib
 rm lib/git-annex.tar.gz
 
+PATH_APPEND=$PATH
+
 for f in lib/*
 do
 	if echo "$f" | grep '^lib/elasticsearch*' >/dev/null ; then
@@ -39,7 +41,7 @@ do
 	fi
 	
 	if echo "$f" | grep '^lib/git-annex*' >/dev/null ; then
-		echo export PATH=$PATH:$THIS_DIR/$f >> .bashrc
+		PATH_APPEND=$PATH_APPEND:$THIS_DIR/$f
 		break
 	fi
 done
@@ -61,8 +63,10 @@ echo "**************************************************"
 
 ./lib/anaconda.sh
 
-echo export PATH=$ANACONDA_DIR/bin:$PATH >> .bashrc
-source .bashrc
+PATH_APPEND=$ANACONDA_DIR/bin:$PATH_APPEND
+echo export PATH=$PATH_APPEND >> ~/.bashrc
+echo $PATH
+source ~/.bashrc
 
 echo "**************************************************"
 echo "Installing other python dependencies..."

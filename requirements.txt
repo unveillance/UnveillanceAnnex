@@ -5,3 +5,5 @@ pyyaml
 filemagic
 Celery
 python-levenshtein
+amqp
+anyjson
