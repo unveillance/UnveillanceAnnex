@@ -32,7 +32,7 @@ class QueryBatchStub(object):
 
 QUERY_KEYS = {
 	'must' : {
-		'query_string' : ['mime_type', 'assets.tags', 'task_path', 'update_file'],
+		'query_string' : ['mime_type', 'assets.tags', 'task_path', 'update_file', 'file_name'],
 		'filter' : []
 	},
 	'must_not' : {

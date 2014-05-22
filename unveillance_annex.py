@@ -24,7 +24,7 @@ class UnveillanceAnnex(tornado.web.Application, UnveillanceAPI):
 		self.reserved_routes = ["files", "sync"]
 		self.routes = [
 			(r"/files/(\S+)", self.FileHandler), 
-			(r"/sync/", self.SyncHandler)]
+			(r"/sync/(.+)", self.SyncHandler)]
 		
 		UnveillanceAPI.__init__(self)
 	

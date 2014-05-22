@@ -190,34 +190,25 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		os.chdir(old_dir)
 		return False
 		
-	def syncAnnex(self):
-		create_rx = r'\s*create mode (?:\d+) (?:(?!\.data/.*))([a-zA-Z0-9_\-\./]+)'
-		task_update_rx = r'\s*create mode (?:\d+) (.data/[a-zA-Z0-0]{32}/.*)'
-		
-		cmd = ['git', 'annex', 'sync']
-		
-		old_dir = os.getcwd()
-		os.chdir(ANNEX_DIR)
-		
-		p = Popen(cmd, stdout=PIPE, close_fds=True)
-		data = p.stdout.readline()
-		
+	def syncAnnex(self, file_name):
 		tasks = []
+		
+		create_rx = r'(?:(?!\.data/.*))([a-zA-Z0-9_\-\./]+)'
+		task_update_rx = r'(.data/[a-zA-Z0-0]{32}/.*)'
 
-		while data:
-			print data.strip()
-			create = re.findall(create_rx, data.strip())
+		if self.fileExistsInAnnex(file_name, auto_add=False):
+			create = re.findall(create_rx, file_name)
 			if len(create) == 1:
 				# init new file. here it starts.
 				if DEBUG: print "INIT NEW FILE: %s" % create[0]
 				
 				tasks.append(UnveillanceTask(inflate={
 					'task_path' : "Documents.evaluate_document.evaluateDocument",
-					'file_name' : create[0],
+					'file_name' : file_name,
 					'queue' : UUID
 				}))
 			
-			task_update = re.findall(task_update_rx, data.strip())
+			task_update = re.findall(task_update_rx, file_name)
 			if len(task_update) == 1:
 				if DEBUG: print "UPDATING TASK BY PATH %s" % task_update[0]
 				
@@ -235,11 +226,6 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 						}))
 					except KeyError as e:
 						print e
-				
-			data = p.stdout.readline()
-		p.stdout.close()
-		
-		os.chdir(old_dir)
 		
 		if len(tasks) > 0:
 			for task in tasks: task.run()

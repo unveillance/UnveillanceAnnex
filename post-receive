@@ -1,1 +1,2 @@
-curl -X GET http://localhost:8888/sync/
+curl -X GET http://localhost:8888/sync/$1
+echo $1
