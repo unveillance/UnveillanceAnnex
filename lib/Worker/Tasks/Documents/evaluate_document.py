@@ -34,7 +34,7 @@ def evaluateDocument(task):
 			'queue' : task.queue
 		})
 		
-		print new_task.emit()
+		if DEBUG: print new_task.emit()
 		new_task.run()
 		
 	else:

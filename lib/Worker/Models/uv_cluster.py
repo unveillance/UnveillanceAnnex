@@ -1,21 +1,38 @@
 from Models.uv_object import UnveillanceObject
+from Models.uv_batch import UnveillanceBatch
 from conf import DEBUG
-from vars import ASSET_TAGS
+from vars import ASSET_TAGS, EmitSentinel
 
 class UnveillanceCluster(UnveillanceObject):
 	def __init__(self, _id=None, inflate=None):
 	
 		if inflate is not None:
-			print "INFLATING CLUSTER"
+			if DEBUG: print "INFLATING CLUSTER"
 			from lib.Core.Utils.funcs import generateMD5Hash
-			inflate['_id'] = generateMD5Hash(content="".join(inflate['documents']),
-				salt=inflate['asset_tag'])
 			
-		super(UnveillanceCluster, self).__init__(_id=_id, inflate=inflate)			
+			batch = UnveillanceBatch(_id="".join(inflate['documents'])
+			if batch is None:
+				batch = UnveillanceBatch(inflate={'documents' : inflate['documents']})
+			
+			if batch is None:
+				if DEBUG: print "I CAN'T START UP THIS CLUSTER!"
+				self.invalid = True
+				return
+			
+			del inflate['documents']
+			inflate.update({
+				'batch' : batch._id,
+				'_id' : generateMD5Hash(content=batch._id, salt=inflate['asset_tag'])
+			})
+			
+		super(UnveillanceCluster, self).__init__(_id=_id, inflate=inflate,
+			emit_sentinels=[EmitSentinel("batch", UnveillanceBatch, "_id")])
 	
 	def inflate(self, inflate):
 		super(UnveillanceCluster, self).inflate(inflate)
 		if not hasattr(self, "already_exists") or not self.already_exists: self.build()
+		
+		self.batch = UnveillanceBatch(_id=self.batch)
 	
 	def build(self):
 		"""
@@ -23,14 +40,13 @@ class UnveillanceCluster(UnveillanceObject):
 		"""
 		if DEBUG: print "BUILDING CLUSTER"
 		
-		from lib.Worker.Models.uv_document import UnveillanceDocument
 		from cStringIO import StringIO
 		import csv, json
 		
 		whole_cluster = StringIO()
 		cluster_type = "csv"
 		
-		for d, doc in enumerate(self.documents):
+		for d, doc in enumerate(self.batch.documents):
 			doc = UnveillanceDocument(_id=doc)
 			if doc is None: continue
 			
