@@ -1,5 +1,5 @@
 from Models.uv_object import UnveillanceObject
-from Models.uv_batch import UnveillanceBatch
+from lib.Worker.Models.uv_batch import UnveillanceBatch
 from conf import DEBUG
 from vars import ASSET_TAGS, EmitSentinel
 
@@ -10,7 +10,7 @@ class UnveillanceCluster(UnveillanceObject):
 			if DEBUG: print "INFLATING CLUSTER"
 			from lib.Core.Utils.funcs import generateMD5Hash
 			
-			batch = UnveillanceBatch(_id="".join(inflate['documents'])
+			batch = UnveillanceBatch(_id="".join(inflate['documents']))
 			if batch is None:
 				batch = UnveillanceBatch(inflate={'documents' : inflate['documents']})
 			
