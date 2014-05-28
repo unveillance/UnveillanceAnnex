@@ -196,7 +196,7 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		create_rx = r'(?:(?!\.data/.*))([a-zA-Z0-9_\-\./]+)'
 		task_update_rx = r'(.data/[a-zA-Z0-0]{32}/.*)'
 
-		if self.fileExistsInAnnex(file_name, auto_add=False):
+		if not self.fileExistsInAnnex(file_name, auto_add=False):
 			create = re.findall(create_rx, file_name)
 			if len(create) == 1:
 				# init new file. here it starts.
