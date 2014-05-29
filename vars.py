@@ -23,7 +23,7 @@ def inflateVars(path):
 			if DEBUG: print "updating var: %s" % lcl[k]
 		except KeyError as e:
 			if DEBUG: print "don't worry, don't have %s" % k
-			continue
+			lcl[k] = vars_extras[k]
 
 QueryBatchRequestStub = namedtuple("QueryBatchRequestStub", "query")
 class QueryBatchStub(object):
@@ -32,7 +32,7 @@ class QueryBatchStub(object):
 
 QUERY_KEYS = {
 	'must' : {
-		'query_string' : ['mime_type', 'assets.tags', 'task_path', 'update_file', 'file_name'],
+		'match' : ['mime_type', 'assets.tags', 'task_path', 'update_file', 'file_name'],
 		'filter' : []
 	},
 	'must_not' : {
@@ -45,9 +45,8 @@ QUERY_DEFAULTS = {
 	'UV_DOCUMENT' : {
 		"bool": {
 			"must" : [
-				{"query_string" : {
-					"default_field" : "uv_document.uv_doc_type",
-					"query" : "UV_DOCUMENT" 
+				{"match" : {
+					"uv_document.uv_doc_type" : "UV_DOCUMENT" 
 				}}
 			],
 			"must_not" : [

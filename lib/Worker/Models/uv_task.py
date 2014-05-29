@@ -40,6 +40,14 @@ class UnveillanceTask(UnveillanceObject):
 	def finish(self):
 		if DEBUG: print "task finished!"
 		self.setStatus(200)
+		
+		if not hasattr(self, 'persist') or not self.persist:
+			if DEBUG: print "task will be deleted!"
+			self.delete()
+	
+	def delete(self):
+		if DEBUG: print "DELETING MYSELF"
+		return super(UnveillanceTask, self).delete(self._id)
 	
 	def setStatus(self, status):
 		self.status = status

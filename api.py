@@ -103,14 +103,13 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 			except KeyError as e: pass
 			
 			for a in args.keys():
-				if a in QUERY_KEYS[operator]['query_string']:
+				if a in QUERY_KEYS[operator]['match']:
 					query['bool'][operator].append({
-						"query_string": {
-							"default_field" : "uv_document.%s" % a,
-							"query" : args[a]
+						"match": {
+							"uv_document.%s" % a : args[a]
 						}
 					})
-
+		
 		return self.query(query, count_only=count_only, limit=limit)
 	
 	def do_reindex(self, request):

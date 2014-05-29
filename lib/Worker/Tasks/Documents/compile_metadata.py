@@ -38,7 +38,11 @@ def compileMetadata(task):
 	try:
 		for mda in METADATA_ASPECTS[task.md_namespace]:
 			labels.append(mda['label'])
-			pattern = re.compile(task.md_rx % (mda['tag_position'], mda['label']))
+			if hasattr(task, "md_rx"):
+				pattern = re.compile(task.md_rx % (mda['tag_position'], mda['label']))
+			else:
+				pattern = re.compile(mda['tag_position'])
+				
 			if DEBUG: print pattern.pattern
 			
 			value = missing_value
@@ -65,7 +69,11 @@ def compileMetadata(task):
 							value = 0
 
 					elif mda['type'] == "int":
-						value = ideal/float(match[0].replace("\"", ''))
+						try:
+							value = ideal/float(match[0].replace("\"", ''))
+						except ZeroDivisionError as e:
+							if DEBUG: print e
+							value = 0
 					break
 					
 			if value == missing_value:
