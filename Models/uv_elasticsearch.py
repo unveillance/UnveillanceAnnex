@@ -25,6 +25,7 @@ class UnveillanceElasticsearchHandler(object):
 			print "OH A QUERY"
 			print args
 		
+		# TODO: ACTUALLY, I MEAN ALL OF THEM.
 		if limit is None: limit = 50
 		if from_ is None: from_ = 0
 
@@ -73,6 +74,7 @@ class UnveillanceElasticsearchHandler(object):
 		if DEBUG: print "deleting thing"
 		
 		res = self.sendELSRequest(endpoint=_id, method="delete")
+		if DEBUG: print res
 		
 		try: return res['ok']
 		except KeyError as e: pass
@@ -86,7 +88,7 @@ class UnveillanceElasticsearchHandler(object):
 		if endpoint is not None: url += endpoint
 		if data is not None: data = json.dumps(data)
 
-		if DEBUG: print "at %s" % url
+		if DEBUG: print "SENDING ELS REQUEST TO %s" % url
 			
 		if method == "get":
 			r = requests.get(url, data=data)

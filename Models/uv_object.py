@@ -18,7 +18,6 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 			EmitSentinel("already_exists", "str", None)])
 		
 		if inflate is not None:
-			print "HEY INFLATE"
 			if self.get(inflate['_id']) is not None:
 				if DEBUG: 
 					print "this object already exists. use it instead of re-creating it."
@@ -71,12 +70,13 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 		"""
 			git annex add [file]
 		"""
-		if not self.getFile(asset_path): return False
+		#if not self.getFile(asset_path): return False
 		
 		this_dir = os.getcwd()
 		os.chdir(ANNEX_DIR)
 		
 		if data is not None:
+			if DEBUG: print data
 			try:
 				with open(os.path.join(ANNEX_DIR, asset_path), 'wb+') as f: f.write(data)
 			except Exception as e:
@@ -110,6 +110,9 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 			as_literal=as_literal, **metadata)
 		
 		if data is not None and asset_path:
+			print "HERE IS THE DATA I PLAN ON ADDING:"
+			print data
+			
 			if not as_literal: data = dumps(data)
 			if not self.addFile(asset_path, data): return False
 			

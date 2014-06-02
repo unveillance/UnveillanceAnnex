@@ -38,7 +38,11 @@ def compileMetadata(task):
 	try:
 		for mda in METADATA_ASPECTS[task.md_namespace]:
 			labels.append(mda['label'])
-			pattern = re.compile(task.md_rx % (mda['tag_position'], mda['label']))
+			if hasattr(task, "md_rx"):
+				pattern = re.compile(task.md_rx % (mda['tag_position'], mda['label']))
+			else:
+				pattern = re.compile(mda['tag_position'])
+				
 			if DEBUG: print pattern.pattern
 			
 			value = missing_value
@@ -65,7 +69,11 @@ def compileMetadata(task):
 							value = 0
 
 					elif mda['type'] == "int":
-						value = ideal/float(match[0].replace("\"", ''))
+						try:
+							value = ideal/float(match[0].replace("\"", ''))
+						except ZeroDivisionError as e:
+							if DEBUG: print e
+							value = 0
 					break
 					
 			if value == missing_value:
@@ -92,11 +100,17 @@ def compileMetadata(task):
 		md_csv.writerow(labels)
 		md_csv.writerow(values)
 		
-		document.addAsset(md_csv_file.getvalue(), "file_metadata.csv", 
+		md_asset = document.addAsset(md_csv_file.getvalue(), "file_metadata.csv", 
 			tags=[ASSET_TAGS["F_MD"]], 
 			description="CSV representation of %s" % task.md_file)
 		
 		md_csv_file.close()	
+		
+		if md_asset is None or not document.addFile(md_asset, None, sync=True):
+			print "Could not save the Metadata"
+			print "\n\n************** %s [ERROR] ******************\n" % task_tag
+			return
+		
 		task.finish()
 		print "\n\n************** %s [END] ******************\n" % task_tag
 			

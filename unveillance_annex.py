@@ -61,8 +61,8 @@ class UnveillanceAnnex(tornado.web.Application, UnveillanceAPI):
 	
 	class SyncHandler(tornado.web.RequestHandler):
 		@tornado.web.asynchronous
-		def get(self): 
-			self.application.syncAnnex()
+		def get(self, file_name): 
+			self.application.syncAnnex(file_name)
 			res = Result()
 			res.result = 200
 			self.finish(res.emit())

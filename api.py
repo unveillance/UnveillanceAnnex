@@ -103,14 +103,13 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 			except KeyError as e: pass
 			
 			for a in args.keys():
-				if a in QUERY_KEYS[operator]['query_string']:
+				if a in QUERY_KEYS[operator]['match']:
 					query['bool'][operator].append({
-						"query_string": {
-							"default_field" : "uv_document.%s" % a,
-							"query" : args[a]
+						"match": {
+							"uv_document.%s" % a : args[a]
 						}
 					})
-
+		
 		return self.query(query, count_only=count_only, limit=limit)
 	
 	def do_reindex(self, request):
@@ -196,7 +195,7 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		create_rx = r'(?:(?!\.data/.*))([a-zA-Z0-9_\-\./]+)'
 		task_update_rx = r'(.data/[a-zA-Z0-0]{32}/.*)'
 
-		if self.fileExistsInAnnex(file_name, auto_add=False):
+		if not self.fileExistsInAnnex(file_name, auto_add=False):
 			create = re.findall(create_rx, file_name)
 			if len(create) == 1:
 				# init new file. here it starts.

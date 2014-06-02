@@ -67,6 +67,7 @@ PATH_APPEND=$ANACONDA_DIR/bin:$PATH_APPEND
 echo export PATH=$PATH_APPEND >> ~/.bashrc
 echo $PATH
 source ~/.bashrc
+echo $PATH
 
 echo "**************************************************"
 echo "Installing other python dependencies..."
