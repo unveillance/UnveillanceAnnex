@@ -100,11 +100,17 @@ def compileMetadata(task):
 		md_csv.writerow(labels)
 		md_csv.writerow(values)
 		
-		document.addAsset(md_csv_file.getvalue(), "file_metadata.csv", 
+		md_asset = document.addAsset(md_csv_file.getvalue(), "file_metadata.csv", 
 			tags=[ASSET_TAGS["F_MD"]], 
 			description="CSV representation of %s" % task.md_file)
 		
 		md_csv_file.close()	
+		
+		if md_asset is None or not document.addFile(md_asset, None, sync=True):
+			print "Could not save the Metadata"
+			print "\n\n************** %s [ERROR] ******************\n" % task_tag
+			return
+		
 		task.finish()
 		print "\n\n************** %s [END] ******************\n" % task_tag
 			

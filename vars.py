@@ -78,7 +78,33 @@ ELASTICSEARCH_MAPPINGS = {
 			"assets": {
 				"type" : "nested",
 				"include_in_parent": True,
-				"include_in_root": True
+				"include_in_root": True,
+				"properties" : {
+					"file_name" : {
+						"type" : "string",
+						"index" : "not_analyzed"
+					}
+				}
+			},
+			"file_name" : {
+				"type" : "string",
+				"index" : "not_analyzed",
+				"store" : True
+			},
+			"mime_type": {
+				"type" : "string",
+				"index" : "not_analyzed",
+				"store" : True
+			},
+			"farm": {
+				"type" : "string",
+				"index" : "not_analyzed",
+				"store" : True
+			},
+			"uv_doc_type": {
+				"type" : "string",
+				"index" : "not_analyzed",
+				"store" : True
 			}
 		}
 	}
