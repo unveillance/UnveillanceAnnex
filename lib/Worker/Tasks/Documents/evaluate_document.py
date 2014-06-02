@@ -12,7 +12,20 @@ def evaluateDocument(task):
 	from lib.Worker.Models.uv_document import UnveillanceDocument
 	from conf import DEBUG, UUID
 	
-	document = UnveillanceDocument(inflate={'file_name' : task.file_name})	
+	document = None
+	
+	if hasattr(task.doc_id):
+		document = UnveillanceDocument(_id=task.doc_id)
+	else:
+		document = UnveillanceDocument(inflate={'file_name' : task.file_name})
+	
+	if document is None:
+		print "\n\n************** %s [INVALID] ******************\n" % task_tag
+		print "DOCUMENT INVALID"
+		
+		task.invalidate(error="DOCUMUENT INVALID")
+		return
+		
 	if hasattr(document, 'invalid') and document.invalid:
 		print "\n\n************** %s [INVALID] ******************\n" % task_tag
 		print "DOCUMENT INVALID"
