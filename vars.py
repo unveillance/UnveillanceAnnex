@@ -18,6 +18,19 @@ def inflateVars(path):
 			return
 	
 	for k in vars_extras.keys():
+		if k == "ELASTICSEARCH_MAPPINGS":
+			for key in vars_extras[k].keys():
+				if key in lcl[k]['uv_document']['properties'].keys():
+					del vars_extras[k][key]
+					# no overwriting our default elasticsearch mappings!
+			
+			if len(vars_extras[k].keys()) == 0: continue
+			
+			lcl[k]['uv_document']['properties'].update(vars_extras[k])
+			
+			if DEBUG: print "NEW ELASICSEARCH MAPPING:\n%s" % lcl[k]
+			continue
+			
 		try:
 			lcl[k].update(vars_extras[k])
 			if DEBUG: print "updating var: %s" % lcl[k]
