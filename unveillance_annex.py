@@ -10,6 +10,7 @@ import tornado.httpserver
 from api import UnveillanceAPI
 from lib.Core.vars import Result
 from lib.Core.Utils.funcs import startDaemon, stopDaemon
+from lib.Worker.Models.uv_task import UnveillanceTask
 
 from conf import ANNEX_DIR, API_PORT, NUM_PROCESSES, HOST, MONITOR_ROOT, DEBUG
 
@@ -24,7 +25,8 @@ class UnveillanceAnnex(tornado.web.Application, UnveillanceAPI):
 		self.reserved_routes = ["files", "sync"]
 		self.routes = [
 			(r"/files/(\S+)", self.FileHandler), 
-			(r"/sync/(.+)", self.SyncHandler)]
+			(r"/sync/(.+)", self.SyncHandler),
+			(r"/task/", self.TaskHandler)]
 		
 		UnveillanceAPI.__init__(self)
 	
@@ -65,6 +67,32 @@ class UnveillanceAnnex(tornado.web.Application, UnveillanceAPI):
 			self.application.syncAnnex(file_name)
 			res = Result()
 			res.result = 200
+			self.finish(res.emit())
+	
+	class TaskHandler(tornado.web.RequestHandler):
+		@tornado.web.asynchronous
+		def get(self):
+			res = Result()
+			res.data = self.application.do_task(self)
+			
+			if res.data is None:
+				del res.data
+				res.result = 412
+			
+			self.set_status(res.result)
+			self.finish(res.emit())
+		
+		@tornado.web.asynchronous
+		def post(self):
+			res = Result()
+			
+			task = UnveillanceTask(_id=task_id)
+			if task is not None:
+				task.run()
+				res.data = task.emit()
+				res.status = 200
+			
+			self.set_status(res.result)
 			self.finish(res.emit())
 	
 	class FileHandler(tornado.web.RequestHandler):

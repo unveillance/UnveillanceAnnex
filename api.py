@@ -112,6 +112,22 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		
 		return self.query(query, count_only=count_only, limit=limit)
 	
+	def runTask(self, request):
+		args = parseRequestEntity(request.body)
+		
+		task = None
+		if len(args.keys()) == 1 and '_id' in args.keys():
+			task = UnveillanceTask(_id=args['_id'])
+		else:
+			if 'task_path' in args.keys():
+				args['queue'] = UUID
+				task = UnveillanceTask(args)
+		
+		if task is None: return None
+		
+		task.run()
+		return task.emit()
+	
 	def do_reindex(self, request):
 		query = parseRequestEntity(request.query)
 		if query is None: return None
