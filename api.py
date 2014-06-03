@@ -119,6 +119,7 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		if len(args.keys()) == 1 and '_id' in args.keys():
 			task = UnveillanceTask(_id=args['_id'])
 		else:
+			# TODO: XXX: IF REFERER IS LOCALHOST ONLY (and other auth TBD)!
 			if 'task_path' in args.keys():
 				args['queue'] = UUID
 				task = UnveillanceTask(args)
