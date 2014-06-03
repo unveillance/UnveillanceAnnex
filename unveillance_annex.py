@@ -22,7 +22,7 @@ class UnveillanceAnnex(tornado.web.Application, UnveillanceAPI):
 		self.api_pid_file = os.path.join(MONITOR_ROOT, "api.pid.txt")
 		self.api_log_file = os.path.join(MONITOR_ROOT, "api.log.txt")
 		
-		self.reserved_routes = ["files", "sync"]
+		self.reserved_routes = ["files", "sync", "task"]
 		self.routes = [
 			(r"/files/(\S+)", self.FileHandler), 
 			(r"/sync/(.+)", self.SyncHandler),
@@ -78,6 +78,7 @@ class UnveillanceAnnex(tornado.web.Application, UnveillanceAPI):
 			if res.data is None:
 				del res.data
 				res.result = 412
+			elif res.data: res.result = 200
 			
 			self.set_status(res.result)
 			self.finish(res.emit())
@@ -90,6 +91,7 @@ class UnveillanceAnnex(tornado.web.Application, UnveillanceAPI):
 			if res.data is None:
 				del res.data
 				res.status = 412
+			elif res.data: res.result = 200
 			
 			self.set_status(res.result)
 			self.finish(res.emit())
