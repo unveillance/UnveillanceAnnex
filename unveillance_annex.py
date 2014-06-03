@@ -73,11 +73,11 @@ class UnveillanceAnnex(tornado.web.Application, UnveillanceAPI):
 		@tornado.web.asynchronous
 		def get(self):
 			res = Result()
-			res.data = self.application.do_tasks(self)
+			res.result = 412
 			
+			res.data = self.application.do_tasks(self)
 			if res.data is None:
 				del res.data
-				res.result = 412
 			elif res.data: res.result = 200
 			
 			self.set_status(res.result)
@@ -86,11 +86,11 @@ class UnveillanceAnnex(tornado.web.Application, UnveillanceAPI):
 		@tornado.web.asynchronous
 		def post(self):
 			res = Result()
+			res.status = 412
 			
 			res.data = self.application.runTask(self)
 			if res.data is None:
 				del res.data
-				res.status = 412
 			elif res.data: res.result = 200
 			
 			self.set_status(res.result)
