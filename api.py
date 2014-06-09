@@ -140,12 +140,20 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		from vars import MIME_TYPE_TASKS
 		print MIME_TYPE_TASKS
 		
-		task = UnveillanceTask(inflate={
-			'task_path' : MIME_TYPE_TASKS[document['mime_type']][0],
+		inflate={
 			'doc_id' : document['_id'],
 			'queue' : UUID
-		})
+		}
 		
+		if 'task_path' not in query.keys():
+			inflate['task_path'] = MIME_TYPE_TASKS[document['mime_type']][0]
+		else:
+			inflate.update({
+				'task_path' :  query['task_path'],
+				'no_continue' : True 
+			})
+		
+		task = UnveillanceTask(inflate=inflate)
 		task.run()
 		return True
 	
