@@ -3,6 +3,7 @@ from collections import namedtuple
 from inspect import getmembers, ismodule, isfunction
 from celery import Celery
 
+from lib.Core.vars import MIME_TYPE_TASKS
 from conf import BASE_DIR
 
 MAX_PAGES = 300
@@ -32,10 +33,3 @@ def buildCeleryTaskList():
 		except AttributeError as e: pass
 	
 	return CELERY_TASKS
-
-MIME_TYPE_TASKS = {
-	'text/plain' : [
-		'Text.evaluate_text.evaluateText',
-		'Text.preprocess_nlp.preprocessNLP'
-	]
-}

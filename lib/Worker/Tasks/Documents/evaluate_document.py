@@ -14,7 +14,7 @@ def evaluateDocument(task):
 	
 	document = None
 	
-	if hasattr(task.doc_id):
+	if hasattr(task, "doc_id"):
 		document = UnveillanceDocument(_id=task.doc_id)
 	else:
 		document = UnveillanceDocument(inflate={'file_name' : task.file_name})
