@@ -60,6 +60,18 @@ def getFileType(file, as_buffer=False):
 	m.close()
 	return None
 
+def gzipFile(path):
+	_out = StringIO()
+	_in = open(path)
+	
+	z = gzip.GzipFile(fileobj=_out, mode='w')
+	z.write(_in.read())
+	
+	z.close()
+	_in.close()
+	
+	return _out.getvalue()
+
 def unGzipBinary(bin):
 	try:
 		with gzip.GzipFile(fileobj=StringIO(bin)) as G:
