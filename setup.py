@@ -90,7 +90,7 @@ if __name__ == "__main__":
 	with open(os.path.join(base_dir, "conf", "annex.config.yaml"), "wb+") as CONFIG:
 		CONFIG.write("base_dir: %s\n" % base_dir)
 		CONFIG.write("annex_dir: %s\n" % annex_dir)
-		CONFIG.write("els_root: %s\n" % els_root)
+		CONFIG.write("els_root: %s\n" % os.path.join(els_root, "bin", "elasticsearch"))
 		CONFIG.write("git_annex_bin: %s\n" % git_annex_dir)
 		CONFIG.write("monitor_root: %s\n" % monitor_root)
 	
