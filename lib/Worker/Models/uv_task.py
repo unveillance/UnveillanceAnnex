@@ -1,4 +1,5 @@
 import os
+from time import sleep
 from importlib import import_module
 from multiprocessing import Process
 
@@ -27,7 +28,10 @@ class UnveillanceTask(UnveillanceObject):
 		try:
 			module = import_module(p)
 			func = getattr(module, f)
-			#args = [(self,), ({'queue' :self.queue})]
+
+			#TODO: for cellery: 
+			# args = [(self,), ({'queue' :self.queue})]
+
 			args = [self]
 			if DEBUG: print args
 			
@@ -39,11 +43,16 @@ class UnveillanceTask(UnveillanceObject):
 	
 	def finish(self):
 		if DEBUG: print "task finished!"
-		self.setStatus(200)
 		
 		if not hasattr(self, 'persist') or not self.persist:
+			self.setStatus(200)
 			if DEBUG: print "task will be deleted!"
 			self.delete()
+		else:
+			self.setStatus(205)
+			if DEBUG: print "task will run again after %d minutes" % self.persist
+			sleep(self.persist * 60)
+			self.run()
 	
 	def delete(self):
 		if DEBUG: print "DELETING MYSELF"

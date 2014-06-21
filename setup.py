@@ -94,6 +94,10 @@ if __name__ == "__main__":
 		CONFIG.write("git_annex_bin: %s\n" % git_annex_dir)
 		CONFIG.write("monitor_root: %s\n" % monitor_root)
 	
+	with open(os.path.join(base_dir, "conf", "annex.config.yaml"), "ab") as CONFIG:
+		from lib.Core.Utils.funcs import generateNonce
+		CONFIG.write("document_salt: %s\n" % generateNonce())
+	
 	os.chdir(annex_dir)
 	with settings(warn_only=True):
 		local("git init")

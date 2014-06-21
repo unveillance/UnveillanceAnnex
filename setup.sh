@@ -10,7 +10,6 @@ else
 	WITH_CONFIG=$1
 fi
 
-<<DONE
 wget -O lib/anaconda.sh http://09c8d0b2229f813c1b93-c95ac804525aac4b6dba79b00b39d1d3.r79.cf1.rackcdn.com/Anaconda-2.0.1-Linux-x86_64.sh
 chmod +x lib/anaconda.sh
 echo "**************************************************"
@@ -23,7 +22,6 @@ sleep 10
 sleep 3
 source ~/.bashrc
 sleep 3
-DONE
 
 pip install --upgrade -r requirements.txt
 

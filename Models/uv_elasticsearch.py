@@ -136,6 +136,19 @@ class UnveillanceElasticsearch(UnveillanceElasticsearchHandler):
 		p.stdout.close()
 		
 		startDaemon(self.els_log_file, self.els_pid_file)
+
+		try:
+			with open(os.path.join(CONF_ROOT, "initial_tasks.json"), 'rb') as TASK_LIST:
+				initial_tasks = json.loads(TASK_LIST.read())
+				
+				from lib.Worker.Models.uv_task import UnveillanceTask
+				for i_task in initial_tasks:
+					task = UnveillanceTask(inflate=i_task)
+					task.run()
+
+		except Exception as e:
+			if DEBUG: print "No initial tasks...\n%s" % e
+			
 		if catch:
 			while True: sleep(1)
 	
