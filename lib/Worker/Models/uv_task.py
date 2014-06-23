@@ -1,4 +1,4 @@
-import os
+import os, requests
 from time import sleep
 from importlib import import_module
 from multiprocessing import Process
@@ -7,7 +7,7 @@ from Models.uv_object import UnveillanceObject
 from Utils.funcs import printAsLog
 
 from vars import EmitSentinel, UV_DOC_TYPE, TASKS_ROOT
-from conf import DEBUG, BASE_DIR
+from conf import DEBUG, BASE_DIR, HOST, API_PORT
 
 class UnveillanceTask(UnveillanceObject):
 	def __init__(self, inflate=None, _id=None):		
@@ -53,7 +53,9 @@ class UnveillanceTask(UnveillanceObject):
 			self.save()
 			if DEBUG: print "task will run again after %d minutes" % self.persist
 			sleep(self.persist * 60)
-			self.run()
+			
+			r = requests.post("http://%s:%d/task/" % (HOST, API_PORT), 
+				data={ '_id' : self._id })
 	
 	def delete(self):
 		if DEBUG: print "DELETING MYSELF"
