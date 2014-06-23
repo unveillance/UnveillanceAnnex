@@ -50,6 +50,7 @@ class UnveillanceTask(UnveillanceObject):
 			self.delete()
 		else:
 			self.setStatus(205)
+			self.save()
 			if DEBUG: print "task will run again after %d minutes" % self.persist
 			sleep(self.persist * 60)
 			self.run()
