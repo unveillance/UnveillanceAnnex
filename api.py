@@ -113,8 +113,13 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		
 		return self.query(query, count_only=count_only, limit=limit)
 	
-	def runTask(self, request):
-		args = parseRequestEntity(request.body)
+	def runTask(self, handler):
+		
+		try:
+			args = parseRequestEntity(handler.request.body)
+		except AttributeError as e:
+			if DEBUG: print "No body?\n%s" % e
+			return None
 		
 		task = None
 		if len(args.keys()) == 1 and '_id' in args.keys():
