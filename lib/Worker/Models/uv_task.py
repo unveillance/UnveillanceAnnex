@@ -43,6 +43,13 @@ class UnveillanceTask(UnveillanceObject):
 		except Exception as e:
 			printAsLog(e)
 	
+	def lock(self, lock=True):
+		self.locked = lock
+		self.save()
+	
+	def unlock(self):
+		self.lock(lock=False)
+	
 	def finish(self):
 		if DEBUG: print "task finished!"
 		
@@ -56,8 +63,12 @@ class UnveillanceTask(UnveillanceObject):
 			if DEBUG: print "task will run again after %d minutes" % self.persist
 			sleep(self.persist * 60)
 			
-			r = requests.post("http://%s:%d/task/" % (HOST, API_PORT), 
-				data={ '_id' : self._id })
+			if not hasattr(self, "locked") or not self.locked:
+				r = requests.post("http://%s:%d/task/" % (HOST, API_PORT), 
+					data={ '_id' : self._id })
+			else:
+				sleep(self.persist * 60)
+				self.finish()
 	
 	def delete(self):
 		if DEBUG: print "DELETING MYSELF"
