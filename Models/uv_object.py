@@ -1,6 +1,7 @@
 import os
 from json import dumps
 from subprocess import Popen, PIPE
+from fabric.api import local, settings
 
 from lib.Core.Models.uv_object import UnveillanceObject as UVO_Stub
 from lib.Core.vars import EmitSentinel
@@ -76,7 +77,12 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 		os.chdir(ANNEX_DIR)
 		
 		if data is not None:
-			if DEBUG: print data
+			try:
+				with settings(warn_only=True):
+					local("git annex get %s" % os.path.join(ANNEX_DIR, asset_path))
+			except Exception as e:
+				print e
+
 			try:
 				with open(os.path.join(ANNEX_DIR, asset_path), 'wb+') as f: f.write(data)
 			except Exception as e:
@@ -110,10 +116,13 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 			as_literal=as_literal, **metadata)
 		
 		if data is not None and asset_path:
-			print "HERE IS THE DATA I PLAN ON ADDING:"
-			print data
+			if DEBUG:
+				print "HERE IS THE DATA I PLAN ON ADDING:"
+				print data
 			
 			if not as_literal: data = dumps(data)
-			if not self.addFile(asset_path, data): return False
+			if not self.addFile(asset_path, data):
+				if DEBUG: print "COULD NOT ADD FILE."
+				return False
 			
 		return asset_path
