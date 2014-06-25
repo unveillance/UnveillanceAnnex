@@ -172,7 +172,8 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		old_dir = os.getcwd()
 		os.chdir(ANNEX_DIR)
 		
-		cmd0 = ['git', 'annex', 'find', file_path]			
+		cmd0 = ['git', 'annex', 'find', file_path]
+		if DEBUG: print "SEARCHING FOR FILE IN ANNEX WITH\n%s" % cmd0
 		p0 = Popen(cmd0, stdout=PIPE, close_fds=True)
 		data0 = p0.stdout.readline()
 
