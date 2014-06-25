@@ -3,6 +3,8 @@ from sys import exit, argv
 from multiprocessing import Process
 from time import sleep
 
+from fabric.api import local, settings
+
 import tornado.ioloop
 import tornado.web
 import tornado.httpserver
@@ -150,6 +152,13 @@ class UnveillanceAnnex(tornado.web.Application, UnveillanceAPI):
 	
 	def startup(self):
 		argv.pop()
+		
+		this_dir = os.getcwd()
+		os.chdir(ANNEX_DIR)
+		with settings(warn_only=True):
+			local("git annex watch")
+		os.chdir(this_dir)
+		
 		p = Process(target=self.startWorker)
 		p.start()
 		

@@ -19,8 +19,10 @@ class UnveillanceTask(UnveillanceObject):
 			
 		super(UnveillanceTask, self).__init__(_id=_id, inflate=inflate, 
 			emit_sentinels=[EmitSentinel("ctx", "Worker", None)])
-	
+		
 	def run(self):
+		if DEBUG: print "NOW RUNNING TASK:\n%s" % self.emit()
+		
 		# i.e. "lib.Worker.Tasks.Documents.evaluate_document"
 		task_path = ".".join([TASKS_ROOT, self.task_path])
 		p, f = task_path.rsplit(".", 1)

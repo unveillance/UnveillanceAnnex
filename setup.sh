@@ -35,5 +35,6 @@ python setup.py $WITH_CONFIG
 sleep 2
 if $LAUNCH_ANNEX; then
 	source ~/.bashrc
+	chmod 0400 conf/*
 	python unveillance_annex.py -firstuse
 fi
