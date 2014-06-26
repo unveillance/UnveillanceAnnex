@@ -79,13 +79,15 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 		if data is not None:
 			try:
 				with settings(warn_only=True):
-					local("git annex get %s" % os.path.join(ANNEX_DIR, asset_path))
+					local("rm %s" % asset_path)
+					local("git annex add %s" % asset_path)
 			except Exception as e:
 				print e
 
 			try:
 				with open(os.path.join(ANNEX_DIR, asset_path), 'wb+') as f: f.write(data)
 			except Exception as e:
+				print "I D K WHY?"
 				print e
 				os.chdir(this_dir)
 				return False
