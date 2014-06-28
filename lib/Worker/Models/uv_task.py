@@ -24,6 +24,22 @@ class UnveillanceTask(UnveillanceObject):
 	def run(self):
 		if DEBUG: print "NOW RUNNING TASK:\n%s" % self.emit()
 		
+		# if we already have a cron entry, let's make sure it's on
+		if hasattr(self, "persist"):
+			cron = CronTab(tabfile=os.path.join(MONITOR_ROOT, "uv_cron.tab"))
+			try:
+				job = cron.find_comment("task_%s" % self._id)
+				print type(job)
+				print job
+				job = job[0]
+				print job
+				
+				if not job.is_enabled(): job.enable()
+				return
+			except Exception as e:
+				print "ERROR FINDING TASK IN CRON:\n%s" % e
+		
+		# otherwise...		
 		# i.e. "lib.Worker.Tasks.Documents.evaluate_document"
 		task_path = ".".join([TASKS_ROOT, self.task_path])
 		p, f = task_path.rsplit(".", 1)

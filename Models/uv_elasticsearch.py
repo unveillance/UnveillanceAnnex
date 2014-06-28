@@ -1,5 +1,6 @@
 import os, json, re, requests
 from subprocess import Popen, PIPE
+from crontab import CronTab
 from sys import argv
 from time import sleep
 
@@ -136,6 +137,7 @@ class UnveillanceElasticsearch(UnveillanceElasticsearchHandler):
 		p.stdout.close()
 		
 		startDaemon(self.els_log_file, self.els_pid_file)
+		self.startCronJobs()
 
 		try:
 			with open(os.path.join(CONF_ROOT, "initial_tasks.json"), 'rb') as TASK_LIST:
@@ -154,6 +156,8 @@ class UnveillanceElasticsearch(UnveillanceElasticsearchHandler):
 	
 	def stopElasticsearch(self):
 		printAsLog("stopping elasticsearch")
+
+		self.stopCronJobs()
 		
 		p = Popen(['lsof', '-t', '-i:9200'], stdout=PIPE, close_fds=True)
 		data = p.stdout.readline()
@@ -167,6 +171,21 @@ class UnveillanceElasticsearch(UnveillanceElasticsearchHandler):
 		p.stdout.close()
 		stopDaemon(self.els_pid_file)
 		with open(self.els_status_file, 'wb+') as f: f.write("False")
+	
+	def startCronJobs(self):
+		self.setCronJob()
+	
+	def stopCronJobs(self):
+		self.setCronJob(enabled=False)
+	
+	def setCronJob(enabled=True):
+		cron = CronTab(tabfile=os.path.join(MONITOR_ROOT, "uv_cron.tab"))
+
+		# enable/disable all the jobs (except for the log one)
+		for job in cron:
+			if job.comment == "clear_logs": continue
+			
+			job.enable(enabled)
 	
 	def initElasticsearch(self):
 		if DEBUG: print "INITING ELASTICSEARCH"
