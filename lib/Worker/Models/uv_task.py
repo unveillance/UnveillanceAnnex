@@ -3,6 +3,7 @@ from crontab import CronTab
 from time import sleep
 from importlib import import_module
 from multiprocessing import Process
+from fabric.api import local, settings
 
 from Models.uv_object import UnveillanceObject
 from Utils.funcs import printAsLog
@@ -23,16 +24,6 @@ class UnveillanceTask(UnveillanceObject):
 		
 	def run(self):
 		if DEBUG: print "NOW RUNNING TASK:\n%s" % self.emit()
-		
-		# if we already have a cron entry, let's make sure it's on
-		if hasattr(self, "persist"):
-			try:
-				cron = CronTab(tabfile=os.path.join(MONITOR_ROOT, "uv_cron.tab"))
-				job = cron.find_comment("task_%s" % self._id).next()				
-				if not job.is_enabled(): job.enable()
-				return
-			except Exception as e:
-				print "ERROR FINDING TASK IN CRON:\n%s" % e
 		
 		# otherwise...		
 		# i.e. "lib.Worker.Tasks.Documents.evaluate_document"
@@ -77,19 +68,35 @@ class UnveillanceTask(UnveillanceObject):
 			
 			try:
 				cron = CronTab(tabfile=os.path.join(MONITOR_ROOT, "uv_cron.tab"))
+				
+				# if we already have a cron entry, let's make sure it's on
+				job = cron.find_comment(self.task_path).next()				
+				if not job.is_enabled(): job.enable()
+				
+				if DEBUG:
+					print "this task %s is already registered in our crontab" % self._id
+				
+				return
+				
 			except IOError as e:
 				if DEBUG: print "no crontab yet..."
 				cron = CronTab(tab='')
-				
+			except StopIteration as e:
+				if DEBUG: print "this job isn't in cron yet..."
+				pass
+			
+			task_script = os.path.join(BASE_DIR, "run_task.py")
 			job = cron.new(
-				command="%s %s" % (os.path.join(BASE_DIR, "run_task.py"), self._id),
-				comment="task_%s" % self._id)
+				command="python %s %s >/dev/null 2>&1" % (task_script, self._id),
+				comment=self.task_path)
 			
 			job.every(self.persist).minutes()
+			job.enable()
 			cron.write(os.path.join(MONITOR_ROOT, "uv_cron.tab"))
 			
 			sleep(self.persist * 60)
-			job.enable()
+			with settings(warn_only=True):
+				local("crontab %s" % os.path.join(MONITOR_ROOT, "uv_cron.tab"))
 	
 	def delete(self):
 		if DEBUG: print "DELETING MYSELF"

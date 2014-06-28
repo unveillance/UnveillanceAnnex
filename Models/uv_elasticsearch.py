@@ -3,6 +3,7 @@ from subprocess import Popen, PIPE
 from crontab import CronTab
 from sys import argv
 from time import sleep
+from fabric.api import local, settings
 
 from lib.Core.Utils.funcs import stopDaemon, startDaemon
 from Utils.funcs import printAsLog
@@ -139,17 +140,17 @@ class UnveillanceElasticsearch(UnveillanceElasticsearchHandler):
 		startDaemon(self.els_log_file, self.els_pid_file)
 		self.startCronJobs()
 
-		try:
-			with open(os.path.join(CONF_ROOT, "initial_tasks.json"), 'rb') as TASK_LIST:
-				initial_tasks = json.loads(TASK_LIST.read())
+		if self.first_use:
+			try:
+				with open(os.path.join(CONF_ROOT, "initial_tasks.json"), 'rb') as IT:
 				
-				from lib.Worker.Models.uv_task import UnveillanceTask
-				for i_task in initial_tasks:
-					task = UnveillanceTask(inflate=i_task)
-					task.run()
+					from lib.Worker.Models.uv_task import UnveillanceTask
+					for i_task in json.loads(IT.read()):
+						task = UnveillanceTask(inflate=i_task)
+						task.run()
 
-		except Exception as e:
-			if DEBUG: print "No initial tasks...\n%s" % e
+			except Exception as e:
+				if DEBUG: print "No initial tasks...\n%s" % e
 			
 		if catch:
 			while True: sleep(1)
@@ -178,7 +179,7 @@ class UnveillanceElasticsearch(UnveillanceElasticsearchHandler):
 	def stopCronJobs(self):
 		self.setCronJob(enabled=False)
 	
-	def setCronJob(enabled=True):
+	def setCronJob(self, enabled=True):
 		try:
 			cron = CronTab(tabfile=os.path.join(MONITOR_ROOT, "uv_cron.tab"))
 		except IOError as e:
@@ -190,6 +191,9 @@ class UnveillanceElasticsearch(UnveillanceElasticsearchHandler):
 			if job.comment == "clear_logs": continue
 			
 			job.enable(enabled)
+		
+		with settings(warn_only=True):
+			local("crontab %s" % os.path.join(MONITOR_ROOT, "uv_cron.tab"))
 	
 	def initElasticsearch(self):
 		if DEBUG: print "INITING ELASTICSEARCH"

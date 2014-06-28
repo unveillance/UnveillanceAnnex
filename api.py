@@ -152,7 +152,12 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		}
 		
 		if 'task_path' not in query.keys():
-			inflate['task_path'] = MIME_TYPE_TASKS[document['mime_type']][0]
+			if 'original_mime_type' in document.keys():
+				mime_type = document['original_mime_type']
+			else:
+				mime_type = document['mime_type']
+				
+			inflate['task_path'] = MIME_TYPE_TASKS[mime_type][0]
 		else:
 			inflate.update({
 				'task_path' :  query['task_path'],

@@ -70,7 +70,8 @@ if __name__ == "__main__":
 		local("mkdir %s" % monitor_root)
 
 	cron = CronTab(tab='')
-	cron_job = cron.new(command=os.path.join(base_dir, 'clear_logs.py'),
+	cron_job = cron.new(
+		command="python %s" % os.path.join(base_dir, 'clear_logs.py'),
 		comment="clear_logs")
 
 	cron_job.every(uv_log_cron).days()
