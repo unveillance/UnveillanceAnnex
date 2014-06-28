@@ -26,14 +26,9 @@ class UnveillanceTask(UnveillanceObject):
 		
 		# if we already have a cron entry, let's make sure it's on
 		if hasattr(self, "persist"):
-			cron = CronTab(tabfile=os.path.join(MONITOR_ROOT, "uv_cron.tab"))
 			try:
-				job = cron.find_comment("task_%s" % self._id)
-				print type(job)
-				print job
-				job = job[0]
-				print job
-				
+				cron = CronTab(tabfile=os.path.join(MONITOR_ROOT, "uv_cron.tab"))
+				job = cron.find_comment("task_%s" % self._id).next()				
 				if not job.is_enabled(): job.enable()
 				return
 			except Exception as e:
@@ -80,7 +75,12 @@ class UnveillanceTask(UnveillanceObject):
 			self.save()
 			if DEBUG: print "task will run again after %d minutes" % self.persist
 			
-			cron = CronTab(tabfile=os.path.join(MONITOR_ROOT, "uv_cron.tab"))
+			try:
+				cron = CronTab(tabfile=os.path.join(MONITOR_ROOT, "uv_cron.tab"))
+			except IOError as e:
+				if DEBUG: print "no crontab yet..."
+				cron = CronTab(tab='')
+				
 			job = cron.new(
 				command="%s %s" % (os.path.join(BASE_DIR, "run_task.py"), self._id),
 				comment="task_%s" % self._id)

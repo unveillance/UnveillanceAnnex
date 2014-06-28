@@ -69,8 +69,8 @@ if __name__ == "__main__":
 		local("mkdir %s" % annex_dir)	
 		local("mkdir %s" % monitor_root)
 
-	cron = CronTab(tabfile=os.path.join(monitor_root, "uv_cron.tab"))
-	cron_job = cron.new(command=os.path.join(base_dir, 'clear_logs.py'))
+	cron = CronTab(tab='')
+	cron_job = cron.new(command=os.path.join(base_dir, 'clear_logs.py'),
 		comment="clear_logs")
 
 	cron_job.every(uv_log_cron).days()

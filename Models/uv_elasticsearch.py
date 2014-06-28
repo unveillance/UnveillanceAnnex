@@ -179,7 +179,11 @@ class UnveillanceElasticsearch(UnveillanceElasticsearchHandler):
 		self.setCronJob(enabled=False)
 	
 	def setCronJob(enabled=True):
-		cron = CronTab(tabfile=os.path.join(MONITOR_ROOT, "uv_cron.tab"))
+		try:
+			cron = CronTab(tabfile=os.path.join(MONITOR_ROOT, "uv_cron.tab"))
+		except IOError as e:
+			if DEBUG: print "THERE ARE NO CRONS YET!"
+			return
 
 		# enable/disable all the jobs (except for the log one)
 		for job in cron:
