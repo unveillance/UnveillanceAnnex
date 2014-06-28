@@ -1,4 +1,5 @@
 import re, os, json
+from crontab import CronTab
 from sys import argv, exit
 from time import sleep
 from fabric.api import local, settings
@@ -46,7 +47,7 @@ if __name__ == "__main__":
 			uv_server_host = "127.0.0.1"
 	
 	try:
-		uv_uuid = config['uv_uuid']
+		uv_uuid = extras['uv_uuid']
 	except Exception as e:
 		print "What is this server's short name?"
 		uv_uuid = prompt("Pressing enter will generate a default")
@@ -55,9 +56,27 @@ if __name__ == "__main__":
 			from time import time
 			uv_uuid = "unveillance_annex_%d" % time()
 	
+	try:
+		uv_log_cron = extras['uv_log_cron']
+	except Exception as e:
+		print "Unveillance tasks might log a lot of information.  How frequently would you like the logs to be cleared?"
+		uv_log_cron = Prompt("[DEFAULT: 3 days]")
+		
+		if len(uv_log_cron) == 0:
+			uv_log_cron = 3
+
 	with settings(warn_only=True):
 		local("mkdir %s" % annex_dir)	
 		local("mkdir %s" % monitor_root)
+
+	cron = CronTab(tabfile=os.path.join(monitor_root, "uv_cron.tab"))
+	cron_job = cron.new(command=os.path.join(base_dir, 'clear_logs.py'))
+		comment="clear_logs")
+
+	cron_job.hour.every(uv_log_cron * 24)
+	cron_job.enable()
+	
+	cron.write(os.path.join(monitor_root, "uv_cron.tab"))	
 
 	print "******************************************"
 	els_root = locateLibrary(r'elasticsearch*')

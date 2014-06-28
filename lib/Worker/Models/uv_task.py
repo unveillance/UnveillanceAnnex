@@ -1,4 +1,5 @@
 import os, requests
+from crontab import CronTab
 from time import sleep
 from importlib import import_module
 from multiprocessing import Process
@@ -7,7 +8,7 @@ from Models.uv_object import UnveillanceObject
 from Utils.funcs import printAsLog
 
 from vars import EmitSentinel, UV_DOC_TYPE, TASKS_ROOT
-from conf import DEBUG, BASE_DIR, HOST, API_PORT
+from conf import DEBUG, BASE_DIR, HOST, API_PORT, MONITOR_ROOT
 
 class UnveillanceTask(UnveillanceObject):
 	def __init__(self, inflate=None, _id=None):		
@@ -54,21 +55,25 @@ class UnveillanceTask(UnveillanceObject):
 		if DEBUG: print "task finished!"
 		
 		if not hasattr(self, 'persist') or not self.persist:
-			self.setStatus(200)
 			if DEBUG: print "task will be deleted!"
+
+			self.setStatus(200)
 			self.delete()
 		else:
 			self.setStatus(205)
 			self.save()
 			if DEBUG: print "task will run again after %d minutes" % self.persist
-			sleep(self.persist * 60)
 			
-			if not hasattr(self, "locked") or not self.locked:
-				r = requests.post("http://%s:%d/task/" % (HOST, API_PORT), 
-					data={ '_id' : self._id })
-			else:
-				sleep(self.persist * 60)
-				self.finish()
+			cron = CronTab(tabfile=os.path.join(MONITOR_ROOT, "uv_cron.tab"))
+			job = cron.new(
+				command="%s %s" % (os.path.join(BASE_DIR, "run_task.py"), self._id),
+				comment=self._id)
+			
+			job.minutes.every(self.persist)
+			cron.write(os.path.join(MONITOR_ROOT, "uv_cron.tab"))
+			
+			sleep(self.persist * 60)
+			job.enable()
 	
 	def delete(self):
 		if DEBUG: print "DELETING MYSELF"
