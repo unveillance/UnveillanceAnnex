@@ -73,7 +73,7 @@ if __name__ == "__main__":
 	cron_job = cron.new(command=os.path.join(base_dir, 'clear_logs.py'))
 		comment="clear_logs")
 
-	cron_job.hour.every(uv_log_cron * 24)
+	cron_job.every(uv_log_cron).days()
 	cron_job.enable()
 	
 	cron.write(os.path.join(monitor_root, "uv_cron.tab"))	

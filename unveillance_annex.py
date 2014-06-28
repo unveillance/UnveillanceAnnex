@@ -2,7 +2,7 @@ import signal, os, logging, re, json
 from sys import exit, argv
 from multiprocessing import Process
 from time import sleep
-
+from crontab import CronTab
 from fabric.api import local, settings
 
 import tornado.ioloop
@@ -141,6 +141,21 @@ class UnveillanceAnnex(tornado.web.Application, UnveillanceAPI):
 	
 		tornado.ioloop.IOLoop.instance().start()
 	
+	def startCronJobs(self):
+		self.setCronJob()
+	
+	def stopCronJobs(self):
+		self.setCronJob(enabled=False)
+	
+	def setCronJob(enabled=True):
+		cron = CronTab(tabfile=os.path.join(MONITOR_ROOT, "uv_cron.tab"))
+
+		# enable/disable all the jobs (except for the log one)
+		for job in cron:
+			if job.comment == "clear_logs": continue
+			
+			job.enable(enabled)
+	
 	def stopRESTAPI(self):
 		print "shutting down REST API"
 		stopDaemon(self.api_pid_file, extra_pids_port=API_PORT)
@@ -149,6 +164,7 @@ class UnveillanceAnnex(tornado.web.Application, UnveillanceAPI):
 		self.stopWorker()
 		self.stopElasticsearch()
 		self.stopRESTAPI()
+		self.stopCronJobs()
 	
 	def startup(self):
 		argv.pop()
@@ -167,6 +183,8 @@ class UnveillanceAnnex(tornado.web.Application, UnveillanceAPI):
 		
 		p = Process(target=self.startRESTAPI)
 		p.start()
+		
+		self.startCronJobs()
 			
 if __name__ == "__main__":
 	os.chdir(ANNEX_DIR)	

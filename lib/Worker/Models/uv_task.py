@@ -67,9 +67,9 @@ class UnveillanceTask(UnveillanceObject):
 			cron = CronTab(tabfile=os.path.join(MONITOR_ROOT, "uv_cron.tab"))
 			job = cron.new(
 				command="%s %s" % (os.path.join(BASE_DIR, "run_task.py"), self._id),
-				comment=self._id)
+				comment="task_%s" % self._id)
 			
-			job.minutes.every(self.persist)
+			job.every(self.persist).minutes()
 			cron.write(os.path.join(MONITOR_ROOT, "uv_cron.tab"))
 			
 			sleep(self.persist * 60)
