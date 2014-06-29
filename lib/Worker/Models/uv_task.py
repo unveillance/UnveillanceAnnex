@@ -80,14 +80,17 @@ class UnveillanceTask(UnveillanceObject):
 				
 			except IOError as e:
 				if DEBUG: print "no crontab yet..."
-				cron = CronTab(tab='')
+				cron = CronTab(tab='# Unveillance CronTab')
 			except StopIteration as e:
 				if DEBUG: print "this job isn't in cron yet..."
 				pass
 			
+			with settings(warn_only=True):
+				PYTHON_PATH = local("which python", capture=True)
+	
 			task_script = os.path.join(BASE_DIR, "run_task.py")
 			job = cron.new(
-				command="python %s %s >/dev/null 2>&1" % (task_script, self._id),
+				command="%s %s %s >> %s" % (PYTHON_PATH, task_script, self._id, os.path.join(MONITOR_ROOT, "api.log.txt")),
 				comment=self.task_path)
 			
 			job.every(self.persist).minutes()

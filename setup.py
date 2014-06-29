@@ -68,10 +68,11 @@ if __name__ == "__main__":
 	with settings(warn_only=True):
 		local("mkdir %s" % annex_dir)	
 		local("mkdir %s" % monitor_root)
-
-	cron = CronTab(tab='')
+		PYTHON_HOME = local('which python', capture=True)
+		
+	cron = CronTab(tab='# Unveillance CronTab')
 	cron_job = cron.new(
-		command="python %s" % os.path.join(base_dir, 'clear_logs.py'),
+		command="%s %s >> %s" % (PYTHON_HOME, os.path.join(base_dir, 'clear_logs.py'), os.path.join(monitor_root, "api.log.txt")),
 		comment="clear_logs")
 
 	cron_job.every(uv_log_cron).days()
