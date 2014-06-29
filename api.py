@@ -86,6 +86,8 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 			query = deepcopy(QUERY_DEFAULTS['UV_DOCUMENT'])
 
 		args = parseRequestEntity(request.query)
+		if DEBUG: print "\n\nARGS:\n%s\n\n" % args
+		
 		if len(args.keys()) > 0:
 			try:
 				count_only = args['count']
@@ -108,6 +110,20 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 					query['bool'][operator].append({
 						"match": {
 							"uv_document.%s" % a : args[a]
+						}
+					})
+				elif a in QUERY_KEYS[operator]['filter']:
+					terms = args[a]
+					if type(terms) is not list:
+						terms = [terms]
+					
+					query['bool'][operator].append({
+						"constant_score" : {
+							"filter" : {
+								"terms" : {
+									"uv_document.%s" % a : terms
+								}
+							}
 						}
 					})
 		
