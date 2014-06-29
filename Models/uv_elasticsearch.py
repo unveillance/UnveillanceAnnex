@@ -1,4 +1,4 @@
-import os, json, re, requests
+import os, json, re, requests, urllib
 from subprocess import Popen, PIPE
 from crontab import CronTab
 from sys import argv
@@ -23,10 +23,6 @@ class UnveillanceElasticsearchHandler(object):
 		return None
 	
 	def query(self, args, count_only=False, limit=None, sort=None, from_=None):
-		if DEBUG: 
-			print "OH A QUERY"
-			print args
-		
 		# TODO: ACTUALLY, I MEAN ALL OF THEM.
 		if limit is None: limit = 50
 		if from_ is None: from_ = 0
@@ -36,11 +32,15 @@ class UnveillanceElasticsearchHandler(object):
 			if type(sort) is not list: sort = [sort]
 		
 		query = {
-			'query' : args,
+			'query' : json.loads(urllib.unquote(json.dumps(args))),
 			'from' : from_,
 			'size' : limit,
 			'sort' : sort
 		}
+		
+		if DEBUG: 
+			print "OH A QUERY"
+			print query
 		
 		res = self.sendELSRequest(endpoint="_search", data=query, method="post")
 		
