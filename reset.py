@@ -15,6 +15,7 @@ if __name__ == "__main__":
 		
 		cron.remove_all()
 		with settings(warn_only=True):
+			local("crontab -r")
 			local("rm %s" % os.path.join(MONITOR_ROOT, "uv_cron.tab"))
 
 	except IOError as e:

@@ -56,9 +56,7 @@ class UnveillanceAnnex(tornado.web.Application, UnveillanceAPI):
 						del res.data
 						res.result = 412
 				except AttributeError as e: pass
-			
-			if DEBUG : print res.emit()
-			
+						
 			self.set_status(res.result)					
 			self.finish(res.emit())
 	

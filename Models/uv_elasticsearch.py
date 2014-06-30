@@ -24,7 +24,7 @@ class UnveillanceElasticsearchHandler(object):
 	
 	def query(self, args, count_only=False, limit=None, sort=None, from_=None):
 		# TODO: ACTUALLY, I MEAN ALL OF THEM.
-		if limit is None: limit = 50
+		if limit is None: limit = 1000
 		if from_ is None: from_ = 0
 
 		if sort is None: sort = [{"uv_document.date_added" : {"order" : "desc"}}]
@@ -193,7 +193,10 @@ class UnveillanceElasticsearch(UnveillanceElasticsearchHandler):
 			job.enable(enabled)
 		
 		with settings(warn_only=True):
-			local("crontab %s" % os.path.join(MONITOR_ROOT, "uv_cron.tab"))
+			if enabled:
+				local("crontab %s" % os.path.join(MONITOR_ROOT, "uv_cron.tab"))
+			else:
+				local("crontab -r")
 	
 	def initElasticsearch(self):
 		if DEBUG: print "INITING ELASTICSEARCH"

@@ -97,7 +97,6 @@ class UnveillanceTask(UnveillanceObject):
 			job.enable()
 			cron.write(os.path.join(MONITOR_ROOT, "uv_cron.tab"))
 			
-			sleep(self.persist * 60)
 			with settings(warn_only=True):
 				local("crontab %s" % os.path.join(MONITOR_ROOT, "uv_cron.tab"))
 	
