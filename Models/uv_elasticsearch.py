@@ -22,7 +22,7 @@ class UnveillanceElasticsearchHandler(object):
 		
 		return None
 	
-	def query(self, args, count_only=False, limit=None, sort=None, from_=None):
+	def query(self, args, count_only=False, limit=None, sort=None, from_=None, cast_as=None):
 		# TODO: ACTUALLY, I MEAN ALL OF THEM.
 		if limit is None: limit = 1000
 		if from_ is None: from_ = 0
@@ -38,6 +38,9 @@ class UnveillanceElasticsearchHandler(object):
 			'sort' : sort
 		}
 		
+		if cast_as is not None:
+			query['fields'] = cast_as
+		
 		if DEBUG: 
 			print "OH A QUERY"
 			print query
@@ -46,7 +49,23 @@ class UnveillanceElasticsearchHandler(object):
 		
 		try:
 			if len(res['hits']['hits']) > 0:
+				# if cast_as, do an ids query!
+				if cast_as is not None:
+					casts = [h['fields'][cast_as][0] for h in h in res['hits']['hits']]
+					
+					del query['fields']
+					query['query'] = {
+						"ids" : {
+							"values" : casts
+						}
+					}
+					
+					if DEBUG: print "\nCASTING TO %s:\n%s\n" % (cast_as, query)
+					res = self.sendELSRequest(endpoint="_search", method="post",
+						data=query)
+				
 				if count_only: return res['hits']['total']
+				
 				else: 
 					return { 
 						'count' : res['hits']['total'], 
