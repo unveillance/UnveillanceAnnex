@@ -81,6 +81,7 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 	def do_list(self, request, query=None):
 		count_only = False
 		limit = None
+		cast_as = None
 		
 		if query is None:
 			query = deepcopy(QUERY_DEFAULTS['UV_DOCUMENT'])
@@ -97,6 +98,11 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 			try:
 				limit = args['limit']
 				del args['limit']
+			except KeyError as e: pass
+			
+			try:
+				cast_as = args['cast_as']
+				del args['cast_as']
 			except KeyError as e: pass
 			
 			operator = 'must'
@@ -127,10 +133,9 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 						}
 					})
 		
-		return self.query(query, count_only=count_only, limit=limit)
+		return self.query(query, count_only=count_only, limit=limit, cast_as=cast_as)
 	
 	def runTask(self, handler):
-		
 		try:
 			args = parseRequestEntity(handler.request.body)
 		except AttributeError as e:

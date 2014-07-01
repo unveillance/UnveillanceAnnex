@@ -51,7 +51,7 @@ class UnveillanceElasticsearchHandler(object):
 			if len(res['hits']['hits']) > 0:
 				# if cast_as, do an ids query!
 				if cast_as is not None:
-					casts = [h['fields'][cast_as][0] for h in h in res['hits']['hits']]
+					casts = [h['fields'][cast_as][0] for h in res['hits']['hits']]
 					
 					del query['fields']
 					query['query'] = {
