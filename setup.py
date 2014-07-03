@@ -60,7 +60,7 @@ if __name__ == "__main__":
 		uv_log_cron = extras['uv_log_cron']
 	except Exception as e:
 		print "Unveillance tasks might log a lot of information.  How frequently would you like the logs to be cleared?"
-		uv_log_cron = Prompt("[DEFAULT: 3 days]")
+		uv_log_cron = prompt("[DEFAULT: 3 days]")
 		
 		if len(uv_log_cron) == 0:
 			uv_log_cron = 3
@@ -117,7 +117,7 @@ if __name__ == "__main__":
 	
 	with open(os.path.join(base_dir, "conf", "annex.config.yaml"), "ab") as CONFIG:
 		from lib.Core.Utils.funcs import generateNonce
-		CONFIG.write("document_salt: %s\n" % generateNonce())
+		CONFIG.write("document_salt: \"%s\"\n" % generateNonce())
 	
 	os.chdir(annex_dir)
 	with settings(warn_only=True):
@@ -125,6 +125,7 @@ if __name__ == "__main__":
 		local("mkdir .git/hooks")
 		local("cp %s .git/hooks" % os.path.join(base_dir, "post-receive"))
 		local("chmod +x .git/hooks/post-receive")
+		local("cp %s .git/hooks" % os.path.join(base_dir, "sync_file.py"))
 		local("git annex init \"unveillance_remote\"")
 		local("git annex untrust web")
 		local("git annex watch")
