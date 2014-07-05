@@ -247,13 +247,13 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		os.chdir(old_dir)
 		return False
 		
-	def syncAnnex(self, file_name):
+	def syncAnnex(self, file_name, reindex=False):
 		tasks = []
 		
 		create_rx = r'(?:(?!\.data/.*))([a-zA-Z0-9_\-\./]+)'
 		task_update_rx = r'(.data/[a-zA-Z0-0]{32}/.*)'
 
-		if not self.fileExistsInAnnex(file_name, auto_add=False):
+		if reindex or not self.fileExistsInAnnex(file_name, auto_add=False):
 			create = re.findall(create_rx, file_name)
 			if len(create) == 1:
 				# init new file. here it starts.

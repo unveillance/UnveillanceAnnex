@@ -5,6 +5,8 @@ if [ $# -eq 0 ]
 then
 	LAUNCH_ANNEX=true
 	WITH_CONFIG=0
+	
+	pip install --upgrade fabric
 else
 	LAUNCH_ANNEX=false
 	WITH_CONFIG=$1

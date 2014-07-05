@@ -123,9 +123,11 @@ if __name__ == "__main__":
 	with settings(warn_only=True):
 		local("git init")
 		local("mkdir .git/hooks")
-		local("cp %s .git/hooks" % os.path.join(base_dir, "post-receive"))
-		local("chmod +x .git/hooks/post-receive")
-		local("cp %s .git/hooks" % os.path.join(base_dir, "sync_file.py"))
+		
+		for hook in ["post-receive", "uv-post-netcat"]:
+			local("cp %s .git/hooks" % os.path.join(base_dir, hook))
+			local("chmod +x .git/hooks/%s" % hook)
+			
 		local("git annex init \"unveillance_remote\"")
 		local("git annex untrust web")
 		local("git annex watch")

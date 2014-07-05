@@ -60,10 +60,17 @@ class UnveillanceAnnex(tornado.web.Application, UnveillanceAPI):
 			self.set_status(res.result)					
 			self.finish(res.emit())
 	
-	class SyncHandler(tornado.web.RequestHandler):
+	class SyncHandler(tornado.web.RequestHandler):			
 		@tornado.web.asynchronous
 		def get(self, file_name): 
 			self.application.syncAnnex(file_name)
+			res = Result()
+			res.result = 200
+			self.finish(res.emit())
+		
+		@tornado.web.asynchronous
+		def post(self, file_name):
+			self.application.syncAnnex(file_name, reindex=True)
 			res = Result()
 			res.result = 200
 			self.finish(res.emit())
