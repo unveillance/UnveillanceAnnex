@@ -59,6 +59,15 @@ def evaluateText(task):
 			
 			if DEBUG: print txt_json
 			
+			if hasattr(document, "searchable_text"):
+				if type(document.searchable_text) is not list:
+					document.searchable_text = [document.searchable_text]
+			else:
+				document.searchable_text = []
+			
+			document.searchable_text.extend(txt_json)
+			document.save()
+			
 			document.addAsset(txt_json, "doc_texts.json", as_literal=False,
 				description="jsonified text of original document, segment by segment",
 				tags=[ASSET_TAGS['TXT_JSON']])
