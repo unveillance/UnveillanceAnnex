@@ -1,0 +1,2 @@
+cd /home/ubuntu/Compass/CompassAnnex/lib/Annex
+python sync_file.py $1

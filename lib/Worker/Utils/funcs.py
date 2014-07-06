@@ -1,4 +1,4 @@
-import magic, gzip
+import magic, gzip, re
 from cStringIO import StringIO
 from json import loads
 
@@ -42,6 +42,9 @@ def getFileType(file, as_buffer=False):
 			mime_type = m.id_buffer(file)
 
 		m.close()
+		if re.match(r'text/x\-.*', mime_type) is not None:
+			mime_type = "text/plain"
+		
 		if mime_type == "text/plain":
 			content = file
 			if not as_buffer:
