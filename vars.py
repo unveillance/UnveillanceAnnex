@@ -68,11 +68,17 @@ class QueryBatchStub(object):
 QUERY_KEYS = {
 	'must' : {
 		'match' : ['assets.tags', 'task_path', 'update_file', 'file_name'],
-		'filter' : ['mime_type']
+		'filter' : ['mime_type'],
+		'range' : ['date_added'],
+		'geo_distance' : [],
+		'query_string' : []
 	},
 	'must_not' : {
 		'query_string' : ['mime_type'],
-		'filter' : []
+		'filter' : [],
+		'match' : [],
+		'range' : [],
+		'geo_distance' : []
 	}
 }
 

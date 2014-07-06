@@ -1,7 +1,7 @@
-import re, sys, os
+import re, sys, os, datetime
 from subprocess import Popen, PIPE
 from multiprocessing import Process
-from time import sleep
+from time import sleep, mktime
 from copy import deepcopy
 
 from Models.uv_elasticsearch import UnveillanceElasticsearch
@@ -130,6 +130,40 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 									"uv_document.%s" % a : terms
 								}
 							}
+						}
+					})
+				elif a in QUERY_KEYS[operator]['range']:
+					try:
+						day = datetime.date.fromtimestamp(args[a]/1000)
+					except Exception as e:
+						print "TIME ERROR: %s" % e
+						return None
+						
+					if "upper" in args.keys():
+						lte = datetime.date.fromtimestamp((args[a] + args['upper'])/1000)
+						gte = datetime.date.fromtimestamp(args[a]/1000)
+					else:
+						lte = datetime.date(day.year, day.month, day.day + 1)
+						gte = datetime.date(day.year, day.month, day.day)
+					
+					query['bool'][operator].append({
+						"range" : {
+							"uv_document.%s" % a : {
+								"gte" : format(mktime(gte.timetuple()) * 1000, '0.0f'),
+								"lte" : format(mktime(lte.timetuple()) * 1000, '0.0f')
+							}
+						}
+					})
+				elif a in QUERY_KEYS[operator]['geo_distance']:
+					if "radius" not in args.keys():
+						radius = 3
+					else:
+						radius = args['radius']
+
+					query['bool'][operator].append({
+						"geo_distance" : {
+							"distance" : "%dmi" % radius,
+							"uv_document.%s" % a : args[a]
 						}
 					})
 		
