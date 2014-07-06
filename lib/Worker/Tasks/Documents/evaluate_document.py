@@ -36,6 +36,8 @@ def evaluateDocument(task):
 	from lib.Worker.Models.uv_task import UnveillanceTask
 	from vars import MIME_TYPE_TASKS
 	
+	document.addCompletedTask(task.task_path)
+	
 	if document.mime_type in MIME_TYPE_TASKS.keys():
 		if DEBUG:
 			print "mime type (%s) usable..." % document.mime_type

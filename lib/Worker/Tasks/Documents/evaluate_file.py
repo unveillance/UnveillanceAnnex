@@ -37,6 +37,8 @@ def evaluateFile(task):
 			'doc_id' : document._id,
 			'file_name' : task.file_name
 		})
+		
+		document.addCompletedTask(task.task_path)
 		new_task.run()
 	except IndexError as e:
 		print "NO NEXT TASK: %s" % e

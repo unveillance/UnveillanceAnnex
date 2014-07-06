@@ -79,6 +79,8 @@ def evaluateText(task):
 				print "ERROR HERE GENERATING DOC TEXTS:"
 				print e
 	
+	document.addComletedTask(task.task_path)
+	
 	if task_path is not None and not hasattr(task, "no_continue"):
 		from lib.Worker.Models.uv_task import UnveillanceTask
 		from conf import UUID

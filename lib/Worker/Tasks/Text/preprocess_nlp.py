@@ -47,5 +47,6 @@ def preprocessNLP(task):
 			description="keywords, as list, and parsable by gensim",
 			tags=ASSET_TAGS['KW'])
 
+	document.addCompletedTask(task.task_path)
 	task.finish()
 	print "\n\n************** %s [END] ******************\n" % task_tag
