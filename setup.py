@@ -124,8 +124,15 @@ if __name__ == "__main__":
 		local("git init")
 		local("mkdir .git/hooks")
 		
+	with open(os.path.join(annex_dir, ".git", "hooks", "post-receive"), 'wb+') as HOOK:
+		# TODO: not yet sure what we're doing for git-annex sync...
+		HOOK.write("echo $1 >> %s" % os.path.join(monitor_root, "test_post_receive.txt"))
+
+	with open(os.path.join(annex_dir, ".git", "hooks", "uv-post-netcat"), 'wb+') as HOOK:
+		HOOK.write("cd %s\n%s sync_file.py $1" % (base_dir, PYTHON_HOME))
+		
+	with settings(warn_only=True):
 		for hook in ["post-receive", "uv-post-netcat"]:
-			local("cp %s .git/hooks" % os.path.join(base_dir, hook))
 			local("chmod +x .git/hooks/%s" % hook)
 			
 		local("git annex init \"unveillance_remote\"")
