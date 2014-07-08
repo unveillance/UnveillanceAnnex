@@ -28,6 +28,13 @@ pip install --upgrade -r requirements.txt
 cd lib/Core
 pip install --upgrade -r requirements.txt
 
+cd $THIS_DIR/lib
+mkdir dstk
+wget -O dstk/dstk.zip http://www.datasciencetoolkit.org/python_tools.zip
+unzip dstk/dstk.zip -d dstk
+cd dstk/python
+python setup.py install
+
 cd $THIS_DIR
 echo "**************************************************"
 python setup.py $WITH_CONFIG
