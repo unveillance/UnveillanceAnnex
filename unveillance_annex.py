@@ -2,6 +2,7 @@ import signal, os, logging, re, json
 from sys import exit, argv
 from multiprocessing import Process
 from time import sleep
+from fabric.api import local, settings
 
 import tornado.ioloop
 import tornado.web
@@ -55,16 +56,21 @@ class UnveillanceAnnex(tornado.web.Application, UnveillanceAPI):
 						del res.data
 						res.result = 412
 				except AttributeError as e: pass
-			
-			if DEBUG : print res.emit()
-			
+						
 			self.set_status(res.result)					
 			self.finish(res.emit())
 	
-	class SyncHandler(tornado.web.RequestHandler):
+	class SyncHandler(tornado.web.RequestHandler):			
 		@tornado.web.asynchronous
 		def get(self, file_name): 
 			self.application.syncAnnex(file_name)
+			res = Result()
+			res.result = 200
+			self.finish(res.emit())
+		
+		@tornado.web.asynchronous
+		def post(self, file_name):
+			self.application.syncAnnex(file_name, reindex=True)
 			res = Result()
 			res.result = 200
 			self.finish(res.emit())
@@ -150,6 +156,13 @@ class UnveillanceAnnex(tornado.web.Application, UnveillanceAPI):
 	
 	def startup(self):
 		argv.pop()
+		
+		this_dir = os.getcwd()
+		os.chdir(ANNEX_DIR)
+		with settings(warn_only=True):
+			local("git annex watch")
+		os.chdir(this_dir)
+		
 		p = Process(target=self.startWorker)
 		p.start()
 		

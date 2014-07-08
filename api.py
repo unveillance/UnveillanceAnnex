@@ -1,7 +1,7 @@
-import re, sys, os
+import re, sys, os, datetime
 from subprocess import Popen, PIPE
 from multiprocessing import Process
-from time import sleep
+from time import sleep, mktime
 from copy import deepcopy
 
 from Models.uv_elasticsearch import UnveillanceElasticsearch
@@ -20,7 +20,8 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		UnveillanceElasticsearch.__init__(self)
 		sleep(1)
 		UnveillanceWorker.__init__(self)
-	
+		sleep(5)
+
 	def do_cluster(self, request):
 		"""
 			request must be inflated with 
@@ -80,11 +81,14 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 	def do_list(self, request, query=None):
 		count_only = False
 		limit = None
+		cast_as = None
 		
 		if query is None:
 			query = deepcopy(QUERY_DEFAULTS['UV_DOCUMENT'])
 
 		args = parseRequestEntity(request.query)
+		if DEBUG: print "\n\nARGS:\n%s\n\n" % args
+		
 		if len(args.keys()) > 0:
 			try:
 				count_only = args['count']
@@ -94,6 +98,11 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 			try:
 				limit = args['limit']
 				del args['limit']
+			except KeyError as e: pass
+			
+			try:
+				cast_as = args['cast_as']
+				del args['cast_as']
 			except KeyError as e: pass
 			
 			operator = 'must'
@@ -109,11 +118,63 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 							"uv_document.%s" % a : args[a]
 						}
 					})
+				elif a in QUERY_KEYS[operator]['filter']:
+					terms = args[a]
+					if type(terms) is not list:
+						terms = [terms]
+					
+					query['bool'][operator].append({
+						"constant_score" : {
+							"filter" : {
+								"terms" : {
+									"uv_document.%s" % a : terms
+								}
+							}
+						}
+					})
+				elif a in QUERY_KEYS[operator]['range']:
+					try:
+						day = datetime.date.fromtimestamp(args[a]/1000)
+					except Exception as e:
+						print "TIME ERROR: %s" % e
+						return None
+						
+					if "upper" in args.keys():
+						lte = datetime.date.fromtimestamp((args[a] + args['upper'])/1000)
+						gte = datetime.date.fromtimestamp(args[a]/1000)
+					else:
+						lte = datetime.date(day.year, day.month, day.day + 1)
+						gte = datetime.date(day.year, day.month, day.day)
+					
+					query['bool'][operator].append({
+						"range" : {
+							"uv_document.%s" % a : {
+								"gte" : format(mktime(gte.timetuple()) * 1000, '0.0f'),
+								"lte" : format(mktime(lte.timetuple()) * 1000, '0.0f')
+							}
+						}
+					})
+				elif a in QUERY_KEYS[operator]['geo_distance']:
+					if "radius" not in args.keys():
+						radius = 3
+					else:
+						radius = args['radius']
+
+					query['bool'][operator].append({
+						"geo_distance" : {
+							"distance" : "%dmi" % radius,
+							"uv_document.%s" % a : args[a]
+						}
+					})
 		
-		return self.query(query, count_only=count_only, limit=limit)
+		return self.query(query, count_only=count_only, limit=limit, cast_as=cast_as)
 	
-	def runTask(self, request):
-		args = parseRequestEntity(request.body)
+	def runTask(self, handler):
+		try:
+			args = parseRequestEntity(handler.request.body)
+		except AttributeError as e:
+			if DEBUG: print "No body?\n%s" % e
+			return None
 		
 		task = None
 		if len(args.keys()) == 1 and '_id' in args.keys():
@@ -146,7 +207,12 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		}
 		
 		if 'task_path' not in query.keys():
-			inflate['task_path'] = MIME_TYPE_TASKS[document['mime_type']][0]
+			if 'original_mime_type' in document.keys():
+				mime_type = document['original_mime_type']
+			else:
+				mime_type = document['mime_type']
+				
+			inflate['task_path'] = MIME_TYPE_TASKS[mime_type][0]
 		else:
 			inflate.update({
 				'task_path' :  query['task_path'],
@@ -166,7 +232,8 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		old_dir = os.getcwd()
 		os.chdir(ANNEX_DIR)
 		
-		cmd0 = ['git', 'annex', 'find', file_path]			
+		cmd0 = ['git', 'annex', 'find', file_path]
+		if DEBUG: print "SEARCHING FOR FILE IN ANNEX WITH\n%s" % cmd0
 		p0 = Popen(cmd0, stdout=PIPE, close_fds=True)
 		data0 = p0.stdout.readline()
 
@@ -214,13 +281,13 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		os.chdir(old_dir)
 		return False
 		
-	def syncAnnex(self, file_name):
+	def syncAnnex(self, file_name, reindex=False):
 		tasks = []
 		
 		create_rx = r'(?:(?!\.data/.*))([a-zA-Z0-9_\-\./]+)'
 		task_update_rx = r'(.data/[a-zA-Z0-0]{32}/.*)'
 
-		if not self.fileExistsInAnnex(file_name, auto_add=False):
+		if reindex or not self.fileExistsInAnnex(file_name, auto_add=False):
 			create = re.findall(create_rx, file_name)
 			if len(create) == 1:
 				# init new file. here it starts.

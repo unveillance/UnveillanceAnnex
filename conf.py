@@ -1,4 +1,4 @@
-import os, yaml
+import os, yaml, json
 from collections import namedtuple
 
 SERVER_HOST = os.getenv('UV_SERVER_HOST')
@@ -23,6 +23,11 @@ with open(os.path.join(CONF_ROOT, "annex.config.yaml"), 'rb') as C:
 	ELS_ROOT = os.path.join(BASE_DIR, config['els_root'])
 	
 	try:
+		DOC_SALT = config['document_salt']
+	except KeyError as e:
+		if DEBUG: print "no doc salt yet..."
+	
+	try:
 		VARS_EXTRAS = config['vars_extras']
 	except KeyError as e:
 		if DEBUG: print "DON'T WORRY: no variable extras..."
@@ -30,6 +35,14 @@ with open(os.path.join(CONF_ROOT, "annex.config.yaml"), 'rb') as C:
 def getConfig(key):
 	with open(os.path.join(CONF_ROOT, "annex.config.yaml"), 'rb') as C:
 		config = yaml.load(C.read())
+		try:
+			return config[key]
+		except Exception as e: raise e
+
+def getSecrets(key):
+	with open(os.path.join(CONF_ROOT, "unveillance.secrets.json"), 'rb') as C:
+		config = json.loads(C.read())
+		
 		try:
 			return config[key]
 		except Exception as e: raise e

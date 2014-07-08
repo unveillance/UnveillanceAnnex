@@ -111,6 +111,8 @@ def compileMetadata(task):
 			print "\n\n************** %s [ERROR] ******************\n" % task_tag
 			return
 		
+		document.addCompletedTask(task.task_path)
+		
 		from lib.Worker.Utils.funcs import routeNextTask
 		routeNextTask(task, document)
 		

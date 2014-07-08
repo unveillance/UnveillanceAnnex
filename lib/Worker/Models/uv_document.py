@@ -25,3 +25,11 @@ class UnveillanceDocument(UnveillanceObject):
 			from lib.Worker.Utils.funcs import getFileType
 			self.mime_type = getFileType(os.path.join(ANNEX_DIR, self.file_name))
 			self.save()
+	
+	def addCompletedTask(self, task_path):
+		if not hasattr(self, "completed_tasks"):
+			self.completed_tasks = []
+		
+		if task_path not in self.completed_tasks:
+			self.completed_tasks.add(task_path)
+			self.save()

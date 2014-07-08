@@ -27,15 +27,37 @@ def inflateVars(path):
 			if len(vars_extras[k].keys()) == 0: continue
 			
 			lcl[k]['uv_document']['properties'].update(vars_extras[k])
+			continue
+		elif k == "QUERY_KEYS":			
+			for operator in vars_extras[k].keys():
+				if DEBUG: print "Operator: %s" % operator
+				
+				if operator in QUERY_KEYS.keys():
+					for query_type in vars_extras[k][operator].keys():
+						if DEBUG: print "query type: %s" % query_type
+						qts = vars_extras[k][operator][query_type]
+						
+						if type(qts) is not list: qts = [qts]
+						if DEBUG: print qts
+						
+						if query_type in QUERY_KEYS[operator].keys():
+							if DEBUG: print "UPDATING %s" % query_type
+							QUERY_KEYS[operator][query_type].extend(qts)
+						else:
+							QUERY_KEYS[operator][query_type] = qts
+				else:
+					QUERY_KEYS.update(vars_extras[k][operator])
 			
-			if DEBUG: print "NEW ELASICSEARCH MAPPING:\n%s" % lcl[k]
+			if DEBUG:
+				print "\n\nNEW QUERY KEYS:\n%s" % QUERY_KEYS
+				print "\n\n"
 			continue
 			
 		try:
 			lcl[k].update(vars_extras[k])
-			if DEBUG: print "updating var: %s" % lcl[k]
+			if DEBUG: print "\nupdating %s: %s\n" % (k, lcl[k])
 		except KeyError as e:
-			if DEBUG: print "don't worry, don't have %s" % k
+			if DEBUG: print "\ndon't worry, don't have %s" % k
 			lcl[k] = vars_extras[k]
 
 QueryBatchRequestStub = namedtuple("QueryBatchRequestStub", "query")
@@ -45,12 +67,18 @@ class QueryBatchStub(object):
 
 QUERY_KEYS = {
 	'must' : {
-		'match' : ['mime_type', 'assets.tags', 'task_path', 'update_file', 'file_name'],
-		'filter' : []
+		'match' : ['assets.tags', 'task_path', 'update_file', 'file_name'],
+		'range' : ['date_added'],
+		'geo_distance' : [],
+		'query_string' : [],
+		'filter' : ['mime_type', 'searchable_text']
 	},
 	'must_not' : {
 		'query_string' : ['mime_type'],
-		'filter' : []
+		'filter' : [],
+		'match' : [],
+		'range' : [],
+		'geo_distance' : []
 	}
 }
 

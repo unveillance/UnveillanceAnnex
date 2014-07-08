@@ -1,7 +1,9 @@
-import os, json, re, requests
+import os, json, re, requests, urllib
 from subprocess import Popen, PIPE
+from crontab import CronTab
 from sys import argv
 from time import sleep
+from fabric.api import local, settings
 
 from lib.Core.Utils.funcs import stopDaemon, startDaemon
 from Utils.funcs import printAsLog
@@ -20,13 +22,9 @@ class UnveillanceElasticsearchHandler(object):
 		
 		return None
 	
-	def query(self, args, count_only=False, limit=None, sort=None, from_=None):
-		if DEBUG: 
-			print "OH A QUERY"
-			print args
-		
+	def query(self, args, count_only=False, limit=None, sort=None, from_=None, cast_as=None):
 		# TODO: ACTUALLY, I MEAN ALL OF THEM.
-		if limit is None: limit = 50
+		if limit is None: limit = 1000
 		if from_ is None: from_ = 0
 
 		if sort is None: sort = [{"uv_document.date_added" : {"order" : "desc"}}]
@@ -34,17 +32,41 @@ class UnveillanceElasticsearchHandler(object):
 			if type(sort) is not list: sort = [sort]
 		
 		query = {
-			'query' : args,
+			'query' : json.loads(urllib.unquote(json.dumps(args))),
 			'from' : from_,
 			'size' : limit,
 			'sort' : sort
 		}
 		
+		if cast_as is not None:
+			query['fields'] = cast_as
+		
+		if DEBUG: 
+			print "OH A QUERY"
+			print query
+		
 		res = self.sendELSRequest(endpoint="_search", data=query, method="post")
 		
 		try:
 			if len(res['hits']['hits']) > 0:
+				# if cast_as, do an ids query!
+				
+				if cast_as is not None:
+					casts = [h['fields'][cast_as][0] for h in res['hits']['hits'] if 'fields' in h.keys()]
+										
+					del query['fields']	
+					query['query'] = {
+						"ids" : {
+							"values" : casts
+						}
+					}
+					
+					if DEBUG: print "\nCASTING TO %s:\n%s\n" % (cast_as, query)
+					res = self.sendELSRequest(endpoint="_search", method="post",
+						data=query)
+				
 				if count_only: return res['hits']['total']
+				
 				else: 
 					return { 
 						'count' : res['hits']['total'], 
@@ -136,11 +158,27 @@ class UnveillanceElasticsearch(UnveillanceElasticsearchHandler):
 		p.stdout.close()
 		
 		startDaemon(self.els_log_file, self.els_pid_file)
+		self.startCronJobs()
+
+		if self.first_use:
+			try:
+				with open(os.path.join(CONF_ROOT, "initial_tasks.json"), 'rb') as IT:
+				
+					from lib.Worker.Models.uv_task import UnveillanceTask
+					for i_task in json.loads(IT.read()):
+						task = UnveillanceTask(inflate=i_task)
+						task.run()
+
+			except Exception as e:
+				if DEBUG: print "No initial tasks...\n%s" % e
+			
 		if catch:
 			while True: sleep(1)
 	
 	def stopElasticsearch(self):
 		printAsLog("stopping elasticsearch")
+
+		self.stopCronJobs()
 		
 		p = Popen(['lsof', '-t', '-i:9200'], stdout=PIPE, close_fds=True)
 		data = p.stdout.readline()
@@ -154,6 +192,31 @@ class UnveillanceElasticsearch(UnveillanceElasticsearchHandler):
 		p.stdout.close()
 		stopDaemon(self.els_pid_file)
 		with open(self.els_status_file, 'wb+') as f: f.write("False")
+	
+	def startCronJobs(self):
+		self.setCronJob()
+	
+	def stopCronJobs(self):
+		self.setCronJob(enabled=False)
+	
+	def setCronJob(self, enabled=True):
+		try:
+			cron = CronTab(tabfile=os.path.join(MONITOR_ROOT, "uv_cron.tab"))
+		except IOError as e:
+			if DEBUG: print "THERE ARE NO CRONS YET!"
+			return
+
+		# enable/disable all the jobs (except for the log one)
+		for job in cron:
+			if job.comment == "clear_logs": continue
+			
+			job.enable(enabled)
+		
+		with settings(warn_only=True):
+			if enabled:
+				local("crontab %s" % os.path.join(MONITOR_ROOT, "uv_cron.tab"))
+			else:
+				local("crontab -r")
 	
 	def initElasticsearch(self):
 		if DEBUG: print "INITING ELASTICSEARCH"

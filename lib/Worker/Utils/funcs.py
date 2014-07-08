@@ -1,4 +1,4 @@
-import magic, gzip
+import magic, gzip, re
 from cStringIO import StringIO
 from json import loads
 
@@ -42,6 +42,9 @@ def getFileType(file, as_buffer=False):
 			mime_type = m.id_buffer(file)
 
 		m.close()
+		if re.match(r'text/x\-.*', mime_type) is not None:
+			mime_type = "text/plain"
+		
 		if mime_type == "text/plain":
 			content = file
 			if not as_buffer:
@@ -59,6 +62,18 @@ def getFileType(file, as_buffer=False):
 	except: pass
 	m.close()
 	return None
+
+def gzipFile(path):
+	_out = StringIO()
+	_in = open(path)
+	
+	z = gzip.GzipFile(fileobj=_out, mode='w')
+	z.write(_in.read())
+	
+	z.close()
+	_in.close()
+	
+	return _out.getvalue()
 
 def unGzipBinary(bin):
 	try:
