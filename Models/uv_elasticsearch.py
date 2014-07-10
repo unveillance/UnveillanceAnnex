@@ -16,9 +16,12 @@ class UnveillanceElasticsearchHandler(object):
 	def get(self, _id):
 		if DEBUG: print "getting thing"
 		res = self.sendELSRequest(endpoint=_id)
+		
 		try:
 			if res['found']: return res['_source']
-		except KeyError as e: pass
+		except KeyError as e: 
+			if DEBUG: print "ERROR ON GET: %s" % e
+			pass
 		
 		return None
 	
@@ -121,7 +124,12 @@ class UnveillanceElasticsearchHandler(object):
 		elif method == "delete":
 			r = requests.delete(url, data=data)
 		
-		return json.loads(r.content)
+		if hasattr(r, "content"):
+			return json.loads(r.content)
+		elif hasattr(r, "text"):
+			return json.loads(r.text)
+		
+		return None
 
 class UnveillanceElasticsearch(UnveillanceElasticsearchHandler):
 	def __init__(self):		
