@@ -140,7 +140,7 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 						return None
 						
 					if "upper" in args.keys():
-						lte = datetime.date.fromtimestamp((args[a] + args['upper'])/1000)
+						lte = datetime.date.fromtimestamp(args['upper']/1000)
 						gte = datetime.date.fromtimestamp(args[a]/1000)
 					else:
 						lte = datetime.date(day.year, day.month, day.day + 1)
