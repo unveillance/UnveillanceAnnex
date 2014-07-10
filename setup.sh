@@ -32,6 +32,7 @@ cd $THIS_DIR/lib
 mkdir dstk
 wget -O dstk/dstk.zip http://www.datasciencetoolkit.org/python_tools.zip
 unzip dstk/dstk.zip -d dstk
+rm -rf dstk/__MACOSX
 cd dstk/python
 python setup.py install
 
