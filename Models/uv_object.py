@@ -31,7 +31,9 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 			emit_sentinels=emit_sentinels)
 		
 	def save(self):
-		if DEBUG: print "SAVING AS ANNEX/WORKER OBJECT"
+		if DEBUG: 
+			print "\n\n**SAVING AS ANNEX/WORKER OBJECT"
+		
 		return self.update(self._id, self.emit())
 		
 	def getObject(self, _id):
@@ -120,7 +122,7 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 		if data is not None and asset_path:
 			if DEBUG:
 				print "HERE IS THE DATA I PLAN ON ADDING:"
-				print data
+				print type(data)
 			
 			if not as_literal: data = dumps(data)
 			if not self.addFile(asset_path, data):
