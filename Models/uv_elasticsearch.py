@@ -114,15 +114,19 @@ class UnveillanceElasticsearchHandler(object):
 		if data is not None: data = json.dumps(data)
 
 		if DEBUG: print "SENDING ELS REQUEST TO %s" % url
-			
-		if method == "get":
-			r = requests.get(url, data=data)
-		elif method == "post":
-			r = requests.post(url, data=data)
-		elif method == "put":
-			r = requests.put(url, data=data)
-		elif method == "delete":
-			r = requests.delete(url, data=data)
+		
+		try:
+			if method == "get":
+				r = requests.get(url, data=data)
+			elif method == "post":
+				r = requests.post(url, data=data)
+			elif method == "put":
+				r = requests.put(url, data=data)
+			elif method == "delete":
+				r = requests.delete(url, data=data)
+		except Exception as e:
+			if DEBUG: print "ERROR ACCESSING ELASTICSEARCH: %s" e
+			return None
 		
 		if hasattr(r, "content"):
 			return json.loads(r.content)
