@@ -18,7 +18,7 @@ class UnveillanceDocument(UnveillanceObject):
 			emit_sentinels=emit_sentinels)
 		
 		if inflate is not None:
-			if not self.getFile(self.file_name):
+			if not self.queryFile(self.file_name):
 				self.invalidate(error="COULD NOT GET DOCUMENT FROM ANNEX")
 				return
 				

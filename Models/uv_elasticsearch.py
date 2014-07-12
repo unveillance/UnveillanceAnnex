@@ -125,7 +125,7 @@ class UnveillanceElasticsearchHandler(object):
 			elif method == "delete":
 				r = requests.delete(url, data=data)
 		except Exception as e:
-			if DEBUG: print "ERROR ACCESSING ELASTICSEARCH: %s" e
+			if DEBUG: print "ERROR ACCESSING ELASTICSEARCH: %s" % e
 			return None
 		
 		if hasattr(r, "content"):

@@ -1,8 +1,8 @@
 import re, sys, os, datetime
-from subprocess import Popen, PIPE
-from multiprocessing import Process
 from time import sleep, mktime
 from copy import deepcopy
+from fabric.api import local, settings
+from fabric.context_managers import hide
 
 from Models.uv_elasticsearch import UnveillanceElasticsearch
 from Models.uv_worker import UnveillanceWorker
@@ -176,19 +176,19 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 			if DEBUG: print "No body?\n%s" % e
 			return None
 		
-		task = None
+		uv_task = None
 		if len(args.keys()) == 1 and '_id' in args.keys():
-			task = UnveillanceTask(_id=args['_id'])
+			uv_task = UnveillanceTask(_id=args['_id'])
 		else:
 			# TODO: XXX: IF REFERER IS LOCALHOST ONLY (and other auth TBD)!
 			if 'task_path' in args.keys():
 				args['queue'] = UUID
-				task = UnveillanceTask(args)
+				uv_task = UnveillanceTask(args)
 		
-		if task is None: return None
+		if uv_task is None: return None
 		
-		task.run()
-		return task.emit()
+		uv_task.run()
+		return uv_task.emit()
 	
 	def do_reindex(self, request):
 		query = parseRequestEntity(request.query)
@@ -219,8 +219,8 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 				'no_continue' : True 
 			})
 		
-		task = UnveillanceTask(inflate=inflate)
-		task.run()
+		uv_task = UnveillanceTask(inflate=inflate)
+		uv_task.run()
 		return True
 	
 	def fileExistsInAnnex(self, file_path, auto_add=True):
@@ -232,57 +232,41 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		old_dir = os.getcwd()
 		os.chdir(ANNEX_DIR)
 		
-		cmd0 = ['git', 'annex', 'find', file_path]
-		if DEBUG: print "SEARCHING FOR FILE IN ANNEX WITH\n%s" % cmd0
-		p0 = Popen(cmd0, stdout=PIPE, close_fds=True)
-		data0 = p0.stdout.readline()
-
-		while data0:
-			if DEBUG: print data0
-			if data0.strip() == file_path:
+		with settings(hide('everything'), warn_only=True):
+			find_cmd = local("git annex find %s" % file_path, capture=True)
+		
+		for line in find_cmd.splitlines():
+			if line == file_path:				
 				if auto_add:
 					web_match_found = False
 					m_path = re.compile("\s*web: http\://%s:%d/files/%s" % 
 						(HOST, API_PORT, file_path))
-					cmd1 = ['git', 'annex', 'whereis', file_path]
-					p1 = Popen(cmd1, stdout=PIPE, close_fds=True)
-					data1 = p1.stdout.readline()
 				
-					# if this file has not already been added to web remote, add it
-					while data1:
-						if re.match(m_path, data1) is not None:
+					with settings(hide('everything'), warn_only=True):
+						w_match = local("git annex whereis %s" % file_path, capture=True)
+							
+					for w_line in w_match.splitlines():
+						# if this file has not already been added to web remote, add it
+						if re.match(m_path, w_line) is not None:
 							web_match_found = True
-							p1.stdout.close()
 							break
-				
-						data1 = p1.stdout.readline()
-					
-					p1.stdout.close()
-				
+								
 					if not web_match_found:
-						cmd2 = ['git', 'annex', 'addurl', '--file' , file_path,
-							'http://%s:%d/files/%s' % (HOST, API_PORT, file_path),
-							'--relaxed']
-						p2 = Popen(cmd2, stdout=PIPE, close_fds=True)
-						data2 = p2.stdout.readline()
-						while data2:
-							print data2.strip()
-							# TODO: handle error
-							data2 = p2.stdout.readline()
-						p2.stdout.close()
-				
-				p0.stdout.close()
+						add_cmd = "git annex addurl --file %s http://%s:%d/files/%s --relaxed" % (file_path, HOST, API_PORT, file_path)
+						
+						with settings(hide('everything'), warn_only=True):
+							add_url = local(add_cmd, capture=True)
+							if DEBUG: print "\nFILE'S URL ADDED: %s" % add_url
+							# TODO: error handling
+							
 				os.chdir(old_dir)
 				return True
 		
-			data0 = p0.stdout.readline()
-	
-		p0.stdout.close()
 		os.chdir(old_dir)
 		return False
 		
 	def syncAnnex(self, file_name, reindex=False):
-		tasks = []
+		uv_tasks = []
 		
 		create_rx = r'(?:(?!\.data/.*))([a-zA-Z0-9_\-\./]+)'
 		task_update_rx = r'(.data/[a-zA-Z0-0]{32}/.*)'
@@ -293,7 +277,7 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 				# init new file. here it starts.
 				if DEBUG: print "INIT NEW FILE: %s" % create[0]
 				
-				tasks.append(UnveillanceTask(inflate={
+				uv_tasks.append(UnveillanceTask(inflate={
 					'task_path' : "Documents.evaluate_document.evaluateDocument",
 					'file_name' : file_name,
 					'queue' : UUID
@@ -309,7 +293,7 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 				if matching_tasks is not None:
 					matching_task = matching_tasks['documents'][0]			
 					try:
-						tasks.append(UnveillanceTask(inflate={
+						uv_tasks.append(UnveillanceTask(inflate={
 							'task_path' : matching_task['on_update'],
 							'file_name' : task_update[0],
 							'doc_id' : matching_task['doc_id'],
@@ -318,5 +302,5 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 					except KeyError as e:
 						print e
 		
-		if len(tasks) > 0:
-			for task in tasks: task.run()
+		if len(uv_tasks) > 0:
+			for uv_task in uv_tasks: uv_task.run()
