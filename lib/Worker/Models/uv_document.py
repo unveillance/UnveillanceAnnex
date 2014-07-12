@@ -32,4 +32,4 @@ class UnveillanceDocument(UnveillanceObject):
 		
 		if task_path not in self.completed_tasks:
 			self.completed_tasks.append(task_path)
-			self.save()
+			self.saveFields('completed_tasks')

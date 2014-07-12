@@ -81,6 +81,20 @@ class UnveillanceElasticsearchHandler(object):
 		
 		return None
 	
+	def updateFields(self, _id, args):
+		res = self.sendELSRequest(endpoint="%s/_update" % _id, method="post",
+			data={ "doc" : args })
+		
+		if DEBUG: print res
+		
+		try: 
+			if 'error' not in res.keys(): return True
+		except Exception as e:
+			if DEBUG: print "ERROR ON UPDATE:\n%s" % e
+			pass
+		
+		return False
+	
 	def update(self, _id, args):
 		if DEBUG: print "updating thing"
 		

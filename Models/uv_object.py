@@ -36,6 +36,26 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 			print "\n\n**SAVING AS ANNEX/WORKER OBJECT"
 		
 		return self.update(self._id, self.emit())
+	
+	def saveFields(self, fields):
+		if DEBUG:
+			print "\n\n** UPDATE/SAVING ANNEX/WORKER OBJECT"
+		
+		if type(fields) is not list:
+			fields = [fields]
+		
+		new_data = {}
+		for field in fields:
+			try:
+				new_data[field] = getattr(self, field)
+			except Exception as e:
+				if DEBUG: print "could not update field %s" % field
+				continue
+		
+		if len(new_data.keys()) == 0: return False
+		
+		if DEBUG: print "update: %s" % new_data
+		return self.updateFields(self._id, new_data)
 		
 	def getObject(self, _id):
 		try: self.inflate(self.get(_id))
@@ -75,10 +95,10 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 		
 		for line in ga_query.splitlines():
 			r = re.match(re.compile("(.{1,2}) %s" % asset_path), line)
-			
-			if DEBUG: print (line, r)
 			if r is not None:
-				if DEBUG: print "...AND SUCCEEDED...\n"
+				if DEBUG: 
+					print (line, r)
+					print "...AND SUCCEEDED...\n"
 				res = True
 				break
 		
@@ -115,14 +135,13 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 			 
 			for line in ga_find.splitlines():
 				if line == asset_path:
+					# 3. if it was already added, sync=True
 					sync = True
 					local("git annex unlock %s" % asset_path)
 					break
-					
-					# 3. write
-					# 4. if it was already added, sync=True
 
 			try:
+				# 4. write
 				with open(os.path.join(ANNEX_DIR, asset_path), 'wb+') as f: f.write(data)
 			except Exception as e:
 				print "FAILED TO WRITE FILE, I D K WHY?"
