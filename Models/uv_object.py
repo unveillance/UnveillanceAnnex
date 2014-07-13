@@ -1,7 +1,8 @@
-import os
+import os, re
 from json import dumps
 from subprocess import Popen, PIPE
 from fabric.api import local, settings
+from fabric.context_managers import hide
 
 from lib.Core.Models.uv_object import UnveillanceObject as UVO_Stub
 from lib.Core.vars import EmitSentinel
@@ -31,8 +32,30 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 			emit_sentinels=emit_sentinels)
 		
 	def save(self):
-		if DEBUG: print "SAVING AS ANNEX/WORKER OBJECT"
+		if DEBUG: 
+			print "\n\n**SAVING AS ANNEX/WORKER OBJECT"
+		
 		return self.update(self._id, self.emit())
+	
+	def saveFields(self, fields):
+		if DEBUG:
+			print "\n\n** UPDATE/SAVING ANNEX/WORKER OBJECT"
+		
+		if type(fields) is not list:
+			fields = [fields]
+		
+		new_data = {}
+		for field in fields:
+			try:
+				new_data[field] = getattr(self, field)
+			except Exception as e:
+				if DEBUG: print "could not update field %s" % field
+				continue
+		
+		if len(new_data.keys()) == 0: return False
+		
+		if DEBUG: print "update: %s" % new_data
+		return self.updateFields(self._id, new_data)
 		
 	def getObject(self, _id):
 		try: self.inflate(self.get(_id))
@@ -41,23 +64,49 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 			self.invalidate(error="Object does not exist in Elasticsearch")
 		
 	def getFile(self, asset_path):
+		res = False
 		this_dir = os.getcwd()
 		os.chdir(ANNEX_DIR)
 		
+		with settings(hide('everything'), warn_only=True):
+			ga_unlock = local("git annex unlock %s" % asset_path)
+		
+		if DEBUG: print "unlocking asset %s:\n%s\n" % (asset_path, ga_unlock)
+		
+		for line in ga_unlock.splitlines():
+			if re.match(r'add (?:.*) ok', line):
+				if DEBUG: print "...AND SUCCEEDED...\n"
+				res = True
+				break
+		
+		if not res:
+			res = self.queryFile(asset_path)
+		
+		os.chdir(this_dir)
+		return res
+	
+	def queryFile(self, asset_path):
 		res = False
-		try:
-			p = Popen(['git', 'annex', 'unlock', asset_path])
-			p.wait()
-			res =  True
-		except Exception as e: 
-			print "COULD NOT GET FILE:"
-			print e
+		this_dir = os.getcwd()
+		os.chdir(ANNEX_DIR)
+		
+		with settings(hide('everything'), warn_only=True):
+			ga_query = local("git annex status", capture=True)
+		
+		for line in ga_query.splitlines():
+			r = re.match(re.compile("(.{1,2}) %s" % asset_path), line)
+			if r is not None:
+				if DEBUG: 
+					print (line, r)
+					print "...AND SUCCEEDED...\n"
+				res = True
+				break
 		
 		os.chdir(this_dir)
 		return res
 	
 	def loadFile(self, asset_path):
-		if self.getFile(asset_path):
+		if self.queryFile(asset_path):
 			try:
 				with open(os.path.join(ANNEX_DIR, asset_path), 'rb') as file:
 					return file.read()
@@ -77,36 +126,39 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 		os.chdir(ANNEX_DIR)
 		
 		if data is not None:
-			try:
-				with settings(warn_only=True):
-					local("rm %s" % asset_path)
-					local("git annex add %s" % asset_path)
-			except Exception as e:
-				print e
+			# 1. file exists? git annex find
+			# 2. if so, check out "git annex get asset_path"
+			with settings(hide('everything'), warn_only=True):
+				ga_find = local("git annex find %s" % asset_path, capture=True)
+			
+			if DEBUG: print "finding %s:\n%s\n" % (asset_path, ga_find)
+			 
+			for line in ga_find.splitlines():
+				if line == asset_path:
+					# 3. if it was already added, sync=True
+					sync = True
+					local("git annex unlock %s" % asset_path)
+					break
 
 			try:
+				# 4. write
 				with open(os.path.join(ANNEX_DIR, asset_path), 'wb+') as f: f.write(data)
 			except Exception as e:
-				print "I D K WHY?"
+				print "FAILED TO WRITE FILE, I D K WHY?"
 				print e
 				os.chdir(this_dir)
 				return False
 		
 		if sync:
-			try:
-				p = Popen(['git', 'annex', 'add', asset_path])
-				p.wait()
-			except Exception as e:
-				print e
-				os.chdir(this_dir)
-				return False
-		
-			try:
-				p = Popen(['git', 'commit', asset_path, '-m', '"saved and synced asset"'])
-				p.wait()
-			except Exception as e:
-				print e
-		
+			with settings(hide('everything'), warn_only=True):
+				ga_add = local("git annex add %s" % asset_path, capture=True)
+				ga_commit = local("git commit %s -m \"saved and synced asset\"",
+					capture=True)
+
+			if DEBUG: 
+				print "adding asset back: %s\n%s" % (asset_path, ga_add)
+				print "committing to git: %s\n" % ga_commit
+			
 		os.chdir(this_dir)
 		return True
 			
@@ -120,7 +172,7 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 		if data is not None and asset_path:
 			if DEBUG:
 				print "HERE IS THE DATA I PLAN ON ADDING:"
-				print data
+				print type(data)
 			
 			if not as_literal: data = dumps(data)
 			if not self.addFile(asset_path, data):

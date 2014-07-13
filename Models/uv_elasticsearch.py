@@ -81,6 +81,20 @@ class UnveillanceElasticsearchHandler(object):
 		
 		return None
 	
+	def updateFields(self, _id, args):
+		res = self.sendELSRequest(endpoint="%s/_update" % _id, method="post",
+			data={ "doc" : args })
+		
+		if DEBUG: print res
+		
+		try: 
+			if 'error' not in res.keys(): return True
+		except Exception as e:
+			if DEBUG: print "ERROR ON UPDATE:\n%s" % e
+			pass
+		
+		return False
+	
 	def update(self, _id, args):
 		if DEBUG: print "updating thing"
 		
@@ -114,15 +128,19 @@ class UnveillanceElasticsearchHandler(object):
 		if data is not None: data = json.dumps(data)
 
 		if DEBUG: print "SENDING ELS REQUEST TO %s" % url
-			
-		if method == "get":
-			r = requests.get(url, data=data)
-		elif method == "post":
-			r = requests.post(url, data=data)
-		elif method == "put":
-			r = requests.put(url, data=data)
-		elif method == "delete":
-			r = requests.delete(url, data=data)
+		
+		try:
+			if method == "get":
+				r = requests.get(url, data=data)
+			elif method == "post":
+				r = requests.post(url, data=data)
+			elif method == "put":
+				r = requests.put(url, data=data)
+			elif method == "delete":
+				r = requests.delete(url, data=data)
+		except Exception as e:
+			if DEBUG: print "ERROR ACCESSING ELASTICSEARCH: %s" % e
+			return None
 		
 		if hasattr(r, "content"):
 			return json.loads(r.content)
