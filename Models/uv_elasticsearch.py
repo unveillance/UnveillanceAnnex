@@ -75,7 +75,6 @@ class UnveillanceElasticsearchHandler(object):
 					documents = [h['_source'] for h in res['hits']['hits']]
 					if len(ELASTICSEARCH_SOURCE_EXCLUDES) > 0:
 						for ex in ELASTICSEARCH_SOURCE_EXCLUDES:
-							if DEBUG: print "trying to remove %s from documents" % ex
 							map(lambda d: d.pop(ex, None), documents)
 						
 					return { 
