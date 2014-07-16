@@ -109,6 +109,8 @@ QUERY_DEFAULTS = {
 	}
 }
 
+ELASTICSEARCH_SOURCE_EXCLUDES = ["searchable_text"]
+
 ELASTICSEARCH_MAPPINGS = {
 	"uv_document" : {
 		"properties": {

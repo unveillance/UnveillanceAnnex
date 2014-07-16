@@ -8,6 +8,7 @@ from fabric.api import local, settings
 from lib.Core.Utils.funcs import stopDaemon, startDaemon
 from Utils.funcs import printAsLog
 from conf import MONITOR_ROOT, CONF_ROOT, ELS_ROOT, DEBUG
+from vars import ELASTICSEARCH_SOURCE_EXCLUDES
 
 class UnveillanceElasticsearchHandler(object):
 	def __init__(self):
@@ -43,7 +44,7 @@ class UnveillanceElasticsearchHandler(object):
 		
 		if cast_as is not None:
 			query['fields'] = cast_as
-		
+				
 		if DEBUG: 
 			print "OH A QUERY"
 			print query
@@ -71,9 +72,15 @@ class UnveillanceElasticsearchHandler(object):
 				if count_only: return res['hits']['total']
 				
 				else: 
+					documents = [h['_source'] for h in res['hits']['hits']]
+					if len(ELASTICSEARCH_SOURCE_EXCLUDES) > 0:
+						for ex in ELASTICSEARCH_SOURCE_EXCLUDES:
+							if DEBUG: print "trying to remove %s from documents" % ex
+							map(lambda d: d.pop(ex, None), documents)
+						
 					return { 
 						'count' : res['hits']['total'], 
-						'documents' : [h['_source'] for h in res['hits']['hits']]
+						'documents' : documents
 					}
 	
 		except Exception as e:
