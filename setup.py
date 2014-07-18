@@ -110,7 +110,7 @@ if __name__ == "__main__":
 	else:
 		print "Git Annex downloaded; moving on..."
 	
-	with open(os.path.join(os.path.expanduser("~"), ".bashrc"), 'ab') as BASHRC:
+	with open(os.path.join(os.path.expanduser("~"), ".bash_profile"), 'ab') as BASHRC:
 		BASHRC.write("export UV_SERVER_HOST=\"%s\"\n" % uv_server_host)
 		BASHRC.write("export UV_UUID=\"%s\"\n" % uv_uuid)
 		BASHRC.write("export PATH=$PATH:%s\n" % git_annex_dir)

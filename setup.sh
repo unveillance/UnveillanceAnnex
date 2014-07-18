@@ -15,12 +15,13 @@ chmod +x lib/anaconda.sh
 echo "**************************************************"
 echo "Installing Python Framework via ANACONDA"
 
-#sleep 10
-
+sleep 10
 ./lib/anaconda.sh
 
 sleep 3
-source ~/.bashrc
+ANACONDA=$(grep -i "anaconda" ~/.bashrc)
+echo $ANACONDA >> ~/.bash_profile
+source ~/.bash_profile
 sleep 3
 
 pip install --upgrade -r requirements.txt
