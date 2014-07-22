@@ -147,9 +147,9 @@ if __name__ == "__main__":
 		for hook in ["post-receive", "post-update", "uv-post-netcat"]:
 			local("chmod +x .git/hooks/%s" % hook)
 			
-		local("git annex init \"unveillance_remote\"")
-		local("git annex untrust web")
-		local("git annex watch")
+		local("%s init \"unveillance_remote\"" % git_annex_dir)
+		local("%s untrust web" % git_annex_dir)
+		local("%s watch" % git_annex_dir)
 
 	os.chdir(base_dir)
 	
