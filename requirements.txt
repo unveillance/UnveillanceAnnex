@@ -4,7 +4,7 @@ requests
 tornado
 pyyaml
 filemagic
-kombu==2.5.12
+kombu
 billiard
 Celery
 python-levenshtein
