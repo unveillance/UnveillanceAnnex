@@ -134,16 +134,27 @@ class UnveillanceAnnex(tornado.web.Application, UnveillanceAPI):
 	
 	def startRESTAPI(self):
 		if DEBUG: print "Starting REST API on port %d" % API_PORT
-		startDaemon(self.api_log_file, self.api_pid_file)
+		
 		
 		rr_group = r"/(?:(?!%s))([a-zA-Z0-9_/]*/$)?" % "|".join(self.reserved_routes)
 		self.routes.append((re.compile(rr_group).pattern, self.RouteHandler))
 		tornado.web.Application.__init__(self, self.routes)
 		
 		server = tornado.httpserver.HTTPServer(self)
-		server.bind(API_PORT)
+		try:
+			server.bind(API_PORT)
+		except Exception as e:
+			if DEBUG: print "** FAILED TO START UP ON PORT %d\n%s" % (API_PORT, e)
+			from fabric.api import settings, local
+			from fabric.context_managers import hide
+			
+			with settings(warn_only=True):
+				local("kill $(lsof -t -i:%d)" % API_PORT)
+
+			server.bind(API_PORT)
+			
+		startDaemon(self.api_log_file, self.api_pid_file)
 		server.start(NUM_PROCESSES)
-	
 		tornado.ioloop.IOLoop.instance().start()
 	
 	def stopRESTAPI(self):
@@ -174,10 +185,15 @@ class UnveillanceAnnex(tornado.web.Application, UnveillanceAPI):
 		p.start()
 			
 if __name__ == "__main__":
+	if len(argv) != 2: exit("Usage: unveillance_annex.py [-start, -stop, -restart]")
+	
+	if argv[1] == "-config":
+		from Utils.funcs import exportFrontendConfig
+		exportFrontendConfig()
+		exit(0)
+	
 	os.chdir(ANNEX_DIR)	
 	unveillance_annex = UnveillanceAnnex()
-	
-	if len(argv) != 2: exit("Usage: unveillance_annex.py [-start, -stop, -restart]")
 	
 	if argv[1] == "-start" or argv[1] == "-firstuse":
 		unveillance_annex.startup()

@@ -8,7 +8,6 @@ from conf import DEBUG
 lcl = locals()
 
 def inflateVars(path):
-	print "INFLATING EXTRA VARS..."
 	with open(path, 'rb') as VE:
 		from json import loads
 		try:
@@ -48,16 +47,13 @@ def inflateVars(path):
 				else:
 					QUERY_KEYS.update(vars_extras[k][operator])
 			
-			if DEBUG:
-				print "\n\nNEW QUERY KEYS:\n%s" % QUERY_KEYS
-				print "\n\n"
 			continue
 			
 		try:
 			lcl[k].update(vars_extras[k])
-			if DEBUG: print "\nupdating %s: %s\n" % (k, lcl[k])
+			#if DEBUG: print "\nupdating %s: %s\n" % (k, lcl[k])
 		except KeyError as e:
-			if DEBUG: print "\ndon't worry, don't have %s" % k
+			#if DEBUG: print "\ndon't worry, don't have %s" % k
 			lcl[k] = vars_extras[k]
 
 QueryBatchRequestStub = namedtuple("QueryBatchRequestStub", "query")
@@ -157,4 +153,5 @@ try:
 	from conf import VARS_EXTRAS
 	inflateVars(VARS_EXTRAS)
 except ImportError as e:
-	if DEBUG: print "no, really, don't worry about vars extras"
+	#if DEBUG: print "no, really, don't worry about vars extras"
+	pass
