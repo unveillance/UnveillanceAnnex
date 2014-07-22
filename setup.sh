@@ -17,8 +17,8 @@ echo "Installing Python Framework via ANACONDA"
 
 sleep 10
 ./lib/anaconda.sh
-
 sleep 3
+
 ANACONDA=$(grep -i "anaconda" ~/.bashrc)
 echo $ANACONDA >> ~/.bash_profile
 source ~/.bash_profile

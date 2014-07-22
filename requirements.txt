@@ -4,6 +4,8 @@ requests
 tornado
 pyyaml
 filemagic
+kombu==2.5.12
+billiard
 Celery
 python-levenshtein
 amqp
