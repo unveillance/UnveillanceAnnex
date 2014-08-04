@@ -64,6 +64,13 @@ if __name__ == "__main__":
 		
 		if len(uv_log_cron) == 0:
 			uv_log_cron = 3
+	
+	if 'dstk_url' not in extras.keys():
+		print "What is the complete URL of your Data Science Toolkit instance?"
+		dstk_url = prompt("[DEFAULT: http://datasciencetoolkit.org]")
+		
+		if len(dstk_url) == 0:
+			dstk_url = "http://www.datasciencetoolkit.org"
 
 	with settings(warn_only=True):
 		local("mkdir %s" % annex_dir)	
@@ -103,7 +110,7 @@ if __name__ == "__main__":
 	else:
 		print "Git Annex downloaded; moving on..."
 	
-	with open(os.path.join(os.path.expanduser("~"), ".bashrc"), 'ab') as BASHRC:
+	with open(os.path.join(os.path.expanduser("~"), ".bash_profile"), 'ab') as BASHRC:
 		BASHRC.write("export UV_SERVER_HOST=\"%s\"\n" % uv_server_host)
 		BASHRC.write("export UV_UUID=\"%s\"\n" % uv_uuid)
 		BASHRC.write("export PATH=$PATH:%s\n" % git_annex_dir)
@@ -114,6 +121,7 @@ if __name__ == "__main__":
 		CONFIG.write("els_root: %s\n" % os.path.join(els_root, "bin", "elasticsearch"))
 		CONFIG.write("git_annex_bin: %s\n" % git_annex_dir)
 		CONFIG.write("monitor_root: %s\n" % monitor_root)
+		CONFIG.write("dstk_url: %s\n" % dstk_url)
 	
 	with open(os.path.join(base_dir, "conf", "annex.config.yaml"), "ab") as CONFIG:
 		from lib.Core.Utils.funcs import generateNonce
@@ -139,9 +147,9 @@ if __name__ == "__main__":
 		for hook in ["post-receive", "post-update", "uv-post-netcat"]:
 			local("chmod +x .git/hooks/%s" % hook)
 			
-		local("git annex init \"unveillance_remote\"")
-		local("git annex untrust web")
-		local("git annex watch")
+		local("%s init \"unveillance_remote\"" % os.path.join(git_annex_dir, "git-annex"))
+		local("%s untrust web" % os.path.join(git_annex_dir, "git-annex"))
+		local("%s watch" % os.path.join(git_annex_dir, "git-annex"))
 
 	os.chdir(base_dir)
 	

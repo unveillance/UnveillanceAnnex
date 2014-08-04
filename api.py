@@ -191,6 +191,8 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		return uv_task.emit()
 	
 	def do_reindex(self, request):
+		print "DOING REINDEX"
+		
 		query = parseRequestEntity(request.query)
 		if query is None: return None
 		if '_id' not in query.keys(): return None

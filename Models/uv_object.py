@@ -92,11 +92,11 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 		
 		with settings(hide('everything'), warn_only=True):
 			ga_query = local("git annex status", capture=True)
-		
+				
 		for line in ga_query.splitlines():
 			r = re.match(re.compile("(.{1,2}) %s" % asset_path), line)
 			if r is not None:
-				if DEBUG: 
+				if DEBUG:
 					print (line, r)
 					print "...AND SUCCEEDED...\n"
 				res = True
@@ -106,7 +106,7 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 		return res
 	
 	def loadFile(self, asset_path):
-		if self.queryFile(asset_path):
+		if self.getFile(asset_path):
 			try:
 				with open(os.path.join(ANNEX_DIR, asset_path), 'rb') as file:
 					return file.read()

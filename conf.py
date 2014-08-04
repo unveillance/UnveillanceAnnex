@@ -40,9 +40,11 @@ def getConfig(key):
 		except Exception as e: raise e
 
 def getSecrets(key):
-	with open(os.path.join(CONF_ROOT, "unveillance.secrets.json"), 'rb') as C:
-		config = json.loads(C.read())
+	try:
+		with open(os.path.join(CONF_ROOT, "unveillance.secrets.json"), 'rb') as C:
+			config = json.loads(C.read())
 		
-		try:
-			return config[key]
-		except Exception as e: raise e
+			try:
+				return config[key]
+			except Exception as e: raise e
+	except IOError as e: raise e

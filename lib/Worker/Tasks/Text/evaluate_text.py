@@ -51,11 +51,23 @@ def evaluateText(task):
 			from vars import ASSET_TAGS
 			
 			txt_json = []
+			txt_pages = []
+			line_count = 0
+			
+			# this is arbitrary
+			MAX_LINES_PER_PAGE = 80
+			
 			for line in content.splitlines(): 
 				if DEBUG: 
 					print "parsing line..."
 					print line
-				txt_json.append(cleanLine(line))
+				txt_pages.append(cleanLine(line))
+				line_count += 1
+				
+				if line_count == MAX_LINES_PER_PAGE:
+					txt_json.append(" ".join(txt_pages))
+					txt_pages = []
+					line_count = 0
 			
 			if DEBUG: print txt_json
 			
