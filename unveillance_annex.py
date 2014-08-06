@@ -44,7 +44,7 @@ class UnveillanceAnnex(tornado.web.Application, UnveillanceAPI):
 				
 				if hasattr(self.application, func_name):
 					if DEBUG : print "doing %s" % func_name
-					func = getattr(self.application, func_name)
+					func = getattr(self.application, str(func_name))
 			
 					res.result = 200
 					res.data = func(self.request)

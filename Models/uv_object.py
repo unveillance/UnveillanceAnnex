@@ -1,5 +1,6 @@
 import os, re
 from json import dumps
+from copy import deepcopy
 from subprocess import Popen, PIPE
 from fabric.api import local, settings
 from fabric.context_managers import hide
@@ -8,7 +9,7 @@ from lib.Core.Models.uv_object import UnveillanceObject as UVO_Stub
 from lib.Core.vars import EmitSentinel
 from Models.uv_elasticsearch import UnveillanceElasticsearchHandler
 
-from conf import ANNEX_DIR, DEBUG
+from conf import ANNEX_DIR, DEBUG, getSecrets
 
 class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 	def __init__(self, _id=None, inflate=None, emit_sentinels=None):
@@ -56,6 +57,43 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 		
 		if DEBUG: print "update: %s" % new_data
 		return self.updateFields(self._id, new_data)
+
+	def notarizedSave(self, fields):
+		if DEBUG:
+			print "\n\n** NOTARIZED SAVING ANNEX/WORKER OBJECT"
+
+		# if annex does not have a gpg key to work with, saveFields
+		gpg_dir = getSecrets('gpg_dir')
+		gpg_pwd = getSecrets('gpg_pwd')
+
+		for req in [gpg_dir, gpg_pwd]:
+			if req is None:
+				if DEBUG: print "cannot notarize: no GPG keys!"
+				return self.saveFields(fields)
+
+		if type(fields) is not list:
+			fields = [fields]
+
+		for field in fields:
+			try:
+				notarized = getattr(self, field)
+			except Exception as e:
+				if DEBUG: print "could not notarize %s" % field
+				continue
+
+			# get clearsign from gpg (with fabric)
+
+			# stick it into notarized_data field
+			if not hasattr(self, 'notarized_data'):
+				self.notarized_data = {}
+
+			self.notarized_data[field] = notarized
+
+		del gpg_pwd
+		del gpg_dir
+		fields.append('notarized_data')
+
+		return self.saveFields(self._id, fields)
 		
 	def getObject(self, _id):
 		try: self.inflate(self.get(_id))
