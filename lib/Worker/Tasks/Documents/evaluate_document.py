@@ -32,7 +32,7 @@ def evaluateDocument(uv_task):
 	from vars import MIME_TYPE_TASKS
 	
 	document.addCompletedTask(uv_task.task_path)
-	
+		
 	if document.mime_type in MIME_TYPE_TASKS.keys():
 		if DEBUG:
 			print "mime type (%s) usable..." % document.mime_type

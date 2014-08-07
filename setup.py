@@ -76,6 +76,7 @@ if __name__ == "__main__":
 		local("mkdir %s" % annex_dir)	
 		local("mkdir %s" % monitor_root)
 		PYTHON_HOME = local('which python', capture=True)
+		SYS_ARCH = local("uname -m", capture=True)
 		
 	cron = CronTab(tab='# Unveillance CronTab')
 	cron_job = cron.new(
@@ -102,7 +103,12 @@ if __name__ == "__main__":
 	git_annex_dir = locateLibrary(r'git-annex\.*')
 	if git_annex_dir is None:
 		with settings(warn_only=True):
-			local("wget -O lib/git-annex.tar.gz http://downloads.kitenet.net/git-annex/linux/current/git-annex-standalone-amd64.tar.gz")
+			if SYS_ARCH == "i686":
+				arch = "git-annex-standalone-i386.tar.gz"
+			else:
+				arch = "git-annex-standalone-amd64.tar.gz"
+
+			local("wget -O lib/git-annex.tar.gz http://downloads.kitenet.net/git-annex/linux/current/%s" % arch)
 			local("tar -xvzf lib/git-annex.tar.gz -C lib")
 			local("rm lib/git-annex.tar.gz")
 		
@@ -122,6 +128,8 @@ if __name__ == "__main__":
 		CONFIG.write("git_annex_bin: %s\n" % git_annex_dir)
 		CONFIG.write("monitor_root: %s\n" % monitor_root)
 		CONFIG.write("dstk_url: %s\n" % dstk_url)
+		CONFIG.write("sys_arch: %s\n" % SYS_ARCH)
+		CONFIG.write("python_home: %s\n" % PYTHON_HOME)
 	
 	with open(os.path.join(base_dir, "conf", "annex.config.yaml"), "ab") as CONFIG:
 		from lib.Core.Utils.funcs import generateNonce

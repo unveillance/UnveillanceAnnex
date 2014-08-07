@@ -129,16 +129,19 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 		os.chdir(ANNEX_DIR)
 		
 		with settings(hide('everything'), warn_only=True):
-			ga_query = local("git annex status", capture=True)
+			ga_find = local("git annex find %s" % asset_path, capture=True)
+			if ga_find == asset_path: res = True
+			else:
+				ga_query = local("git annex status", capture=True)
 				
-		for line in ga_query.splitlines():
-			r = re.match(re.compile("(.{1,2}) %s" % asset_path), line)
-			if r is not None:
-				if DEBUG:
-					print (line, r)
-					print "...AND SUCCEEDED...\n"
-				res = True
-				break
+				for line in ga_query.splitlines():
+					r = re.match(re.compile("(.{1,2}) %s" % asset_path), line)
+					if r is not None:
+						if DEBUG:
+							print (line, r)
+							print "...AND SUCCEEDED...\n"
+						res = True
+						break
 		
 		os.chdir(this_dir)
 		return res

@@ -42,6 +42,7 @@ def getFileType(file, as_buffer=False):
 			mime_type = m.id_buffer(file)
 
 		m.close()
+		
 		if re.match(r'text/x\-.*', mime_type) is not None:
 			mime_type = "text/plain"
 		
