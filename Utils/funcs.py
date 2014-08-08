@@ -1,5 +1,28 @@
-import pandas
+import pandas, re
 from datetime import datetime
+from fabric.api import settings, local
+
+def forceQuitUnveillance(target=None):
+	if target is None:
+		target = "unveillance_annex"
+	
+	with settings(warn_only=True):
+		whoami = local("whoami", capture=True)
+		kill_list = local("ps -ef | grep %s.py" % target, capture=True)
+		
+		for k in kill_list.splitlines():
+			if re.match(".*\d{2}:\d{2}:\d{2}\s/bin/sh", k) is not None: continue
+			if re.match(".*\d{2}:\d{2}:\d{2}\sgrep", k) is not None: continue
+			
+			pid = re.findall(re.compile("\d{4}|%s\s+(\d{3,6})\s+.*" % whoami), k)
+			if len(pid) == 1:
+				try:
+					pid = int(pid[0])
+				except Exception as e:
+					print "ERROR: %s" % e
+					continue
+				
+				with settings(warn_only=True): local("kill -9 %d" % pid)
 
 def printAsLog(message, as_error=False):
 	ts = pandas.DatetimeIndex([datetime.utcnow()])

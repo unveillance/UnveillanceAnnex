@@ -3,11 +3,19 @@ from fabric.api import local, settings
 from crontab import CronTab
 
 from conf import ANNEX_DIR, MONITOR_ROOT, getConfig
+from Utils.funcs import forceQuitUnveillance
 
 if __name__ == "__main__":
 	this_dir = os.getcwd()
-	annex_includes = getConfig('annex_includes')
+	annex_includes = None
 	
+	try:
+		annex_includes = getConfig('annex_includes')
+	except KeyError as e: pass
+	
+	print "Force-Quitting old instance"
+	forceQuitUnveillance()
+		
 	try:
 		cron = CronTab(tabfile=os.path.join(MONITOR_ROOT, "uv_cron.tab"))
 		for job in cron:

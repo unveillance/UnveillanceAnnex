@@ -235,7 +235,13 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		os.chdir(ANNEX_DIR)
 		
 		with settings(hide('everything'), warn_only=True):
-			find_cmd = local("git annex find %s" % file_path, capture=True)
+			find_cmd = local("git annex find %s" % file_path, capture=True)				
+			if find_cmd == "":
+				find_cmd = local("git annex status %s" % file_path, capture=True)
+			
+			if find_cmd != "":
+				find_cmd = file_path
+				local("git annex add %s" % file_path)			
 		
 		for line in find_cmd.splitlines():
 			if line == file_path:				

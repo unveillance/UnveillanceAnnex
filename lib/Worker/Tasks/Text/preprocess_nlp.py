@@ -48,5 +48,19 @@ def preprocessNLP(task):
 			tags=ASSET_TAGS['KW'])
 
 	document.addCompletedTask(task.task_path)
+	
+	if not hasattr(task, 'no_continue') and hasattr(task, 'task_queue'):
+		next_task_path = task.task_queue[0]
+		task.task_queue.remove(next_task_path)
+		
+		from lib.Worker.Models.uv_task import UnveillanceTask
+		next_task = UnveillanceTask(inflate={
+			'task_path' : next_task_path,
+			'doc_id' : document._id,
+			'queue' : task.queue,
+			'task_queue' : task.task_queue
+		})
+		next_task.run()
+	
 	task.finish()
 	print "\n\n************** %s [END] ******************\n" % task_tag

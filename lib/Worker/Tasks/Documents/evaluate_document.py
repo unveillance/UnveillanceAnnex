@@ -29,7 +29,7 @@ def evaluateDocument(uv_task):
 		return
 			
 	from lib.Worker.Models.uv_task import UnveillanceTask
-	from vars import MIME_TYPE_TASKS
+	from vars import MIME_TYPE_TASKS, MIME_TYPES
 	
 	document.addCompletedTask(uv_task.task_path)
 		
@@ -38,11 +38,14 @@ def evaluateDocument(uv_task):
 			print "mime type (%s) usable..." % document.mime_type
 			print MIME_TYPE_TASKS[document.mime_type][0]
 		
-		new_task = UnveillanceTask(inflate={
+		inflate = {
 			'task_path' : MIME_TYPE_TASKS[document.mime_type][0],
 			'doc_id' : document._id,
 			'queue' : uv_task.queue
-		})
+		}
+		
+		if document.mime_type == MIME_TYPES['symlink']: inflate['attempt_sync'] = True
+		new_task = UnveillanceTask(inflate=inflate)
 		
 		if DEBUG: print new_task.emit()
 		new_task.run()
