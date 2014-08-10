@@ -2,8 +2,6 @@ import os, requests
 from sys import argv, exit
 
 if __name__ == "__main__":
-	from Models.uv_elasticsearch import UnveillanceElasticsearchHandler
-
 	from Utils.funcs import printAsLog
 	from conf import HOST, API_PORT
 	from vars import UPLOAD_RESTRICTION
@@ -11,11 +9,15 @@ if __name__ == "__main__":
 	try:
 		if argv[2] == UPLOAD_RESTRICTION['for_local_use_only']:
 			from fabric.api import settings, local
-			from conf import getConfig
+			from conf import getConfig, ANNEX_DIR
+
+			this_dir = os.getcwd()
+			os.chdir(ANNEX_DIR)
 
 			with settings(warn_only=True):
-				local("%s metadata --tag uv_restricted %s" % (
-					os.path.join(getConfig('git_annex_bin'), "git-annex"), argv[1]))
+				local("git annex metadata %s --set=uv_restriction=%d" % (argv[1], argv[2]))
+
+			os.chdir(this_dir)
 
 	except Exception as e:
 		printAsLog(e, as_error=True)

@@ -9,7 +9,7 @@ from Models.uv_object import UnveillanceObject
 from Utils.funcs import printAsLog
 
 from vars import EmitSentinel, UV_DOC_TYPE, TASKS_ROOT
-from conf import DEBUG, BASE_DIR, HOST, API_PORT, MONITOR_ROOT
+from conf import DEBUG, BASE_DIR, ANNEX_DIR, HOST, API_PORT, MONITOR_ROOT
 
 class UnveillanceTask(UnveillanceObject):
 	def __init__(self, inflate=None, _id=None):		
@@ -102,6 +102,10 @@ class UnveillanceTask(UnveillanceObject):
 	
 	def delete(self):
 		if DEBUG: print "DELETING MYSELF"
+
+		with settings(warn_only=True):
+			local("rm -rf %s" % os.path.join(ANNEX_DIR, self.base_path))
+
 		return super(UnveillanceTask, self).delete(self._id)
 	
 	def setStatus(self, status):
