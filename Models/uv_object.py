@@ -63,8 +63,12 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 			print "\n\n** NOTARIZED SAVING ANNEX/WORKER OBJECT"
 
 		# if annex does not have a gpg key to work with, saveFields
-		gpg_dir = getSecrets('gpg_dir')
-		gpg_pwd = getSecrets('gpg_pwd')
+		try:
+			gpg_dir = getSecrets('gpg_dir')
+			gpg_pwd = getSecrets('gpg_pwd')
+		except Exception as e:
+			if DEBUG: print "cannot notarize: no %s" % e
+			return self.saveFields(fields)
 
 		for req in [gpg_dir, gpg_pwd]:
 			if req is None:
@@ -156,6 +160,19 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 				print e
 		
 		return None
+
+	def getFileMetadata(self, key):
+		this_dir = os.getcwd()
+		os.chdir(ANNEX_DIR)
+
+		metadata = None
+
+		with settings(warn_only=True):
+			metadata = local("git annex metadata %s --json --get=%s"  % self.file_name, capture=True)
+			if metadata == "": metadata = None
+
+		os.chdir(this_dir)
+		return metadata
 		
 	def addFile(self, asset_path, data, sync=False):
 		"""

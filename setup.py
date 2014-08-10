@@ -149,7 +149,7 @@ if __name__ == "__main__":
 		HOOK.write("echo $1 >> %s" % os.path.join(monitor_root, "test_post_update.txt"))
 
 	with open(os.path.join(annex_dir, ".git", "hooks", "uv-post-netcat"), 'wb+') as HOOK:
-		HOOK.write("cd %s\n%s sync_file.py $1" % (base_dir, PYTHON_HOME))
+		HOOK.write("cd %s\nif [ $# -eq 1 ]\nthen\n\tUV_RESTRICT=100\nelse\n\tUV_RESTRICT=200\nfi\n%s sync_file.py $1 $UV_RESTRICT" % (base_dir, PYTHON_HOME))
 		
 	with settings(warn_only=True):
 		for hook in ["post-receive", "post-update", "uv-post-netcat"]:

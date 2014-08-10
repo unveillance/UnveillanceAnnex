@@ -125,7 +125,7 @@ class UnveillanceElasticsearchHandler(object):
 		except KeyError as e: pass
 		
 		return False
-	
+
 	def sendELSRequest(self, data=None, to_root=False, endpoint=None, method="get"):
 		url = "http://localhost:9200/unveillance/"
 
