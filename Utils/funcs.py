@@ -13,6 +13,7 @@ def forceQuitUnveillance(target=None):
 		for k in kill_list.splitlines():
 			if re.match(".*\d{2}:\d{2}:\d{2}\s/bin/sh", k) is not None: continue
 			if re.match(".*\d{2}:\d{2}:\d{2}\sgrep", k) is not None: continue
+			if re.match(".*\d{2}:\d{2}:\d{2}\spython\sshutdown.py", k) is not None: continue
 			
 			pid = re.findall(re.compile("\d{4}|%s|%s\+\s+(\d{3,6})\s+.*" % (whoami, whoami[:7])), k)
 			if len(pid) == 1:
