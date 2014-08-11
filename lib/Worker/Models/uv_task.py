@@ -21,6 +21,34 @@ class UnveillanceTask(UnveillanceObject):
 			
 		super(UnveillanceTask, self).__init__(_id=_id, inflate=inflate, 
 			emit_sentinels=[EmitSentinel("ctx", "Worker", None)])
+	
+	def routeNext(self, inflate=None):
+		if DEBUG: print "ROUTING NEXT TASK FROM QUEUE\nCLONING SOME VARS FROM SELF:\n%s" % self.emit()
+		
+		if hasattr(self, "no_continue"):
+			if DEBUG: print "NO CONTINUE FLAG DETECTED.  NO ROUTING POSSIBLE."
+			return
+		
+		if not hasattr(self, "task_queue"):
+			if DEBUG: print "TASK HAS NO TASK QUEUE. NO ROUTING POSSIBLE."
+			return
+		
+		if inflate is None: inflate = {}
+		task_index = self.task_queue.index(self.task_path) + 1
+		
+		try:
+			inflate['task_path'] = self.task_queue[task_index]
+			print "TASK %s AT INDEX %d" % (inflate['task_path'], task_index)
+		except Exception as e:
+			if DEBUG: print "TASK QUEUE EXHAUSTED. NO ROUTING POSSIBLE.\n%s" % e
+			return
+		
+		for a in ["doc_id", "queue", "task_queue"]:
+			if hasattr(self, a):
+				inflate[a] = getattr(self, a)
+		
+		next_task = UnveillanceTask(inflate=inflate)
+		next_task.run()
 		
 	def run(self):
 		if DEBUG: print "NOW RUNNING TASK:\n%s" % self.emit()
@@ -46,12 +74,14 @@ class UnveillanceTask(UnveillanceObject):
 		except Exception as e:
 			printAsLog(e)
 	
+	'''
 	def lock(self, lock=True):
 		self.locked = lock
 		self.save()
 	
 	def unlock(self):
 		self.lock(lock=False)
+	'''
 	
 	def finish(self):
 		if DEBUG: print "task finished!"
