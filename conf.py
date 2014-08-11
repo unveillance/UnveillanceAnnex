@@ -21,6 +21,7 @@ with open(os.path.join(CONF_ROOT, "annex.config.yaml"), 'rb') as C:
 	BASE_DIR = config['base_dir']
 	MONITOR_ROOT = os.path.join(BASE_DIR, ".monitor")
 	ELS_ROOT = os.path.join(BASE_DIR, config['els_root'])
+	SSH_ROOT = config['ssh_root']
 	
 	try:
 		DOC_SALT = config['document_salt']

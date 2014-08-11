@@ -27,6 +27,19 @@ if __name__ == "__main__":
 		try:
 			with open(argv[1], 'rb') as CONFIG: extras.update(json.loads(CONFIG.read()))
 		except Exception as e: pass
+
+	try:
+		SSH_ROOT = extras['ssh_root']
+	except Exception as e:
+		print "Where is your server's ssh root?"
+		SSH_ROOT = prompt("[DEFAULT: ~/.ssh]")
+
+		if len(SSH_ROOT) == 0:
+			SSH_ROOT = os.path.join(os.path.expanduser("~"), ".ssh")
+
+	if not os.path.exists(SSH_ROOT):
+		with settings(warn_only=True):
+			local("mkdir %s" % SSH_ROOT)
 	
 	try:
 		annex_dir = extras['annex_dir']
@@ -130,6 +143,7 @@ if __name__ == "__main__":
 		CONFIG.write("dstk_url: %s\n" % dstk_url)
 		CONFIG.write("sys_arch: %s\n" % SYS_ARCH)
 		CONFIG.write("python_home: %s\n" % PYTHON_HOME)
+		CONFIG.write("ssh_root: %s\n" % SSH_ROOT)
 	
 	with open(os.path.join(base_dir, "conf", "annex.config.yaml"), "ab") as CONFIG:
 		from lib.Core.Utils.funcs import generateNonce
@@ -149,7 +163,7 @@ if __name__ == "__main__":
 		HOOK.write("echo $1 >> %s" % os.path.join(monitor_root, "test_post_update.txt"))
 
 	with open(os.path.join(annex_dir, ".git", "hooks", "uv-post-netcat"), 'wb+') as HOOK:
-		HOOK.write("cd %s\nif [ $# -eq 1 ]\nthen\n\tUV_RESTRICT=100\nelse\n\tUV_RESTRICT=200\nfi\n%s sync_file.py $1 $UV_RESTRICT" % (base_dir, PYTHON_HOME))
+		HOOK.write("cd %s\n%s sync_file.py $1" % (base_dir, PYTHON_HOME))
 		
 	with settings(warn_only=True):
 		for hook in ["post-receive", "post-update", "uv-post-netcat"]:
