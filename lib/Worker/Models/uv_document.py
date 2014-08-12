@@ -18,12 +18,16 @@ class UnveillanceDocument(UnveillanceObject):
 			emit_sentinels=emit_sentinels)
 		
 		if inflate is not None:
-			if not self.getFile(self.file_name):
+			if not self.queryFile(self.file_name):
 				self.invalidate(error="COULD NOT GET DOCUMENT FROM ANNEX")
 				return
 				
 			from lib.Worker.Utils.funcs import getFileType
 			self.mime_type = getFileType(os.path.join(ANNEX_DIR, self.file_name))
+			
+			if self.mime_type == "inode/symlink" and self.getFile(self.file_name):
+				self.mime_type = getFileType(os.path.join(ANNEX_DIR, self.file_name))
+			
 			self.save()
 	
 	def addCompletedTask(self, task_path):
@@ -31,5 +35,5 @@ class UnveillanceDocument(UnveillanceObject):
 			self.completed_tasks = []
 		
 		if task_path not in self.completed_tasks:
-			self.completed_tasks.add(task_path)
-			self.save()
+			self.completed_tasks.append(task_path)
+			self.saveFields('completed_tasks')

@@ -48,5 +48,6 @@ def preprocessNLP(task):
 			tags=ASSET_TAGS['KW'])
 
 	document.addCompletedTask(task.task_path)
+	task.routeNext()
 	task.finish()
 	print "\n\n************** %s [END] ******************\n" % task_tag

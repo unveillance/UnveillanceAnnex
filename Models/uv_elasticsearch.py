@@ -8,6 +8,7 @@ from fabric.api import local, settings
 from lib.Core.Utils.funcs import stopDaemon, startDaemon
 from Utils.funcs import printAsLog
 from conf import MONITOR_ROOT, CONF_ROOT, ELS_ROOT, DEBUG
+from vars import ELASTICSEARCH_SOURCE_EXCLUDES
 
 class UnveillanceElasticsearchHandler(object):
 	def __init__(self):
@@ -16,9 +17,12 @@ class UnveillanceElasticsearchHandler(object):
 	def get(self, _id):
 		if DEBUG: print "getting thing"
 		res = self.sendELSRequest(endpoint=_id)
+		
 		try:
 			if res['found']: return res['_source']
-		except KeyError as e: pass
+		except KeyError as e: 
+			if DEBUG: print "ERROR ON GET: %s" % e
+			pass
 		
 		return None
 	
@@ -40,7 +44,7 @@ class UnveillanceElasticsearchHandler(object):
 		
 		if cast_as is not None:
 			query['fields'] = cast_as
-		
+				
 		if DEBUG: 
 			print "OH A QUERY"
 			print query
@@ -68,15 +72,34 @@ class UnveillanceElasticsearchHandler(object):
 				if count_only: return res['hits']['total']
 				
 				else: 
+					documents = [h['_source'] for h in res['hits']['hits']]
+					if len(ELASTICSEARCH_SOURCE_EXCLUDES) > 0:
+						for ex in ELASTICSEARCH_SOURCE_EXCLUDES:
+							map(lambda d: d.pop(ex, None), documents)
+						
 					return { 
 						'count' : res['hits']['total'], 
-						'documents' : [h['_source'] for h in res['hits']['hits']]
+						'documents' : documents
 					}
 	
 		except Exception as e:
 			if DEBUG: print "ERROR ON SEARCH:\n%s" % e
 		
 		return None
+	
+	def updateFields(self, _id, args):
+		res = self.sendELSRequest(endpoint="%s/_update" % _id, method="post",
+			data={ "doc" : args })
+		
+		if DEBUG: print res
+		
+		try: 
+			if 'error' not in res.keys(): return True
+		except Exception as e:
+			if DEBUG: print "ERROR ON UPDATE:\n%s" % e
+			pass
+		
+		return False
 	
 	def update(self, _id, args):
 		if DEBUG: print "updating thing"
@@ -102,7 +125,7 @@ class UnveillanceElasticsearchHandler(object):
 		except KeyError as e: pass
 		
 		return False
-	
+
 	def sendELSRequest(self, data=None, to_root=False, endpoint=None, method="get"):
 		url = "http://localhost:9200/unveillance/"
 
@@ -111,17 +134,26 @@ class UnveillanceElasticsearchHandler(object):
 		if data is not None: data = json.dumps(data)
 
 		if DEBUG: print "SENDING ELS REQUEST TO %s" % url
-			
-		if method == "get":
-			r = requests.get(url, data=data)
-		elif method == "post":
-			r = requests.post(url, data=data)
-		elif method == "put":
-			r = requests.put(url, data=data)
-		elif method == "delete":
-			r = requests.delete(url, data=data)
 		
-		return json.loads(r.content)
+		try:
+			if method == "get":
+				r = requests.get(url, data=data)
+			elif method == "post":
+				r = requests.post(url, data=data)
+			elif method == "put":
+				r = requests.put(url, data=data)
+			elif method == "delete":
+				r = requests.delete(url, data=data)
+		except Exception as e:
+			if DEBUG: print "ERROR ACCESSING ELASTICSEARCH: %s" % e
+			return None
+		
+		if hasattr(r, "content"):
+			return json.loads(r.content)
+		elif hasattr(r, "text"):
+			return json.loads(r.text)
+		
+		return None
 
 class UnveillanceElasticsearch(UnveillanceElasticsearchHandler):
 	def __init__(self):		
@@ -160,17 +192,16 @@ class UnveillanceElasticsearch(UnveillanceElasticsearchHandler):
 		startDaemon(self.els_log_file, self.els_pid_file)
 		self.startCronJobs()
 
-		if self.first_use:
-			try:
-				with open(os.path.join(CONF_ROOT, "initial_tasks.json"), 'rb') as IT:
-				
-					from lib.Worker.Models.uv_task import UnveillanceTask
-					for i_task in json.loads(IT.read()):
-						task = UnveillanceTask(inflate=i_task)
-						task.run()
+		#if self.first_use:
+		try:
+			with open(os.path.join(CONF_ROOT, "initial_tasks.json"), 'rb') as IT:
+				from lib.Worker.Models.uv_task import UnveillanceTask
+				for i_task in json.loads(IT.read()):
+					task = UnveillanceTask(inflate=i_task)
+					task.run()
 
-			except Exception as e:
-				if DEBUG: print "No initial tasks...\n%s" % e
+		except Exception as e:
+			if DEBUG: print "No initial tasks...\n%s" % e
 			
 		if catch:
 			while True: sleep(1)

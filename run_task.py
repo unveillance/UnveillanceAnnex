@@ -12,12 +12,11 @@ if __name__ == "__main__":
 		exit(1)	
 
 	from conf import HOST, API_PORT
-	if not hasattr(task, "locked") or not task.locked:
-		try:
-			r = requests.post("http://%s:%d/task/" % (HOST, API_PORT), 
-				data={ '_id' : task._id })
-		except Exception as e:
-			printAsLog(e, as_error=True)
-			exit(1)
+	try:
+		r = requests.post("http://%s:%d/task/" % (HOST, API_PORT), 
+			data={ '_id' : task._id })
+	except Exception as e:
+		printAsLog(e, as_error=True)
+		exit(1)
 	
 	exit(0)

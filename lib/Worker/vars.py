@@ -6,6 +6,11 @@ from celery import Celery
 from lib.Core.vars import MIME_TYPE_TASKS
 from conf import BASE_DIR
 
+UPLOAD_RESTRICTION = {
+	'for_local_use_only' : 200,
+	'no_restriction' : 100
+}
+
 MAX_PAGES = 300
 TASKS_ROOT = "lib.Worker.Tasks"
 CELERY_TASKS = None

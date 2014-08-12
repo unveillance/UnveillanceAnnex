@@ -15,12 +15,13 @@ chmod +x lib/anaconda.sh
 echo "**************************************************"
 echo "Installing Python Framework via ANACONDA"
 
-#sleep 10
-
+sleep 10
 ./lib/anaconda.sh
-
 sleep 3
-source ~/.bashrc
+
+ANACONDA=$(grep -i "anaconda" ~/.bashrc)
+echo $ANACONDA >> ~/.bash_profile
+source ~/.bash_profile
 sleep 3
 
 pip install --upgrade -r requirements.txt
@@ -28,13 +29,21 @@ pip install --upgrade -r requirements.txt
 cd lib/Core
 pip install --upgrade -r requirements.txt
 
+cd $THIS_DIR/lib
+mkdir dstk
+wget -O dstk/dstk.zip http://www.datasciencetoolkit.org/python_tools.zip
+unzip dstk/dstk.zip -d dstk
+rm -rf dstk/__MACOSX
+cd dstk/python
+python setup.py install
+
 cd $THIS_DIR
 echo "**************************************************"
 python setup.py $WITH_CONFIG
+source ~/.bash_profile
 
 sleep 2
 if $LAUNCH_ANNEX; then
-	source ~/.bashrc
 	chmod 0400 conf/*
 	python unveillance_annex.py -firstuse
 fi

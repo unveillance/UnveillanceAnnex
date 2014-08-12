@@ -27,6 +27,19 @@ if __name__ == "__main__":
 		try:
 			with open(argv[1], 'rb') as CONFIG: extras.update(json.loads(CONFIG.read()))
 		except Exception as e: pass
+
+	try:
+		SSH_ROOT = extras['ssh_root']
+	except Exception as e:
+		print "Where is your server's ssh root?"
+		SSH_ROOT = prompt("[DEFAULT: ~/.ssh]")
+
+		if len(SSH_ROOT) == 0:
+			SSH_ROOT = os.path.join(os.path.expanduser("~"), ".ssh")
+
+	if not os.path.exists(SSH_ROOT):
+		with settings(warn_only=True):
+			local("mkdir %s" % SSH_ROOT)
 	
 	try:
 		annex_dir = extras['annex_dir']
@@ -64,11 +77,19 @@ if __name__ == "__main__":
 		
 		if len(uv_log_cron) == 0:
 			uv_log_cron = 3
+	
+	if 'dstk_url' not in extras.keys():
+		print "What is the complete URL of your Data Science Toolkit instance?"
+		dstk_url = prompt("[DEFAULT: http://datasciencetoolkit.org]")
+		
+		if len(dstk_url) == 0:
+			dstk_url = "http://www.datasciencetoolkit.org"
 
 	with settings(warn_only=True):
 		local("mkdir %s" % annex_dir)	
 		local("mkdir %s" % monitor_root)
 		PYTHON_HOME = local('which python', capture=True)
+		SYS_ARCH = local("uname -m", capture=True)
 		
 	cron = CronTab(tab='# Unveillance CronTab')
 	cron_job = cron.new(
@@ -95,7 +116,12 @@ if __name__ == "__main__":
 	git_annex_dir = locateLibrary(r'git-annex\.*')
 	if git_annex_dir is None:
 		with settings(warn_only=True):
-			local("wget -O lib/git-annex.tar.gz http://downloads.kitenet.net/git-annex/linux/current/git-annex-standalone-amd64.tar.gz")
+			if SYS_ARCH == "i686":
+				arch = "git-annex-standalone-i386.tar.gz"
+			else:
+				arch = "git-annex-standalone-amd64.tar.gz"
+
+			local("wget -O lib/git-annex.tar.gz http://downloads.kitenet.net/git-annex/linux/current/%s" % arch)
 			local("tar -xvzf lib/git-annex.tar.gz -C lib")
 			local("rm lib/git-annex.tar.gz")
 		
@@ -103,7 +129,7 @@ if __name__ == "__main__":
 	else:
 		print "Git Annex downloaded; moving on..."
 	
-	with open(os.path.join(os.path.expanduser("~"), ".bashrc"), 'ab') as BASHRC:
+	with open(os.path.join(os.path.expanduser("~"), ".bash_profile"), 'ab') as BASHRC:
 		BASHRC.write("export UV_SERVER_HOST=\"%s\"\n" % uv_server_host)
 		BASHRC.write("export UV_UUID=\"%s\"\n" % uv_uuid)
 		BASHRC.write("export PATH=$PATH:%s\n" % git_annex_dir)
@@ -114,6 +140,11 @@ if __name__ == "__main__":
 		CONFIG.write("els_root: %s\n" % os.path.join(els_root, "bin", "elasticsearch"))
 		CONFIG.write("git_annex_bin: %s\n" % git_annex_dir)
 		CONFIG.write("monitor_root: %s\n" % monitor_root)
+		CONFIG.write("dstk_url: %s\n" % dstk_url)
+		CONFIG.write("sys_arch: %s\n" % SYS_ARCH)
+		CONFIG.write("python_home: %s\n" % PYTHON_HOME)
+		CONFIG.write("ssh_root: %s\n" % SSH_ROOT)
+		CONFIG.write("uv_log_cron: %d\n" % uv_log_cron)
 	
 	with open(os.path.join(base_dir, "conf", "annex.config.yaml"), "ab") as CONFIG:
 		from lib.Core.Utils.funcs import generateNonce
@@ -139,9 +170,9 @@ if __name__ == "__main__":
 		for hook in ["post-receive", "post-update", "uv-post-netcat"]:
 			local("chmod +x .git/hooks/%s" % hook)
 			
-		local("git annex init \"unveillance_remote\"")
-		local("git annex untrust web")
-		local("git annex watch")
+		local("%s init \"unveillance_remote\"" % os.path.join(git_annex_dir, "git-annex"))
+		local("%s untrust web" % os.path.join(git_annex_dir, "git-annex"))
+		local("%s watch" % os.path.join(git_annex_dir, "git-annex"))
 
 	os.chdir(base_dir)
 	

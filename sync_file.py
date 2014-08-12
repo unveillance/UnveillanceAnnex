@@ -1,4 +1,4 @@
-import os, requests
+import requests
 from sys import argv, exit
 
 if __name__ == "__main__":

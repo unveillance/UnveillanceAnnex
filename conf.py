@@ -21,6 +21,7 @@ with open(os.path.join(CONF_ROOT, "annex.config.yaml"), 'rb') as C:
 	BASE_DIR = config['base_dir']
 	MONITOR_ROOT = os.path.join(BASE_DIR, ".monitor")
 	ELS_ROOT = os.path.join(BASE_DIR, config['els_root'])
+	SSH_ROOT = config['ssh_root']
 	
 	try:
 		DOC_SALT = config['document_salt']
@@ -40,9 +41,11 @@ def getConfig(key):
 		except Exception as e: raise e
 
 def getSecrets(key):
-	with open(os.path.join(CONF_ROOT, "unveillance.secrets.json"), 'rb') as C:
-		config = json.loads(C.read())
+	try:
+		with open(os.path.join(CONF_ROOT, "unveillance.secrets.json"), 'rb') as C:
+			config = json.loads(C.read())
 		
-		try:
-			return config[key]
-		except Exception as e: raise e
+			try:
+				return config[key]
+			except Exception as e: raise e
+	except IOError as e: raise e
