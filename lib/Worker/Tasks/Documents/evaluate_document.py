@@ -41,7 +41,8 @@ def evaluateDocument(uv_task):
 		inflate = {
 			'task_path' : MIME_TYPE_TASKS[document.mime_type][0],
 			'doc_id' : document._id,
-			'queue' : uv_task.queue
+			'queue' : uv_task.queue,
+			'task_queue' : MIME_TYPE_TASKS[document.mime_type]
 		}
 		
 		if document.mime_type == MIME_TYPES['symlink']: inflate['attempt_sync'] = True

@@ -214,7 +214,11 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 			else:
 				mime_type = document['mime_type']
 				
-			inflate['task_path'] = MIME_TYPE_TASKS[mime_type][0]
+			inflate.update({
+				'task_path' : MIME_TYPE_TASKS[mime_type][0],
+				'task_queue' : MIME_TYPE_TASKS[mime_type]
+			})
+			
 		else:
 			inflate.update({
 				'task_path' :  query['task_path'],
