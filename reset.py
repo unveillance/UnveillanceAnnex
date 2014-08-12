@@ -28,6 +28,23 @@ if __name__ == "__main__":
 
 	except IOError as e:
 		pass
+
+	cron = CronTab(tab='# Unveillance CronTab')
+	cron_job = cron.new(
+		command="%s %s >> %s" % (PYTHON_HOME, os.path.join(base_dir, 'clear_logs.py'), os.path.join(monitor_root, "api.log.txt")),
+		comment="clear_logs")
+
+	try:
+		uv_log_cron = getConfig('uv_log_cron')
+	except Exception as e:
+		uv_log_cron = None
+
+	if uv_log_cron is None: uv_log_cron = 3
+	
+	cron_job.every(uv_log_cron).days()
+	cron_job.enable()
+	
+	cron.write(os.path.join(monitor_root, "uv_cron.tab"))
 	
 	with settings(warn_only=True):
 		os.chdir(ANNEX_DIR)

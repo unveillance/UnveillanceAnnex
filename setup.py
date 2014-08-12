@@ -144,6 +144,7 @@ if __name__ == "__main__":
 		CONFIG.write("sys_arch: %s\n" % SYS_ARCH)
 		CONFIG.write("python_home: %s\n" % PYTHON_HOME)
 		CONFIG.write("ssh_root: %s\n" % SSH_ROOT)
+		CONFIG.write("uv_log_cron: %d\n" % uv_log_cron)
 	
 	with open(os.path.join(base_dir, "conf", "annex.config.yaml"), "ab") as CONFIG:
 		from lib.Core.Utils.funcs import generateNonce
