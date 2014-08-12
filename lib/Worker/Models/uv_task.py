@@ -74,14 +74,12 @@ class UnveillanceTask(UnveillanceObject):
 		except Exception as e:
 			printAsLog(e)
 	
-	'''
 	def lock(self, lock=True):
 		self.locked = lock
 		self.save()
 	
 	def unlock(self):
 		self.lock(lock=False)
-	'''
 	
 	def finish(self):
 		if DEBUG: print "task finished!"

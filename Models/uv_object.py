@@ -70,7 +70,7 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 		os.chdir(ANNEX_DIR)
 		
 		with settings(hide('everything'), warn_only=True):
-			ga_unlock = local("git annex unlock %s" % asset_path)
+			ga_unlock = local("git-annex unlock %s" % asset_path)
 		
 		if DEBUG: print "unlocking asset %s:\n%s\n" % (asset_path, ga_unlock)
 		
@@ -92,10 +92,10 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 		os.chdir(ANNEX_DIR)
 		
 		with settings(hide('everything'), warn_only=True):
-			ga_find = local("git annex find %s" % asset_path, capture=True)
+			ga_find = local("git-annex find %s" % asset_path, capture=True)
 			if ga_find == asset_path: res = True
 			else:
-				ga_query = local("git annex status", capture=True)
+				ga_query = local("git-annex status", capture=True)
 				
 				for line in ga_query.splitlines():
 					r = re.match(re.compile("(.{1,2}) %s" % asset_path), line)
@@ -127,7 +127,7 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 		metadata = None
 
 		with settings(warn_only=True):
-			metadata = local("git annex metadata %s --json --get=%s"  % self.file_name, capture=True)
+			metadata = local("git-annex metadata %s --json --get=%s"  % self.file_name, capture=True)
 			if metadata == "": metadata = None
 
 		os.chdir(this_dir)
@@ -135,7 +135,7 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 		
 	def addFile(self, asset_path, data, sync=False):
 		"""
-			git annex add [file]
+			git-annex add [file]
 		"""
 		#if not self.getFile(asset_path): return False
 		
@@ -143,10 +143,10 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 		os.chdir(ANNEX_DIR)
 		
 		if data is not None:
-			# 1. file exists? git annex find
-			# 2. if so, check out "git annex get asset_path"
+			# 1. file exists? git-annex find
+			# 2. if so, check out "git-annex get asset_path"
 			with settings(hide('everything'), warn_only=True):
-				ga_find = local("git annex find %s" % asset_path, capture=True)
+				ga_find = local("git-annex find %s" % asset_path, capture=True)
 			
 			if DEBUG: print "finding %s:\n%s\n" % (asset_path, ga_find)
 			 
@@ -154,7 +154,7 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 				if line == asset_path:
 					# 3. if it was already added, sync=True
 					sync = True
-					local("git annex unlock %s" % asset_path)
+					local("git-annex unlock %s" % asset_path)
 					break
 
 			try:
@@ -168,7 +168,7 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 		
 		if sync:
 			with settings(hide('everything'), warn_only=True):
-				ga_add = local("git annex add %s" % asset_path, capture=True)
+				ga_add = local("git-annex add %s" % asset_path, capture=True)
 				ga_commit = local("git commit %s -m \"saved and synced asset\"",
 					capture=True)
 

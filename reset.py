@@ -2,7 +2,7 @@ import os
 from fabric.api import local, settings
 from crontab import CronTab
 
-from conf import ANNEX_DIR, MONITOR_ROOT, getConfig
+from conf import ANNEX_DIR, MONITOR_ROOT, BASE_DIR, getConfig
 from Utils.funcs import forceQuitUnveillance
 
 if __name__ == "__main__":
@@ -31,7 +31,7 @@ if __name__ == "__main__":
 
 	cron = CronTab(tab='# Unveillance CronTab')
 	cron_job = cron.new(
-		command="%s %s >> %s" % (PYTHON_HOME, os.path.join(base_dir, 'clear_logs.py'), os.path.join(monitor_root, "api.log.txt")),
+		command="%s %s >> %s" % (getConfig('python_home'), os.path.join(BASE_DIR, 'clear_logs.py'), os.path.join(MONITOR_ROOT, "api.log.txt")),
 		comment="clear_logs")
 
 	try:
@@ -44,7 +44,7 @@ if __name__ == "__main__":
 	cron_job.every(uv_log_cron).days()
 	cron_job.enable()
 	
-	cron.write(os.path.join(monitor_root, "uv_cron.tab"))
+	cron.write(os.path.join(MONITOR_ROOT, "uv_cron.tab"))
 	
 	with settings(warn_only=True):
 		os.chdir(ANNEX_DIR)

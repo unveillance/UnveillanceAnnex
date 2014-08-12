@@ -239,13 +239,13 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		os.chdir(ANNEX_DIR)
 		
 		with settings(hide('everything'), warn_only=True):
-			find_cmd = local("git annex find %s" % file_path, capture=True)				
+			find_cmd = local("git-annex find %s" % file_path, capture=True)				
 			if find_cmd == "":
-				find_cmd = local("git annex status %s" % file_path, capture=True)
+				find_cmd = local("git-annex status %s" % file_path, capture=True)
 			
 			if find_cmd != "":
 				find_cmd = file_path
-				local("git annex add %s" % file_path)			
+				local("git-annex add %s" % file_path)			
 		
 		for line in find_cmd.splitlines():
 			if line == file_path:				
@@ -255,7 +255,7 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 						(HOST, API_PORT, file_path))
 				
 					with settings(hide('everything'), warn_only=True):
-						w_match = local("git annex whereis %s" % file_path, capture=True)
+						w_match = local("git-annex whereis %s" % file_path, capture=True)
 							
 					for w_line in w_match.splitlines():
 						# if this file has not already been added to web remote, add it
@@ -264,7 +264,7 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 							break
 								
 					if not web_match_found:
-						add_cmd = "git annex addurl --file %s http://%s:%d/files/%s --relaxed" % (file_path, HOST, API_PORT, file_path)
+						add_cmd = "git-annex addurl --file %s http://%s:%d/files/%s --relaxed" % (file_path, HOST, API_PORT, file_path)
 						
 						with settings(hide('everything'), warn_only=True):
 							add_url = local(add_cmd, capture=True)

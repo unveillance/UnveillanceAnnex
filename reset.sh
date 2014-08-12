@@ -1,4 +1,5 @@
 #! /bin/bash
+source ~/.bash_profile
 python unveillance_annex.py -stop
 echo "......... RESETTING UNVEILLANCE ANNEX FROM CONFIG ........."
 sleep 3
