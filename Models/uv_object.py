@@ -127,7 +127,13 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 		metadata = None
 
 		with settings(warn_only=True):
-			metadata = local("git-annex metadata %s --json --get=%s"  % self.file_name, capture=True)
+			is_pending = local("git-annex status %s" % self.file_name, capture=True)
+			if DEBUG: print "\n*** IS FILE %s CHECKED OUT?\n%s\n**" % (self.file_name, is_pending)
+			if is_pending != "":
+				local("git-annex add %s" % self.file_name)
+
+			metadata = local("git-annex metadata %s --json --get=%s"  % (self.file_name, key), capture=True)
+			if DEBUG: print "\n***METADATA QUERY: %s = %s ***" % (key, metadata)
 			if metadata == "": metadata = None
 
 		os.chdir(this_dir)

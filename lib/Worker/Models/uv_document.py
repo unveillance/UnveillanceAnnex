@@ -27,6 +27,10 @@ class UnveillanceDocument(UnveillanceObject):
 			
 			if self.mime_type == "inode/symlink" and self.getFile(self.file_name):
 				self.mime_type = getFileType(os.path.join(ANNEX_DIR, self.file_name))
+
+			alias = self.getFileMetadata("uv_file_alias")
+			if alias is not None:
+				self.file_alias = alias
 			
 			self.save()
 	
