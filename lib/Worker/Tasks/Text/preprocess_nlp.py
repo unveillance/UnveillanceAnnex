@@ -32,7 +32,7 @@ def preprocessNLP(task):
 		print "\n\n************** %s [ERROR] ******************\n" % task_tag
 		return
 	
-	word_groups = [cleanAndSplitLine(text) for text in texts]
+	word_groups = [cleanAndSplitLine(text) for text in texts if text is not None]
 	word_groups = [wg for wg in word_groups if len(wg) > 0]
 	bag_of_words = sum(word_groups, [])
 	document.addAsset(bag_of_words, "bag_of_words.txt", as_literal=False,
