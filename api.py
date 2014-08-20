@@ -169,27 +169,6 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		
 		return self.query(query, count_only=count_only, limit=limit, cast_as=cast_as)
 	
-	def runTask(self, handler):
-		try:
-			args = parseRequestEntity(handler.request.body)
-		except AttributeError as e:
-			if DEBUG: print "No body?\n%s" % e
-			return None
-		
-		uv_task = None
-		if len(args.keys()) == 1 and '_id' in args.keys():
-			uv_task = UnveillanceTask(_id=args['_id'])
-		else:
-			# TODO: XXX: IF REFERER IS LOCALHOST ONLY (and other auth TBD)!
-			if 'task_path' in args.keys():
-				args['queue'] = UUID
-				uv_task = UnveillanceTask(args)
-		
-		if uv_task is None: return None
-		
-		uv_task.run()
-		return uv_task.emit()
-	
 	def do_reindex(self, request):
 		print "DOING REINDEX"
 		
@@ -228,6 +207,27 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		uv_task = UnveillanceTask(inflate=inflate)
 		uv_task.run()
 		return True
+	
+	def runTask(self, handler):
+		try:
+			args = parseRequestEntity(handler.request.body)
+		except AttributeError as e:
+			if DEBUG: print "No body?\n%s" % e
+			return None
+		
+		uv_task = None
+		if len(args.keys()) == 1 and '_id' in args.keys():
+			uv_task = UnveillanceTask(_id=args['_id'])
+		else:
+			# TODO: XXX: IF REFERER IS LOCALHOST ONLY (and other auth TBD)!
+			if 'task_path' in args.keys():
+				args['queue'] = UUID
+				uv_task = UnveillanceTask(args)
+		
+		if uv_task is None: return None
+		
+		uv_task.run()
+		return uv_task.emit()
 	
 	def fileExistsInAnnex(self, file_path, auto_add=True):
 		if file_path == ".gitignore" :

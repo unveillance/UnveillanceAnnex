@@ -68,9 +68,6 @@ class UnveillanceTask(UnveillanceObject):
 
 			args = [self]
 			if DEBUG: print args
-
-			startDaemon(os.path.join(MONITOR_ROOT, "api.log.txt"), os.path.join(self.base_path, "task.pid.txt"))	
-			if DEBUG: print "TASK %s DAEMONIZED" % self._id
 			
 			#p = Process(target=func.apply_async, args=args)
 			p = Process(target=func, args=args)
@@ -87,8 +84,6 @@ class UnveillanceTask(UnveillanceObject):
 	
 	def finish(self):
 		if DEBUG: print "task finished!"
-
-		stopDaemon(os.path.join(self.base_path, "task.pid.txt"))
 		
 		if not hasattr(self, 'persist') or not self.persist:
 			if DEBUG: print "task will be deleted!"
