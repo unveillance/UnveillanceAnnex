@@ -91,7 +91,7 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 		this_dir = os.getcwd()
 		os.chdir(ANNEX_DIR)
 		
-		with settings(hide('everything'), warn_only=True):
+		with settings(warn_only=True):
 			ga_find = local("git-annex find %s" % asset_path, capture=True)
 			if ga_find == asset_path: res = True
 			else:
