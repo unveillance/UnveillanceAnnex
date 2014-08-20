@@ -57,10 +57,7 @@ def evaluateText(task):
 			# this is arbitrary
 			MAX_LINES_PER_PAGE = 80
 			
-			for line in content.splitlines(): 
-				if DEBUG: 
-					print "parsing line..."
-					print line
+			for line in content.splitlines():
 				txt_pages.append(cleanLine(line))
 				line_count += 1
 				

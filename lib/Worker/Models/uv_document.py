@@ -1,5 +1,4 @@
 from Models.uv_object import UnveillanceObject
-from conf import DEBUG
 
 class UnveillanceDocument(UnveillanceObject):
 	def __init__(self, _id=None, inflate=None, emit_sentinels=None):

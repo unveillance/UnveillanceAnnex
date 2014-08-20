@@ -7,7 +7,7 @@ from fabric.api import local, settings
 
 from Models.uv_object import UnveillanceObject
 from Utils.funcs import printAsLog
-from lib.Core.Utils.funcs import startDaemon, stopDaemon
+from lib.Core.Utils.funcs import stopDaemon, startDaemon
 
 from vars import EmitSentinel, UV_DOC_TYPE, TASKS_ROOT
 from conf import DEBUG, BASE_DIR, ANNEX_DIR, HOST, API_PORT, MONITOR_ROOT
@@ -22,6 +22,9 @@ class UnveillanceTask(UnveillanceObject):
 			
 		super(UnveillanceTask, self).__init__(_id=_id, inflate=inflate, 
 			emit_sentinels=[EmitSentinel("ctx", "Worker", None)])
+
+		self.pid_file = os.path.join(ANNEX_DIR, self.base_path, "pid.txt")
+		self.log_file = os.path.join(ANNEX_DIR, self.base_path, "log.txt")
 	
 	def routeNext(self, inflate=None):
 		if DEBUG: print "ROUTING NEXT TASK FROM QUEUE\nCLONING SOME VARS FROM SELF:\n%s" % self.emit()
@@ -74,6 +77,13 @@ class UnveillanceTask(UnveillanceObject):
 			p.start()
 		except Exception as e:
 			printAsLog(e)
+
+	def daemonize(self):
+		if DEBUG: print "TASK IS NOW BEING DAEMONIZED. LOG FOUND AT %s" % self.log_file
+		
+		startDaemon(self.log_file, self.pid_file)
+		self.daemonized = True
+		self.save()
 	
 	def lock(self, lock=True):
 		self.locked = lock
@@ -81,9 +91,16 @@ class UnveillanceTask(UnveillanceObject):
 	
 	def unlock(self):
 		self.lock(lock=False)
+
+	def die(self):
+		if hasattr(self, "daemonized") and self.daemonized:
+			stopDaemon(self.pid_file)
+			self.daemonized = False
+			self.save()
 	
 	def finish(self):
 		if DEBUG: print "task finished!"
+		self.die()
 		
 		if not hasattr(self, 'persist') or not self.persist:
 			if DEBUG: print "task will be deleted!"

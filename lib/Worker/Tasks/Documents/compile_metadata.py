@@ -86,11 +86,12 @@ def compileMetadata(task):
 			for key, value in task.md_extras.iteritems():
 				labels.append(key)
 				values.append(value)
-		
+		"""
 		if DEBUG:
 			print "labels %s" % labels
 			print "values %s" % values
-			
+		"""
+
 		from cStringIO import StringIO
 		
 		md_csv_file = StringIO()
