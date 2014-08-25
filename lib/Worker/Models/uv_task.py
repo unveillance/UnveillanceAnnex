@@ -21,10 +21,16 @@ class UnveillanceTask(UnveillanceObject):
 			inflate['status'] = 404
 			
 		super(UnveillanceTask, self).__init__(_id=_id, inflate=inflate, 
-			emit_sentinels=[EmitSentinel("ctx", "Worker", None)])
+			emit_sentinels=[
+				EmitSentinel("ctx", "Worker", None),
+				EmitSentinel("log_file", "str", None)])
 
 		self.pid_file = os.path.join(ANNEX_DIR, self.base_path, "pid.txt")
-		self.log_file = os.path.join(ANNEX_DIR, self.base_path, "log.txt")
+
+		if not hasattr(self, "log_file"):
+			self.log_file = os.path.join(ANNEX_DIR, self.base_path, "log.txt")
+		else:
+			if DEBUG: print "INHERITED A LOG FILE: %s" % self.log_file
 	
 	def routeNext(self, inflate=None):
 		if DEBUG: print "ROUTING NEXT TASK FROM QUEUE\nCLONING SOME VARS FROM SELF:\n%s" % self.emit()
@@ -47,7 +53,7 @@ class UnveillanceTask(UnveillanceObject):
 			if DEBUG: print "TASK QUEUE EXHAUSTED. NO ROUTING POSSIBLE.\n%s" % e
 			return
 		
-		for a in ["doc_id", "queue", "task_queue"]:
+		for a in ["doc_id", "queue", "task_queue", "log_file"]:
 			if hasattr(self, a):
 				inflate[a] = getattr(self, a)
 		
@@ -77,9 +83,10 @@ class UnveillanceTask(UnveillanceObject):
 			p.start()
 		except Exception as e:
 			printAsLog(e)
+			return
 
 	def daemonize(self):
-		if DEBUG: print "TASK IS NOW BEING DAEMONIZED. LOG FOUND AT %s" % self.log_file
+		if DEBUG: print "TASK %s IS NOW BEING DAEMONIZED. LOG FOUND AT %s" % (self.task_path, self.log_file)
 		
 		startDaemon(self.log_file, self.pid_file)
 		self.daemonized = True
@@ -100,16 +107,11 @@ class UnveillanceTask(UnveillanceObject):
 	
 	def finish(self):
 		if DEBUG: print "task finished!"
-		self.die()
-		
 		if not hasattr(self, 'persist') or not self.persist:
 			if DEBUG: print "task will be deleted!"
-
 			self.setStatus(200)
-			self.delete()
 		else:
 			self.setStatus(205)
-			self.save()
 			if DEBUG: print "task will run again after %d minutes" % self.persist
 			
 			try:
@@ -145,12 +147,20 @@ class UnveillanceTask(UnveillanceObject):
 			
 			with settings(warn_only=True):
 				local("crontab %s" % os.path.join(MONITOR_ROOT, "uv_cron.tab"))
+
+		sleep(20)
+		self.die()
+
+		if not hasattr(self, 'persist') or not self.persist:
+			self.delete()
 	
 	def delete(self):
+		'''
 		if DEBUG: print "DELETING MYSELF"
 
 		with settings(warn_only=True):
 			local("rm -rf %s" % os.path.join(ANNEX_DIR, self.base_path))
+		'''
 
 		return super(UnveillanceTask, self).delete(self._id)
 	
