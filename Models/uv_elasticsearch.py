@@ -14,9 +14,9 @@ class UnveillanceElasticsearchHandler(object):
 	def __init__(self):
 		if DEBUG: print "elasticsearch handler inited"
 		
-	def get(self, _id):
+	def get(self, _id, els_doc_root=None):
 		if DEBUG: print "getting thing"
-		res = self.sendELSRequest(endpoint=_id)
+		res = self.sendELSRequest(endpoint=_id, to_root=els_doc_root if els_doc_root is not None else False)
 		
 		try:
 			if res['found']: return res['_source']
@@ -109,10 +109,10 @@ class UnveillanceElasticsearchHandler(object):
 		
 		return False
 	
-	def update(self, _id, args):
+	def update(self, _id, args, parent=None):
 		if DEBUG: print "updating thing"
 		
-		res = self.sendELSRequest(endpoint=_id, data=args, method="put")
+		res = self.sendELSRequest(endpoint=_id if parent is None else "%s?parent=%s" % (_id, parent), data=args, method="put")
 
 		try: return res['ok']
 		except KeyError as e: pass
@@ -121,7 +121,17 @@ class UnveillanceElasticsearchHandler(object):
 	
 	def create(self, _id, args):
 		if DEBUG: print "creating thing"
-		return self.update(_id, args)
+		parent = None
+
+		if hasattr(self, "els_doc_root"):
+			if DEBUG: print "Creating thing on another doc_root:\n%s" % self.emit().keys()
+
+			if hasattr(self, "media_id"):
+				parent = self.media_id
+			else:
+				if DEBUG: print "no parent though..."
+
+		return self.update(_id, args, parent=parent)
 		
 	def delete(self, _id):
 		if DEBUG: print "deleting thing"
@@ -137,7 +147,13 @@ class UnveillanceElasticsearchHandler(object):
 	def sendELSRequest(self, data=None, to_root=False, endpoint=None, method="get"):
 		url = "http://localhost:9200/unveillance/"
 
-		if not to_root: url += "uv_document/"
+		if not to_root:
+			if DEBUG: print "Alternative els_doc_root? %s" % hasattr(self, "els_doc_root")
+			if hasattr(self, "els_doc_root"):
+				url += "%s/" % self.els_doc_root
+			else:
+				url += "uv_document/"
+		
 		if endpoint is not None: url += endpoint
 		if data is not None: data = json.dumps(data)
 

@@ -27,7 +27,7 @@ def inflateVars(path):
 			
 			lcl[k]['uv_document']['properties'].update(vars_extras[k])
 			continue
-		elif k == "QUERY_KEYS":			
+		elif k == "QUERY_KEYS":
 			for operator in vars_extras[k].keys():
 				if DEBUG: print "Operator: %s" % operator
 				
@@ -47,6 +47,16 @@ def inflateVars(path):
 				else:
 					QUERY_KEYS.update(vars_extras[k][operator])
 			
+			continue
+		elif k == "ELASTICSEARCH_MAPPING_STUBS":
+			for key in vars_extras[k].keys():
+				if key in lcl['ELASTICSEARCH_MAPPINGS'].keys():
+					del vars_extras[k][key]
+					# no overwriting, again!
+
+			if len(vars_extras[k].keys()) == 0: continue
+
+			lcl['ELASTICSEARCH_MAPPINGS'].update(vars_extras[k])
 			continue
 			
 		try:
@@ -108,6 +118,16 @@ QUERY_DEFAULTS = {
 ELASTICSEARCH_SOURCE_EXCLUDES = ["searchable_text"]
 
 ELASTICSEARCH_MAPPINGS = {
+	"uv_text_stub" : {
+		"_parent" : {
+			"type" : "uv_document"
+		},
+		"properties" : {
+			"searchable_text" : {
+				"type" : "string"
+			}
+		}
+	},
 	"uv_document" : {
 		"properties": {
 			"uv_type": {

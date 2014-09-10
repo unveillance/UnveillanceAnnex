@@ -60,9 +60,7 @@ class UnveillanceTask(UnveillanceObject):
 		next_task = UnveillanceTask(inflate=inflate)
 		next_task.run()
 		
-	def run(self):
-		if DEBUG: print "NOW RUNNING TASK:\n%s" % self.emit()
-		
+	def run(self):		
 		# otherwise...		
 		# i.e. "lib.Worker.Tasks.Documents.evaluate_document"
 		task_path = ".".join([TASKS_ROOT, self.task_path])

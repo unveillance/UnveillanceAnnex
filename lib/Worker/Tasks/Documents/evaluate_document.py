@@ -48,7 +48,6 @@ def evaluateDocument(uv_task):
 		if document.mime_type == MIME_TYPES['symlink']: inflate['attempt_sync'] = True
 		new_task = UnveillanceTask(inflate=inflate)
 		
-		if DEBUG: print new_task.emit()
 		new_task.run()
 		
 	else:

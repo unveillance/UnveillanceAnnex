@@ -32,11 +32,14 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 		super(UnveillanceObject, self).__init__(_id=_id, inflate=inflate,
 			emit_sentinels=emit_sentinels)
 		
-	def save(self):
+	def save(self, create=False):
 		if DEBUG: 
 			print "\n\n**SAVING AS ANNEX/WORKER OBJECT"
 		
-		return self.update(self._id, self.emit())
+		if create:
+			return self.create(self._id, self.emit())
+		else:
+			return self.update(self._id, self.emit())
 	
 	def saveFields(self, fields):
 		if DEBUG:
@@ -55,11 +58,10 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 		
 		if len(new_data.keys()) == 0: return False
 		
-		if DEBUG: print "update: %s" % new_data
 		return self.updateFields(self._id, new_data)
 		
-	def getObject(self, _id):
-		try: self.inflate(self.get(_id))
+	def getObject(self, _id, els_doc_root=None):
+		try: self.inflate(self.get(_id, els_doc_root=els_doc_root))
 		except Exception as e:
 			if DEBUG: print "ERROR GETTING OBJECT: %s" % e
 			self.invalidate(error="Object does not exist in Elasticsearch")
@@ -153,9 +155,7 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 			# 2. if so, check out "git-annex get asset_path"
 			with settings(hide('everything'), warn_only=True):
 				ga_find = local("git-annex find %s" % asset_path, capture=True)
-			
-			if DEBUG: print "finding %s:\n%s\n" % (asset_path, ga_find)
-			 
+						 
 			for line in ga_find.splitlines():
 				if line == asset_path:
 					# 3. if it was already added, sync=True
@@ -193,10 +193,6 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 			as_literal=as_literal, **metadata)
 		
 		if data is not None and asset_path:
-			if DEBUG:
-				print "HERE IS THE DATA I PLAN ON ADDING:"
-				print type(data)
-			
 			if not as_literal: data = dumps(data)
 			if not self.addFile(asset_path, data):
 				if DEBUG: print "COULD NOT ADD FILE."
