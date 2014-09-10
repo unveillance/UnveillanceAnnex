@@ -110,6 +110,13 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 				operator = args['operator']
 				del args['operator']
 			except KeyError as e: pass
+
+			# [{script_id (str), script_params (k,v)}]
+			map_reduce = None
+			try:
+				map_reduce = args['map_reduce']
+				del args['map_reduce']
+			except KeyError as e: pass
 			
 			for a in args.keys():
 				if a in QUERY_KEYS[operator]['match']:
@@ -167,7 +174,7 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 						}
 					})
 		
-		return self.query(query, count_only=count_only, limit=limit, cast_as=cast_as)
+		return self.query(query, count_only=count_only, limit=limit, cast_as=cast_as, map_reduce=map_reduce)
 	
 	def do_reindex(self, request):
 		print "DOING REINDEX"

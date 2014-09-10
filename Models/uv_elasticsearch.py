@@ -26,7 +26,7 @@ class UnveillanceElasticsearchHandler(object):
 		
 		return None
 	
-	def query(self, args, count_only=False, limit=None, sort=None, from_=None, cast_as=None):
+	def query(self, args, count_only=False, limit=None, sort=None, from_=None, cast_as=None, map_reduce=None):
 		# TODO: ACTUALLY, I MEAN ALL OF THEM.
 		if limit is None: limit = 1000
 		if from_ is None: from_ = 0
@@ -44,6 +44,14 @@ class UnveillanceElasticsearchHandler(object):
 		
 		if cast_as is not None:
 			query['fields'] = cast_as
+
+		if map_reduce is not None:
+			if type(map_reduce) is not list: map_reduce = [map_reduce]
+
+			query = {
+				'function_score' : query,
+				'functions' : [{ "script_score" : { "script_id" : mr['script_id'], "lang" : "python", "params" : mr['script_params']}} for mr in map_reduce]
+			}
 				
 		if DEBUG: 
 			print "OH A QUERY"
