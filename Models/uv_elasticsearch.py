@@ -16,8 +16,8 @@ class UnveillanceElasticsearchHandler(object):
 		
 	def get(self, _id, els_doc_root=None):
 		if DEBUG: print "getting thing"
-		res = self.sendELSRequest(endpoint=_id, to_root=els_doc_root if els_doc_root is not None else False)
-		
+
+		res = self.sendELSRequest(endpoint=_id if els_doc_root is None else "%s/%s" % (els_doc_root, _id), to_root=False if els_doc_root is None else True)		
 		try:
 			if res['found']: return res['_source']
 		except KeyError as e: 
@@ -26,56 +26,13 @@ class UnveillanceElasticsearchHandler(object):
 		
 		return None
 	
-	def query(self, args, count_only=False, limit=None, sort=None, from_=None, cast_as=None, map_reduce=None):
-		'''
-		{
-		  "query": {
-		    "filtered": {
-		      "filter": {
-		        "has_parent": {
-		          "parent_type": "uv_text_stub",
-		          "query": {
-		            "filtered": {
-		              "query": {
-		                "bool": {
-		                  "must_not": [
-		                    {
-		                      "constant_score": {
-		                        "filter": {
-		                          "missing": {
-		                            "field": "uv_text_stub.media_id"
-		                          }
-		                        }
-		                      }
-		                    }
-		                  ]
-		                }
-		              }
-		            }
-		          }
-		        }
-		      },
-		      "query": {
-		        "bool": {
-		          "must": [
-		            {
-		              "term": {
-		                "searchable_text": "green"
-		              }
-		            }
-		          ]
-		        }
-		      }
-		    }
-		  }
-		}
-		'''
-
+	def query(self, args, doc_type=None, count_only=False, limit=None, sort=None, from_=None, cast_as=None, map_reduce=None):
 		# TODO: ACTUALLY, I MEAN ALL OF THEM.
 		if limit is None: limit = 1000
 		if from_ is None: from_ = 0
+		if doc_type is None: doc_type = "uv_document"
 
-		if sort is None: sort = [{"uv_document.date_added" : {"order" : "desc"}}]
+		if sort is None: sort = [{"%s.date_added" % doc_type : {"order" : "desc"}}]
 		else:
 			if type(sort) is not list: sort = [sort]
 		
@@ -88,20 +45,14 @@ class UnveillanceElasticsearchHandler(object):
 		
 		if cast_as is not None:
 			query['fields'] = cast_as
-
-		if map_reduce is not None:
-			if type(map_reduce) is not list: map_reduce = [map_reduce]
-
-			query = {
-				'function_score' : query,
-				'functions' : [{ "script_score" : { "script_id" : mr['script_id'], "lang" : "python", "params" : mr['script_params']}} for mr in map_reduce]
-			}
 				
 		if DEBUG: 
 			print "OH A QUERY"
 			print json.dumps(query)
 		
-		res = self.sendELSRequest(endpoint="_search", to_root=True, data=query, method="post")
+		res = self.sendELSRequest(
+			endpoint="_search" if doc_type is "uv_document" else "%s/_search" % doc_type, 
+			to_root=True, data=query, method="post")
 		
 		try:
 			if len(res['hits']['hits']) > 0:
@@ -125,9 +76,12 @@ class UnveillanceElasticsearchHandler(object):
 				
 				else: 
 					documents = [h['_source'] for h in res['hits']['hits']]
+
+					'''
 					if len(ELASTICSEARCH_SOURCE_EXCLUDES) > 0:
 						for ex in ELASTICSEARCH_SOURCE_EXCLUDES:
 							map(lambda d: d.pop(ex, None), documents)
+					'''
 						
 					return { 
 						'count' : res['hits']['total'], 

@@ -48,6 +48,15 @@ def inflateVars(path):
 					QUERY_KEYS.update(vars_extras[k][operator])
 			
 			continue
+		elif k == "QUERY_DEFAULTS":
+			for key in vars_extras[k].keys():
+				if key in lcl['QUERY_DEFAULTS'].keys():
+					del vars_extras[k][key]
+
+			if len(vars_extras[k].keys()) == 0: continue
+
+			lcl['QUERY_DEFAULTS'].update(vars_extras[k])
+
 		elif k == "ELASTICSEARCH_MAPPING_STUBS":
 			for key in vars_extras[k].keys():
 				if key in lcl['ELASTICSEARCH_MAPPINGS'].keys():
@@ -111,22 +120,6 @@ QUERY_DEFAULTS = {
 					"query" : "UV_TASK" 
 				}}
 			]
-		}
-	},
-	'CP_PAGE_TEXT' : {
-		"bool" : {
-			"must_not" : [
-				{
-					"constant_score" : {
-						"filter" : {
-							"missing" : {
-								"field" : "cp_page_text.media_id"
-							}
-						}
-					}
-				}
-			],
-			"must" : []
 		}
 	}
 }

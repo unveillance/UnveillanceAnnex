@@ -73,9 +73,18 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 	
 	def do_documents(self, request):
 		args = parseRequestEntity(request.query)
-		if len(args.keys()) == 1 and '_id' in args.keys():
-			return self.get(_id=args['_id'])
 		
+		if len(args.keys()) in [1, 2]:
+			doc_type = None
+			try:
+				doc_type = args['doc_type']
+			except KeyError as e: pass
+
+			if '_id' in args.keys():
+				return self.get(_id=args['_id'], els_doc_root=doc_type)
+			elif '_ids' in args.keys():
+				return self.query({"ids" : {"values" : args['_ids']}}, doc_type=doc_type)
+
 		return self.do_list(request)
 		
 	def do_list(self, request, query=None):
@@ -84,7 +93,6 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		cast_as = None
 		sort = None
 		doc_type = "uv_document"
-		parent_type = None
 
 		args = parseRequestEntity(request.query)
 		if DEBUG: print "\n\nARGS:\n%s\n\n" % args
@@ -94,11 +102,12 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 			del args['doc_type']
 		except KeyError as e: pass
 
-		try:
-			query = deepcopy(QUERY_DEFAULTS[doc_type.upper()])
-		except Exception as e:
-			if DEBUG: print "could not find default query for %s" % doc_type.upper()
-			query = deepcopy(QUERY_DEFAULTS['UV_DOCUMENT'])
+		if query is None:
+			try:
+				query = deepcopy(QUERY_DEFAULTS[doc_type.upper()])
+			except Exception as e:
+				if DEBUG: print "could not find default query for %s" % doc_type.upper()
+				query = deepcopy(QUERY_DEFAULTS['UV_DOCUMENT'])
 		
 		if len(args.keys()) > 0:
 			try:
@@ -120,18 +129,6 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 			try:
 				operator = args['operator']
 				del args['operator']
-			except KeyError as e: pass
-
-			try:
-				parent_type = args['parent_type']
-				del args['parent_type']
-			except KeyError as e: pass
-
-			# [{script_id (str), script_params (k,v)}]
-			map_reduce = None
-			try:
-				map_reduce = args['map_reduce']
-				del args['map_reduce']
 			except KeyError as e: pass
 			
 			for a in args.keys():
@@ -193,7 +190,8 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		if sort is None:
 			sort = [{"%s.date_added" % doc_type: {"order" : "desc"}}]
 
-		return self.query(query, sort=sort, count_only=count_only, limit=limit, cast_as=cast_as, map_reduce=map_reduce)
+		return self.query(query, doc_type=doc_type if doc_type != "uv_document" else None,
+			sort=sort, count_only=count_only, limit=limit, cast_as=cast_as)
 	
 	def do_reindex(self, request):
 		print "DOING REINDEX"
