@@ -83,7 +83,7 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 			if '_id' in args.keys():
 				return self.get(_id=args['_id'], els_doc_root=doc_type)
 			elif '_ids' in args.keys():
-				return self.query({"ids" : {"values" : args['_ids']}}, doc_type=doc_type)
+				return self.query({"ids" : {"values" : args['_ids']}}, doc_type=doc_type, exclude_fields=False)
 
 		return self.do_list(request)
 		
@@ -191,7 +191,7 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 			sort = [{"%s.date_added" % doc_type: {"order" : "desc"}}]
 
 		return self.query(query, doc_type=doc_type if doc_type != "uv_document" else None,
-			sort=sort, count_only=count_only, limit=limit, cast_as=cast_as)
+			sort=sort, count_only=count_only, limit=limit, cast_as=cast_as, exclude_fields=True)
 	
 	def do_reindex(self, request):
 		print "DOING REINDEX"

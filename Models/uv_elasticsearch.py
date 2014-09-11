@@ -26,7 +26,7 @@ class UnveillanceElasticsearchHandler(object):
 		
 		return None
 	
-	def query(self, args, doc_type=None, count_only=False, limit=None, sort=None, from_=None, cast_as=None, map_reduce=None):
+	def query(self, args, exclude_fields=False, doc_type=None, count_only=False, limit=None, sort=None, from_=None, cast_as=None, map_reduce=None):
 		# TODO: ACTUALLY, I MEAN ALL OF THEM.
 		if limit is None: limit = 1000
 		if from_ is None: from_ = 0
@@ -77,11 +77,9 @@ class UnveillanceElasticsearchHandler(object):
 				else: 
 					documents = [h['_source'] for h in res['hits']['hits']]
 
-					'''
-					if len(ELASTICSEARCH_SOURCE_EXCLUDES) > 0:
+					if exclude_fields and len(ELASTICSEARCH_SOURCE_EXCLUDES) > 0:
 						for ex in ELASTICSEARCH_SOURCE_EXCLUDES:
 							map(lambda d: d.pop(ex, None), documents)
-					'''
 						
 					return { 
 						'count' : res['hits']['total'], 
