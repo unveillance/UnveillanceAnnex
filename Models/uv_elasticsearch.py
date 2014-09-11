@@ -27,6 +27,50 @@ class UnveillanceElasticsearchHandler(object):
 		return None
 	
 	def query(self, args, count_only=False, limit=None, sort=None, from_=None, cast_as=None, map_reduce=None):
+		'''
+		{
+		  "query": {
+		    "filtered": {
+		      "filter": {
+		        "has_parent": {
+		          "parent_type": "uv_text_stub",
+		          "query": {
+		            "filtered": {
+		              "query": {
+		                "bool": {
+		                  "must_not": [
+		                    {
+		                      "constant_score": {
+		                        "filter": {
+		                          "missing": {
+		                            "field": "uv_text_stub.media_id"
+		                          }
+		                        }
+		                      }
+		                    }
+		                  ]
+		                }
+		              }
+		            }
+		          }
+		        }
+		      },
+		      "query": {
+		        "bool": {
+		          "must": [
+		            {
+		              "term": {
+		                "searchable_text": "green"
+		              }
+		            }
+		          ]
+		        }
+		      }
+		    }
+		  }
+		}
+		'''
+
 		# TODO: ACTUALLY, I MEAN ALL OF THEM.
 		if limit is None: limit = 1000
 		if from_ is None: from_ = 0
@@ -55,9 +99,9 @@ class UnveillanceElasticsearchHandler(object):
 				
 		if DEBUG: 
 			print "OH A QUERY"
-			print query
+			print json.dumps(query)
 		
-		res = self.sendELSRequest(endpoint="_search", data=query, method="post")
+		res = self.sendELSRequest(endpoint="_search", to_root=True, data=query, method="post")
 		
 		try:
 			if len(res['hits']['hits']) > 0:

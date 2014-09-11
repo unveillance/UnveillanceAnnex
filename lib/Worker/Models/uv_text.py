@@ -41,17 +41,6 @@ class UnveillanceText(UnveillanceObject):
 
 		super(UnveillanceText, self).__init__(_id=_id, 
 			inflate=inflate, emit_sentinels=emit_sentinels)
-
-		if inflate is not None:
-			if "searchable_text_type" in inflate.keys() and "searchable_text" in inflate.keys():
-				from Models.uv_els_stub import UnveillanceELSStub
-
-				for i, st in enumerate(inflate['searchable_text']):
-					els_stub = UnveillanceELSStub(inflate['searchable_text_type'], inflate={
-						'media_id' : inflate['_id'],
-						'searchable_text' : st,
-						'index_in_parent' : i
-					})
 	
 	def inflate(self, attrs):
 		attrs['els_doc_root'] = "uv_text_stub"

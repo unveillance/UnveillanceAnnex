@@ -112,6 +112,22 @@ QUERY_DEFAULTS = {
 				}}
 			]
 		}
+	},
+	'CP_PAGE_TEXT' : {
+		"bool" : {
+			"must_not" : [
+				{
+					"constant_score" : {
+						"filter" : {
+							"missing" : {
+								"field" : "cp_page_text.media_id"
+							}
+						}
+					}
+				}
+			],
+			"must" : []
+		}
 	}
 }
 

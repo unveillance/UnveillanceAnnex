@@ -29,7 +29,9 @@ class UnveillanceELSStub(UnveillanceElasticsearchHandler):
 			from lib.Core.Utils.funcs import generateMD5Hash
 
 			inflate['date_added'] = time() * 1000
-			inflate['_id'] = generateMD5Hash(salt=inflate['date_added'])
+
+			if '_id' not in inflate.keys():
+				inflate['_id'] = generateMD5Hash(salt=inflate['date_added'])
 
 			self.inflate(inflate)
 			self.save(create=True)

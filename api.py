@@ -82,12 +82,23 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		count_only = False
 		limit = None
 		cast_as = None
-		
-		if query is None:
-			query = deepcopy(QUERY_DEFAULTS['UV_DOCUMENT'])
+		sort = None
+		doc_type = "uv_document"
+		parent_type = None
 
 		args = parseRequestEntity(request.query)
 		if DEBUG: print "\n\nARGS:\n%s\n\n" % args
+
+		try:
+			doc_type = args['doc_type']
+			del args['doc_type']
+		except KeyError as e: pass
+
+		try:
+			query = deepcopy(QUERY_DEFAULTS[doc_type.upper()])
+		except Exception as e:
+			if DEBUG: print "could not find default query for %s" % doc_type.upper()
+			query = deepcopy(QUERY_DEFAULTS['UV_DOCUMENT'])
 		
 		if len(args.keys()) > 0:
 			try:
@@ -111,6 +122,11 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 				del args['operator']
 			except KeyError as e: pass
 
+			try:
+				parent_type = args['parent_type']
+				del args['parent_type']
+			except KeyError as e: pass
+
 			# [{script_id (str), script_params (k,v)}]
 			map_reduce = None
 			try:
@@ -122,7 +138,7 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 				if a in QUERY_KEYS[operator]['match']:
 					query['bool'][operator].append({
 						"match": {
-							"uv_document.%s" % a : args[a]
+							"%s.%s" % (doc_type, a) : args[a]
 						}
 					})
 				elif a in QUERY_KEYS[operator]['filter']:
@@ -134,7 +150,7 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 						"constant_score" : {
 							"filter" : {
 								"terms" : {
-									"uv_document.%s" % a : terms
+									"%s.%s" % (doc_type, a) : terms
 								}
 							}
 						}
@@ -155,7 +171,7 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 					
 					query['bool'][operator].append({
 						"range" : {
-							"uv_document.%s" % a : {
+							"%s.%s" % (doc_type, a) : {
 								"gte" : format(mktime(gte.timetuple()) * 1000, '0.0f'),
 								"lte" : format(mktime(lte.timetuple()) * 1000, '0.0f')
 							}
@@ -170,11 +186,14 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 					query['bool'][operator].append({
 						"geo_distance" : {
 							"distance" : "%dmi" % radius,
-							"uv_document.%s" % a : args[a]
+							"%s.%s" % (doc_type, a) : args[a]
 						}
 					})
 		
-		return self.query(query, count_only=count_only, limit=limit, cast_as=cast_as, map_reduce=map_reduce)
+		if sort is None:
+			sort = [{"%s.date_added" % doc_type: {"order" : "desc"}}]
+
+		return self.query(query, sort=sort, count_only=count_only, limit=limit, cast_as=cast_as, map_reduce=map_reduce)
 	
 	def do_reindex(self, request):
 		print "DOING REINDEX"
