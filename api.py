@@ -93,6 +93,7 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		cast_as = None
 		sort = None
 		doc_type = "uv_document"
+		exclude_fields = True
 
 		args = parseRequestEntity(request.query)
 		if DEBUG: print "\n\nARGS:\n%s\n\n" % args
@@ -100,6 +101,12 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		try:
 			doc_type = args['doc_type']
 			del args['doc_type']
+		except KeyError as e: pass
+
+		try:
+			exclude_fields = not args['get_all']
+			print exclude_fields
+			del args['get_all']
 		except KeyError as e: pass
 
 		if query is None:
@@ -191,7 +198,8 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 			sort = [{"%s.date_added" % doc_type: {"order" : "desc"}}]
 
 		return self.query(query, doc_type=doc_type if doc_type != "uv_document" else None,
-			sort=sort, count_only=count_only, limit=limit, cast_as=cast_as, exclude_fields=True)
+			sort=sort, count_only=count_only, limit=limit, 
+			cast_as=cast_as, exclude_fields=exclude_fields)
 	
 	def do_reindex(self, request):
 		print "DOING REINDEX"
