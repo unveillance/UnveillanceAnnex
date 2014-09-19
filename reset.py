@@ -82,13 +82,14 @@ if __name__ == "__main__":
 		local("git annex add .")
 		local("git annex sync")
 
-		for _, _, files in os.walk(annex_includes):
-			for f in files:
-				local("cp %s ." % os.path.join(annex_includes, f))
-				local("git annex add %s" % f)
+		if annex_includes is not None:
+			for _, _, files in os.walk(annex_includes):
+				for f in files:
+					local("cp %s ." % os.path.join(annex_includes, f))
+					local("git annex add %s" % f)
 
-			# this should not be recursive.
-			break
+				# this should not be recursive.
+				break
 
 		local("git annex sync")
 		os.chdir(this_dir)

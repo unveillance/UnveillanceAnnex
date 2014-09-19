@@ -88,6 +88,8 @@ class QueryBatchStub(object):
 	def __init__(self, query):
 		self.request = QueryBatchRequestStub(query)
 
+GIT_ANNEX_METADATA = ['uv_file_alias', 'importer_source', 'imported_by', 'uv_local_only']
+
 QUERY_KEYS = {
 	'must' : {
 		'match' : ['assets.tags', 'task_path', 'update_file', 'file_name', 'media_id'],
@@ -143,6 +145,17 @@ CUSTOM_QUERIES = {
 								"field" : "uv_document.documents"
 							}
 						}
+					}
+				}
+			]
+		}
+	},
+	"GET_BY_FILE_NAME" : {
+		"bool" : {
+			"must" : [
+				{
+					"match" : {
+						"uv_document.file_name" : "%s"
 					}
 				}
 			]
