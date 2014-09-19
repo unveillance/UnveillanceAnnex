@@ -177,11 +177,11 @@ class UnveillanceAnnex(tornado.web.Application, UnveillanceAPI):
 		
 		p = Process(target=self.startWorker)
 		p.start()
-		
-		p = Process(target=self.startElasticsearch)
+
+		p = Process(target=self.startRESTAPI)
 		p.start()
 		
-		p = Process(target=self.startRESTAPI)
+		p = Process(target=self.startElasticsearch)
 		p.start()
 			
 if __name__ == "__main__":

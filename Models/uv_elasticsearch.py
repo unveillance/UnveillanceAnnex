@@ -51,7 +51,7 @@ class UnveillanceElasticsearchHandler(object):
 			print json.dumps(query)
 		
 		res = self.sendELSRequest(
-			endpoint="_search" if doc_type is "uv_document" else "%s/_search" % doc_type, 
+			endpoint="_search" if doc_type is None else "%s/_search" % doc_type, 
 			to_root=True, data=query, method="post")
 		
 		try:
@@ -208,11 +208,11 @@ class UnveillanceElasticsearch(UnveillanceElasticsearchHandler):
 		
 			data = p.stdout.readline()
 		p.stdout.close()
-		
+
+		#if self.first_use:
 		startDaemon(self.els_log_file, self.els_pid_file)
 		self.startCronJobs()
 
-		#if self.first_use:
 		try:
 			with open(os.path.join(CONF_ROOT, "initial_tasks.json"), 'rb') as IT:
 				from lib.Worker.Models.uv_task import UnveillanceTask

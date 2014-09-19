@@ -1,17 +1,41 @@
 import os
+from sys import exit
 from fabric.api import local, settings
+from fabric.operations import prompt
 from crontab import CronTab
 
-from conf import ANNEX_DIR, MONITOR_ROOT, BASE_DIR, getConfig
+from conf import DEBUG, ANNEX_DIR, MONITOR_ROOT, BASE_DIR, getConfig
 from Utils.funcs import forceQuitUnveillance
 
 if __name__ == "__main__":
 	this_dir = os.getcwd()
 	annex_includes = None
-	
+	restore_from = None
+
 	try:
 		annex_includes = getConfig('annex_includes')
 	except KeyError as e: pass
+
+	print "****************************** [ IMPORTANT!!!! ] ******************************"
+	print "Do you want to save the documents added to your annex so far? (y or n)"
+	do_evacuate = False if prompt("[DEFAULT y]: ") == "n" else True
+
+	if do_evacuate:
+		from evacuate import evacuate
+
+		default_evac_root = os.path.join(os.path.expanduser('~'), "UNVEILLANCE_MEDIA_EVACUATED")
+
+		print "Where should these documents be evacuated to?"
+		print "i.e. /full/path/to/root"
+		evac_root = prompt("[DEFAULT %s]: " % default_evac_root)
+		if len(evac_root) == 0:
+			evac_root = default_evac_root
+
+		try:
+			restore_from = evacuate(evac_root=evac_root, omit_list=annex_includes)[0]
+		except:
+			print "Evacuation failed.  Continue? (y or n)"
+			if prompt("[DEFAULT n]: ") != "y": exit(-1)
 	
 	print "Force-Quitting old instance"
 	forceQuitUnveillance()
@@ -57,15 +81,18 @@ if __name__ == "__main__":
 		local("mkdir .data")
 		local("git annex add .")
 		local("git annex sync")
-	
-		if annex_includes is not None:
-			for _, _, files in os.walk(annex_includes):
-				for f in files:
-					local("cp %s ." % os.path.join(annex_includes, f))
-					local("git annex add %s" % f)
 
-				# this should not be recursive.
-				break
+		for _, _, files in os.walk(annex_includes):
+			for f in files:
+				local("cp %s ." % os.path.join(annex_includes, f))
+				local("git annex add %s" % f)
+
+			# this should not be recursive.
+			break
 
 		local("git annex sync")
 		os.chdir(this_dir)
+
+	if restore_from is not None: exit(1)
+
+	exit(0)

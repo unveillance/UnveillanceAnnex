@@ -48,6 +48,14 @@ def inflateVars(path):
 					QUERY_KEYS.update(vars_extras[k][operator])
 			
 			continue
+		elif k == "CUSTOM_QUERIES" :
+			for key in vars_extras[k].keys():
+				if key in lcl['CUSTOM_QUERIES'].keys():
+					del vars_extras[k][key]
+
+			if len(vars_extras[k].keys()) == 0: continue
+
+			lcl['CUSTOM_QUERIES'].update(vars_extras[k])
 		elif k == "QUERY_DEFAULTS":
 			for key in vars_extras[k].keys():
 				if key in lcl['QUERY_DEFAULTS'].keys():
@@ -119,6 +127,24 @@ QUERY_DEFAULTS = {
 					"default_field" : "uv_document.uv_doc_type",
 					"query" : "UV_TASK" 
 				}}
+			]
+		}
+	}
+}
+
+CUSTOM_QUERIES = {
+	"GET_ALL_WITH_ATTACHMENTS" : {
+		"bool" : {
+			"must_not" : [
+				{
+					"constant_score" : {
+						"filter" : {
+							"missing" : {
+								"field" : "uv_document.documents"
+							}
+						}
+					}
+				}
 			]
 		}
 	}
