@@ -286,7 +286,7 @@ class UnveillanceElasticsearch(UnveillanceElasticsearchHandler):
 			printAsLog(e, as_error=True)
 				
 		try:
-			res = self.sendELSRequest(data=index, to_root=True, method="put")
+			res = self.sendELSRequest(data=index, to_root=True, method="post")
 			if DEBUG:
 				print "INITIALIZED NEW MAPPING:"
 				print res
