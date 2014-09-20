@@ -74,14 +74,20 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 	def do_documents(self, request):
 		args = parseRequestEntity(request.query)
 		
-		if len(args.keys()) in [1, 2]:
+		if len(args.keys()) in [1, 2, 3]:
 			doc_type = None
 			try:
 				doc_type = args['doc_type']
 			except KeyError as e: pass
 
+			media_id = None
+			try:
+				media_id = args['media_id']
+				del args['media_id']
+			except KeyError as e: pass
+
 			if '_id' in args.keys():
-				return self.get(_id=args['_id'], els_doc_root=doc_type)
+				return self.get(_id=args['_id'], els_doc_root=doc_type, parent=media_id)
 			elif '_ids' in args.keys():
 				return self.query({"ids" : {"values" : args['_ids']}}, doc_type=doc_type, exclude_fields=False)
 

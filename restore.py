@@ -1,6 +1,6 @@
-from sys import exit
+from sys import exit, argv
 
-def restore():
+def restore(top=None):
 	import os
 	from time import sleep
 	from fabric.api import settings, local
@@ -30,6 +30,7 @@ def restore():
 	with open(os.path.join(evac_dir, "evac_manifest.json"), 'rb') as m:
 		manifest = loads(m.read())
 
+	count = 0
 	os.chdir(ANNEX_DIR)
 	for _, _, files in os.walk(evac_dir):
 		for file in [file for file in files if file != "evac_manifest.json"]:
@@ -51,11 +52,22 @@ def restore():
 			
 			sync_file(file)
 			sleep(5)
+			count += 1
+
+			print "TOP: %s" % type(top)
+			print top
+
+			if type(top) is int and count >= top:
+				print "MAX REQUESTED IMPORTED"
+				break
+
 		break
 
 	os.chdir(this_dir)
 	return True
 
-if __name__ == "__main__": 
-	if not restore(): exit(-1)
+if __name__ == "__main__":
+	top = None
+	if len(argv) == 2: top = int(argv[1])
+	if not restore(top=top): exit(-1)
 	exit(0)

@@ -14,10 +14,11 @@ class UnveillanceElasticsearchHandler(object):
 	def __init__(self):
 		if DEBUG: print "elasticsearch handler inited"
 		
-	def get(self, _id, els_doc_root=None):
+	def get(self, _id, els_doc_root=None, parent=None):
 		if DEBUG: print "getting thing"
 
-		res = self.sendELSRequest(endpoint=_id if els_doc_root is None else "%s/%s" % (els_doc_root, _id), to_root=False if els_doc_root is None else True)		
+		res = self.sendELSRequest(endpoint=self.buildEndpoint(_id, els_doc_root, parent))
+
 		try:
 			if res['found']: return res['_source']
 		except KeyError as e: 
@@ -26,7 +27,9 @@ class UnveillanceElasticsearchHandler(object):
 		
 		return None
 	
-	def query(self, args, exclude_fields=False, doc_type=None, count_only=False, limit=None, sort=None, from_=None, cast_as=None, map_reduce=None):
+	def query(self, args, exclude_fields=False, doc_type=None, count_only=False, 
+		limit=None, sort=None, from_=None, cast_as=None, map_reduce=None):
+		
 		# TODO: ACTUALLY, I MEAN ALL OF THEM.
 		if limit is None: limit = 1000
 		if from_ is None: from_ = 0
@@ -50,9 +53,8 @@ class UnveillanceElasticsearchHandler(object):
 			print "OH A QUERY"
 			print json.dumps(query)
 		
-		res = self.sendELSRequest(
-			endpoint="_search" if doc_type is None else "%s/_search" % doc_type, 
-			to_root=True, data=query, method="post")
+		res = self.sendELSRequest(endpoint=self.buildEndpoint("_search", doc_type, None),
+			data=query, method="post")
 		
 		try:
 			if len(res['hits']['hits']) > 0:
@@ -60,17 +62,14 @@ class UnveillanceElasticsearchHandler(object):
 				
 				if cast_as is not None:
 					casts = [h['fields'][cast_as][0] for h in res['hits']['hits'] if 'fields' in h.keys()]
-										
-					del query['fields']	
-					query['query'] = {
-						"ids" : {
-							"values" : casts
-						}
+					query = {
+						'query' : { 'ids' : { 'values' : casts }},
+						'sort' : [{ 'uv_document.date_added' : { 'order' : 'desc' }}]
 					}
 					
 					if DEBUG: print "\nCASTING TO %s:\n%s\n" % (cast_as, query)
-					res = self.sendELSRequest(endpoint="_search", method="post",
-						data=query)
+					res = self.sendELSRequest(endpoint=self.buildEndpoint("_search", None, None), 
+						method="post", data=query)
 				
 				if count_only: return res['hits']['total']
 				
@@ -91,9 +90,9 @@ class UnveillanceElasticsearchHandler(object):
 		
 		return None
 	
-	def updateFields(self, _id, args):
-		res = self.sendELSRequest(endpoint="%s/_update" % _id, method="post",
-			data={ "doc" : args })
+	def updateFields(self, _id, args, els_doc_root=None, parent=None):
+		res = self.sendELSRequest(method="post", data={ "doc" : args },
+			endpoint="/".join([self.buildEndpoint(_id, els_doc_root, None), "_update"]))
 		
 		if DEBUG: print res
 		
@@ -105,34 +104,36 @@ class UnveillanceElasticsearchHandler(object):
 		
 		return False
 	
-	def update(self, _id, args, parent=None):
+	def update(self, _id, args, els_doc_root=None, parent=None):
 		if DEBUG: print "updating thing"
 		
-		res = self.sendELSRequest(endpoint=_id if parent is None else "%s?parent=%s" % (_id, parent), data=args, method="put")
+		res = self.sendELSRequest(endpoint=self.buildEndpoint(_id, els_doc_root, parent), 
+			data=args, method="put")
 
 		try: return res['ok']
 		except KeyError as e: pass
 		
 		return False
 	
-	def create(self, _id, args):
+	def create(self, _id, args, els_doc_root=None, parent=None):
 		if DEBUG: print "creating thing"
-		parent = None
 
 		if hasattr(self, "els_doc_root"):
+			els_doc_root = self.els_doc_root
 			if DEBUG: print "Creating thing on another doc_root:\n%s" % self.emit().keys()
 
-			if hasattr(self, "media_id"):
-				parent = self.media_id
+			if hasattr(self, "media_id"): parent = self.media_id
 			else:
 				if DEBUG: print "no parent though..."
 
-		return self.update(_id, args, parent=parent)
+		return self.update(_id, args, els_doc_root=els_doc_root, parent=parent)
 		
-	def delete(self, _id):
+	def delete(self, _id, els_doc_root=None, parent=None):
 		if DEBUG: print "deleting thing"
 		
-		res = self.sendELSRequest(endpoint=_id, method="delete")
+		res = self.sendELSRequest(endpoint=self.buildEndpoint(_id, els_doc_root, parent),
+			method="delete")
+		
 		if DEBUG: print res
 		
 		try: return res['ok']
@@ -140,20 +141,17 @@ class UnveillanceElasticsearchHandler(object):
 		
 		return False
 
-	def sendELSRequest(self, data=None, to_root=False, endpoint=None, method="get"):
+	def buildEndpoint(self, _id, els_doc_root, parent):
+		return "%s%s" % ("/".join(["uv_document" if els_doc_root is None else els_doc_root, _id]),
+			"" if parent is None else "?parent=%s" % parent)
+
+	def sendELSRequest(self, data=None, endpoint=None, method="get"):
 		url = "http://localhost:9200/unveillance/"
 
-		if not to_root:
-			if DEBUG: print "Alternative els_doc_root? %s" % hasattr(self, "els_doc_root")
-			if hasattr(self, "els_doc_root"):
-				url += "%s/" % self.els_doc_root
-			else:
-				url += "uv_document/"
-		
 		if endpoint is not None: url += endpoint
 		if data is not None: data = json.dumps(data)
 
-		if DEBUG: print "SENDING ELS REQUEST TO %s" % url
+		if DEBUG: print "****\nSENDING ELS REQUEST TO %s\n****" % url
 		
 		try:
 			if method == "get":
@@ -169,9 +167,16 @@ class UnveillanceElasticsearchHandler(object):
 			return None
 		
 		if hasattr(r, "content"):
-			return json.loads(r.content)
+			try:
+				return json.loads(r.content)
+			except Exception as e:
+				print "BIG ERROR: %s" % e
+				print r.content
 		elif hasattr(r, "text"):
-			return json.loads(r.text)
+			try:
+				return json.loads(r.text)
+			except Exception as e:
+				print "BIG ERROR: %s" % e
 		
 		return None
 
@@ -276,7 +281,7 @@ class UnveillanceElasticsearch(UnveillanceElasticsearchHandler):
 		index = { "mappings": ELASTICSEARCH_MAPPINGS }
 
 		try:
-			res = self.sendELSRequest(to_root=True, method="delete")
+			res = self.sendELSRequest(method="delete")
 			
 			if DEBUG:
 				print "DELETED OLD MAPPING:"
@@ -286,7 +291,7 @@ class UnveillanceElasticsearch(UnveillanceElasticsearchHandler):
 			printAsLog(e, as_error=True)
 				
 		try:
-			res = self.sendELSRequest(data=index, to_root=True, method="post")
+			res = self.sendELSRequest(data=index, method="put")
 			if DEBUG:
 				print "INITIALIZED NEW MAPPING:"
 				print res

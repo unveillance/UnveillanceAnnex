@@ -69,8 +69,23 @@ def inflateVars(path):
 			for key in vars_extras[k].keys():
 				if key in lcl['ELASTICSEARCH_MAPPINGS'].keys():
 					del vars_extras[k][key]
+					continue
 					# no overwriting, again!
 
+				'''
+				if "_routing" not in vars_extras[k][key].keys():
+					if DEBUG: print "FIXING ROUTING FOR %s" % key
+
+					vars_extras[k][key].update({
+						'_routing' : {
+							'required' : True,
+							'path' : "%s.media_id" % key
+						}
+					})
+					vars_extras[k][key]['include_in_parent'] = True
+					vars_extras[k][key]['include_in_root'] = True
+				'''
+				
 			if len(vars_extras[k].keys()) == 0: continue
 
 			lcl['ELASTICSEARCH_MAPPINGS'].update(vars_extras[k])
