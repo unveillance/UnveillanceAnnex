@@ -28,7 +28,7 @@ class UnveillanceElasticsearchHandler(object):
 		return None
 	
 	def query(self, args, exclude_fields=False, doc_type=None, count_only=False, 
-		sort=None, cast_as=None):
+		sort=None, cast_as=None, scroll=False):
 		
 		if doc_type is None: doc_type = "uv_document"
 

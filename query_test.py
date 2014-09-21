@@ -24,11 +24,16 @@ def test_query(args):
 
 	if query is None: return None
 
+	if query.keys()[0] == "query": query = query['query']
+
 	from pprint import pprint
+	from fabric.operations import prompt
+
 	from Models.uv_elasticsearch import UnveillanceElasticsearchHandler
 	
 	els = UnveillanceElasticsearchHandler()
-	res = els.query(query, doc_type="uv_document" if len(args) == 1 else args[1])
+	res = els.query(query, exclude_fields=True, scroll=True,
+		doc_type="uv_document" if len(args) == 1 else args[1])
 
 	pprint(res)
 	return res
