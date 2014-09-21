@@ -28,6 +28,14 @@ def inflateVars(path):
 			lcl[k]['uv_document']['properties'].update(vars_extras[k])
 			continue
 
+		elif k == "ELASTICSEARCH_SOURCE_EXCLUDES":
+			for exclude in vars_extras[k]:
+				ELASTICSEARCH_SOURCE_EXCLUDES.append(exclude)
+
+			print "NEW ELASTICSEARCH_SOURCE_EXCLUDES:"
+			print ELASTICSEARCH_SOURCE_EXCLUDES
+			continue
+
 		elif k == "QUERY_KEYS":
 			for key in vars_extras[k].keys():
 				qts = vars_extras[k][key]
@@ -67,20 +75,6 @@ def inflateVars(path):
 					del vars_extras[k][key]
 					continue
 					# no overwriting, again!
-
-				'''
-				if "_routing" not in vars_extras[k][key].keys():
-					if DEBUG: print "FIXING ROUTING FOR %s" % key
-
-					vars_extras[k][key].update({
-						'_routing' : {
-							'required' : True,
-							'path' : "%s.media_id" % key
-						}
-					})
-					vars_extras[k][key]['include_in_parent'] = True
-					vars_extras[k][key]['include_in_root'] = True
-				'''
 				
 			if len(vars_extras[k].keys()) == 0: continue
 
