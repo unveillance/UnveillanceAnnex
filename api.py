@@ -115,14 +115,20 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 			del args['get_all']
 		except KeyError as e: pass
 
+		try:
+			sort = args['sort']
+			del args['sort']
+		except KeyError as e: pass
+
 		if query is None:
 			try:
 				query = deepcopy(QUERY_DEFAULTS[doc_type.upper()])
 			except Exception as e:
 				if DEBUG: print "could not find default query for %s" % doc_type.upper()
-				query = deepcopy(QUERY_DEFAULTS['UV_DOCUMENT'])
+				query = deepcopy(QUERY_DEFAULTS['MATCH_ALL'])
 		
 		if len(args.keys()) > 0:
+			# pull out variables that don't go in search
 			try:
 				count_only = args['count']
 				del args['count']
@@ -137,40 +143,67 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 				cast_as = args['cast_as']
 				del args['cast_as']
 			except KeyError as e: pass
-			
-			operator = 'must'
-			try:
-				operator = args['operator']
-				del args['operator']
-			except KeyError as e: pass
-			
+
+		if len(args.keys()) > 0:
+			# extend out top-level query
+			musts = []
+
 			for a in args.keys():
-				if a in QUERY_KEYS[operator]['match']:
-					query['bool'][operator].append({
-						"match": {
-							"%s.%s" % (doc_type, a) : args[a]
-						}
-					})
-				elif a in QUERY_KEYS[operator]['filter']:
-					terms = args[a]
-					if type(terms) is not list:
-						terms = [terms]
-					
-					query['bool'][operator].append({
+				must = None
+				if a in QUERY_KEYS['match']:
+					must = {
+						"match" : { "%s.%s" % (doc_type, a) : args[a] }
+					}
+
+				elif a in QUERY_KEYS['filter_terms']:
+					must = {
 						"constant_score" : {
 							"filter" : {
 								"terms" : {
-									"%s.%s" % (doc_type, a) : terms
+									"%s.%s" % (doc_type, a) : args[a]
 								}
 							}
 						}
-					})
-				elif a in QUERY_KEYS[operator]['range']:
+					}
+
+				if must is not None:
+					del args[a]
+					musts.append(must)
+
+			if len(musts) > 0:
+				if 'match_all' in query.keys():
+					del query['match_all']
+
+				if 'bool' not in query.keys():
+					query['bool'] = { "must" : [] }
+
+				if 'must' not in query['bool'].keys():
+					query['bool']['must'] = []
+
+				for must in musts: query['bool']['must'].append(must)
+
+		if len(args.keys()) > 0:
+			# this becomes a filtered query
+			query = {
+				"filtered" : {
+					"query" : query,
+					"filter" : {}
+				}
+			}
+			
+			filters = []
+			for a in args.keys():
+				filter = None
+
+				if a in QUERY_KEYS['term']:
+					filter = { "term": { "%s.%s" % (doc_type, a) : args[a] }}
+
+				elif a in QUERY_KEYS['range']:
 					try:
 						day = datetime.date.fromtimestamp(args[a]/1000)
 					except Exception as e:
 						print "TIME ERROR: %s" % e
-						return None
+						continue
 						
 					if "upper" in args.keys():
 						lte = datetime.date.fromtimestamp(args['upper']/1000)
@@ -179,33 +212,42 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 						lte = datetime.date(day.year, day.month, day.day + 1)
 						gte = datetime.date(day.year, day.month, day.day)
 					
-					query['bool'][operator].append({
+					filter = {
 						"range" : {
 							"%s.%s" % (doc_type, a) : {
 								"gte" : format(mktime(gte.timetuple()) * 1000, '0.0f'),
 								"lte" : format(mktime(lte.timetuple()) * 1000, '0.0f')
 							}
 						}
-					})
-				elif a in QUERY_KEYS[operator]['geo_distance']:
+					}
+
+				elif a in QUERY_KEYS['geo_distance']:
 					if "radius" not in args.keys():
 						radius = 3
 					else:
 						radius = args['radius']
 
-					query['bool'][operator].append({
+					filter = {
 						"geo_distance" : {
 							"distance" : "%dmi" % radius,
 							"%s.%s" % (doc_type, a) : args[a]
 						}
-					})
-		
-		if sort is None:
-			sort = [{"%s.date_added" % doc_type: {"order" : "desc"}}]
+					}
 
+				if filter is not None:
+					filters.append(filter)
+
+			if len(filters) > 1:
+				query['filtered']['filter']['and'] = filters
+			else:
+				try:
+					query['filtered']['filter'] = filters[0]
+				except Exception as e:
+					print "COULD NOT BUILD QUERY: %e" % e
+					return None
+		
 		return self.query(query, doc_type=doc_type if doc_type != "uv_document" else None,
-			sort=sort, count_only=count_only, limit=limit, 
-			cast_as=cast_as, exclude_fields=exclude_fields)
+			sort=sort, count_only=count_only, cast_as=cast_as, exclude_fields=exclude_fields)
 	
 	def do_reindex(self, request):
 		print "DOING REINDEX"

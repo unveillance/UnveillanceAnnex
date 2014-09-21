@@ -27,27 +27,23 @@ def inflateVars(path):
 			
 			lcl[k]['uv_document']['properties'].update(vars_extras[k])
 			continue
+
 		elif k == "QUERY_KEYS":
-			for operator in vars_extras[k].keys():
-				if DEBUG: print "Operator: %s" % operator
+			for key in vars_extras[k].keys():
+				qts = vars_extras[k][key]
 				
-				if operator in QUERY_KEYS.keys():
-					for query_type in vars_extras[k][operator].keys():
-						if DEBUG: print "query type: %s" % query_type
-						qts = vars_extras[k][operator][query_type]
-						
-						if type(qts) is not list: qts = [qts]
-						if DEBUG: print qts
-						
-						if query_type in QUERY_KEYS[operator].keys():
-							if DEBUG: print "UPDATING %s" % query_type
-							QUERY_KEYS[operator][query_type].extend(qts)
-						else:
-							QUERY_KEYS[operator][query_type] = qts
+				if type(qts) is not list: qts = [qts]
+				if DEBUG: print qts
+
+				if key in QUERY_KEYS.keys():
+					if DEBUG: print "UPDATING %s" % key
+					QUERY_KEYS[key]= list(set(QUERY_KEYS[key] + qts))
+				
 				else:
-					QUERY_KEYS.update(vars_extras[k][operator])
-			
+					QUERY_KEYS[key] = qts
+			print vars_extras[k]
 			continue
+
 		elif k == "CUSTOM_QUERIES" :
 			for key in vars_extras[k].keys():
 				if key in lcl['CUSTOM_QUERIES'].keys():
@@ -106,6 +102,13 @@ class QueryBatchStub(object):
 GIT_ANNEX_METADATA = ['uv_file_alias', 'importer_source', 'imported_by', 'uv_local_only']
 
 QUERY_KEYS = {
+	'match' : ['assets.tags', 'task_path', 'update_file', 'file_name', 'media_id'],
+	'range' : ['date_added'],
+	'filter_terms' : ['mime_type', 'searchable_text', 'file_alias']
+}
+
+'''
+QUERY_KEYS = {
 	'must' : {
 		'match' : ['assets.tags', 'task_path', 'update_file', 'file_name', 'media_id'],
 		'range' : ['date_added'],
@@ -121,8 +124,12 @@ QUERY_KEYS = {
 		'geo_distance' : []
 	}
 }
+'''
 
 QUERY_DEFAULTS = {
+	'MATCH_ALL' : {
+		"match_all" : {}
+	},
 	'UV_DOCUMENT' : {
 		"bool": {
 			"must" : [

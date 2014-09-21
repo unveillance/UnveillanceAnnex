@@ -28,11 +28,8 @@ class UnveillanceElasticsearchHandler(object):
 		return None
 	
 	def query(self, args, exclude_fields=False, doc_type=None, count_only=False, 
-		limit=None, sort=None, from_=None, cast_as=None, map_reduce=None):
+		sort=None, cast_as=None):
 		
-		# TODO: ACTUALLY, I MEAN ALL OF THEM.
-		if limit is None: limit = 1000
-		if from_ is None: from_ = 0
 		if doc_type is None: doc_type = "uv_document"
 
 		if sort is None: sort = [{"%s.date_added" % doc_type : {"order" : "desc"}}]
@@ -41,13 +38,10 @@ class UnveillanceElasticsearchHandler(object):
 		
 		query = {
 			'query' : json.loads(urllib.unquote(json.dumps(args))),
-			'from' : from_,
-			'size' : limit,
 			'sort' : sort
 		}
 		
-		if cast_as is not None:
-			query['fields'] = cast_as
+		if cast_as is not None: query['fields'] = cast_as
 				
 		if DEBUG: 
 			print "OH A QUERY"
