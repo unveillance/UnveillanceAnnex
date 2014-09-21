@@ -160,7 +160,7 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 						"constant_score" : {
 							"filter" : {
 								"terms" : {
-									"%s.%s" % (doc_type, a) : args[a]
+									"%s.%s" % (doc_type, a) : args[a] if type(args[a]) is list else [args[a]]
 								}
 							}
 						}
@@ -195,10 +195,10 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 			for a in args.keys():
 				filter = None
 
-				if a in QUERY_KEYS['term']:
+				if 'term' in QUERY_KEYS and a in QUERY_KEYS['term']:
 					filter = { "term": { "%s.%s" % (doc_type, a) : args[a] }}
 
-				elif a in QUERY_KEYS['range']:
+				elif 'range' in QUERY_KEYS and a in QUERY_KEYS['range']:
 					try:
 						day = datetime.date.fromtimestamp(args[a]/1000)
 					except Exception as e:
@@ -221,7 +221,7 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 						}
 					}
 
-				elif a in QUERY_KEYS['geo_distance']:
+				elif 'geo_distance' in QUERY_KEYS and a in QUERY_KEYS['geo_distance']:
 					if "radius" not in args.keys():
 						radius = 3
 					else:
@@ -240,11 +240,12 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 			if len(filters) > 1:
 				query['filtered']['filter']['and'] = filters
 			else:
-				try:
-					query['filtered']['filter'] = filters[0]
-				except Exception as e:
-					print "COULD NOT BUILD QUERY: %e" % e
-					return None
+				if len(filters) == 1:
+					try:
+						query['filtered']['filter'] = filters[0]
+					except Exception as e:
+						print "COULD NOT BUILD QUERY: %s" % e
+						return None
 		
 		return self.query(query, doc_type=doc_type if doc_type != "uv_document" else None,
 			sort=sort, count_only=count_only, cast_as=cast_as, exclude_fields=exclude_fields)

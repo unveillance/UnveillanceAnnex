@@ -101,25 +101,6 @@ QUERY_KEYS = {
 	'filter_terms' : ['mime_type', 'searchable_text', 'file_alias']
 }
 
-'''
-QUERY_KEYS = {
-	'must' : {
-		'match' : ['assets.tags', 'task_path', 'update_file', 'file_name', 'media_id'],
-		'range' : ['date_added'],
-		'geo_distance' : [],
-		'query_string' : [],
-		'filter' : ['mime_type', 'searchable_text']
-	},
-	'must_not' : {
-		'query_string' : ['mime_type'],
-		'filter' : [],
-		'match' : [],
-		'range' : [],
-		'geo_distance' : []
-	}
-}
-'''
-
 QUERY_DEFAULTS = {
 	'MATCH_ALL' : {
 		"match_all" : {}
