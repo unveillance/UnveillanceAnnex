@@ -27,16 +27,21 @@ class UnveillanceElasticsearchHandler(object):
 		
 		return None
 
-	def getScrollDocuments(self, _scroll_id, initial_documents=None, limit=None, exclude_fields=False, cast_as=None):
-		if initial_documents is None: initial_documents = []
+	def buildDocumentsFromScroll(self, _scroll_id, with_documents=None, limit=None, exclude_fields=False, cast_as=None):
+		if with_documents is None: with_documents = []
 		
+		if type(limit) is int and len(with_documents) >= limit:
+			print "LIMIT REACHED!"
+			return with_documents
+
 		scroll = self.iterateOverScroll(_scroll_id, exclude_fields=exclude_fields, cast_as=cast_as)
 		
 		if scroll is not None:
-			initial_documents = (initial_documents + scroll['documents'])
-			return self.getScrollDocuments(scroll['_scroll_id'], initial_documents=initial_documents, limit=limit)
+			with_documents = (with_documents + scroll['documents'])
+			return self.buildDocumentsFromScroll(scroll['_scroll_id'],
+				with_documents=with_documents, limit=limit)
 
-		return initial_documents
+		return with_documents
 
 	def iterateOverScroll(self, _scroll_id, exclude_fields=True, cast_as=None):		
 		res = self.sendELSRequest(endpoint="_search/scroll?scroll=600s&scroll_id=%s" % _scroll_id, to_root=True)
@@ -79,11 +84,10 @@ class UnveillanceElasticsearchHandler(object):
 
 		if doc_type is None: doc_type = "uv_document"
 
-		if build:
-			query = {
-				'query' : json.loads(urllib.unquote(json.dumps(query))),
-				'sort' : sort
-			}
+		query = {
+			'query' : json.loads(urllib.unquote(json.dumps(query))),
+			'sort' : sort
+		}
 
 		endpoint = "%s?search_type=scan&scroll=600s" % self.buildEndpoint("_search", doc_type, None)
 		res = self.sendELSRequest(endpoint=endpoint, data=query)
@@ -96,7 +100,7 @@ class UnveillanceElasticsearchHandler(object):
 		
 		return None
 
-	def query(self, args, limit=None, exclude_fields=False, doc_type=None, count_only=False, 
+	def query(self, query, limit=None, exclude_fields=False, doc_type=None, count_only=False, 
 		sort=None, cast_as=None):
 		
 		if doc_type is None: doc_type = "uv_document"
@@ -104,10 +108,9 @@ class UnveillanceElasticsearchHandler(object):
 		if sort is None: sort = [{"%s.date_added" % doc_type : {"order" : "desc"}}]
 		else:
 			if type(sort) is not list: sort = [sort]
-		
-		query = json.loads(urllib.unquote(json.dumps(args)))
-	
-		if cast_as is not None: query['fields'] = cast_as
+			
+		if cast_as is not None:
+			query['fields'] = cast_as
 				
 		if DEBUG: 
 			print "OH A QUERY"
@@ -118,10 +121,8 @@ class UnveillanceElasticsearchHandler(object):
 		if res is None: return None
 		if count_only: return res['count']
 
-		'''
-		res = self.getScrollDocuments(res['_scroll_id'], initial_documents=res['documents'], 
-			limit=limit, cast_as=cast_as)
-		'''
+		res['documents'] = self.buildDocumentsFromScroll(res['_scroll_id'], cast_as=cast_as,
+			with_documents=res['documents'], limit=limit, exclude_fields=exclude_fields)
 
 		if "_scroll_id" in res.keys(): del res['_scroll_id']
 		return res
