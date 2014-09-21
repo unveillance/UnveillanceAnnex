@@ -53,8 +53,10 @@ class UnveillanceElasticsearchHandler(object):
 			if DEBUG: print "!!!!  MAXIMUM SCROLL!  PEAK RESULTS! !!!!"
 			return None
 
+		documents = [d['_source'] for d in res['hits']['hits']]
+
 		if cast_as is not None:
-			casts = [d['fields'][cast_as][0] for d in res['hits']['hits'] if 'fields' in d.keys()]
+			casts = [d[cast_as] for d in documents]
 			query = {
 				'query' : { 'ids' : { 'values' : casts }},
 				'sort' : [{ 'uv_document.date_added' : { 'order' : 'desc' }}]
@@ -63,9 +65,8 @@ class UnveillanceElasticsearchHandler(object):
 			if DEBUG: print "\nCASTING TO %s:\n%s\n" % (cast_as, query)
 			res = self.sendELSRequest(endpoint=self.buildEndpoint("_search", None, None), 
 				method="post", data=query)
-
-		
-		documents = [d['_source'] for d in res['hits']['hits']]
+			
+			documents = [d['_source'] for d in res['hits']['hits']]
 
 		if exclude_fields and len(ELASTICSEARCH_SOURCE_EXCLUDES) > 0:
 			for ex in ELASTICSEARCH_SOURCE_EXCLUDES:
@@ -77,7 +78,7 @@ class UnveillanceElasticsearchHandler(object):
 			"count" : count
 		}
 
-	def getScroll(self, query, build=True, doc_type=None, sort=None, exclude_fields=False):
+	def getScroll(self, query, build=True, doc_type=None, sort=None, exclude_fields=False, cast_as=None):
 		if sort is None: sort = [{"%s.date_added" % doc_type : {"order" : "desc"}}]
 		else:
 			if type(sort) is not list: sort = [sort]
@@ -89,11 +90,16 @@ class UnveillanceElasticsearchHandler(object):
 			'sort' : sort
 		}
 
+		if DEBUG: 
+			print "OH A QUERY"
+			print json.dumps(query)
+
 		endpoint = "%s?search_type=scan&scroll=600s" % self.buildEndpoint("_search", doc_type, None)
 		res = self.sendELSRequest(endpoint=endpoint, data=query)
 
 		try:
-			return self.iterateOverScroll(res['_scroll_id'], exclude_fields=exclude_fields)
+			return self.iterateOverScroll(res['_scroll_id'],
+				exclude_fields=exclude_fields, cast_as=cast_as)
 
 		except Exception as e:
 			if DEBUG: print "BAD SCROLL SEARCH: %s" % e
@@ -108,15 +114,9 @@ class UnveillanceElasticsearchHandler(object):
 		if sort is None: sort = [{"%s.date_added" % doc_type : {"order" : "desc"}}]
 		else:
 			if type(sort) is not list: sort = [sort]
-			
-		if cast_as is not None:
-			query['fields'] = cast_as
-				
-		if DEBUG: 
-			print "OH A QUERY"
-			print json.dumps(query)
 
-		res = self.getScroll(query, doc_type=doc_type, exclude_fields=exclude_fields, sort=sort)
+		res = self.getScroll(query, doc_type=doc_type, exclude_fields=exclude_fields,
+			sort=sort, cast_as=cast_as)
 		
 		if res is None: return None
 		if count_only: return res['count']
