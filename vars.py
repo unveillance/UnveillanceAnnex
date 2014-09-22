@@ -98,7 +98,8 @@ GIT_ANNEX_METADATA = ['uv_file_alias', 'importer_source', 'imported_by', 'uv_loc
 QUERY_KEYS = {
 	'match' : ['assets.tags', 'task_path', 'update_file', 'file_name', 'media_id'],
 	'range' : ['date_added'],
-	'filter_terms' : ['mime_type', 'searchable_text', 'file_alias']
+	'filter_terms' : ['mime_type', 'searchable_text', 'file_alias'],
+	'filter_ids' : ['in_pool']
 }
 
 QUERY_DEFAULTS = {

@@ -43,8 +43,7 @@ class UnveillanceElasticsearchHandler(object):
 		return with_documents
 
 	def iterateOverScroll(self, _scroll_id, exclude_fields=True, cast_as=None):		
-		res = self.sendELSRequest(endpoint="_search/scroll?scroll=600s&scroll_id=%s" % _scroll_id, to_root=True)
-		
+		res = self.sendELSRequest(endpoint="_search/scroll?scroll=600s&scroll_id=%s" % _scroll_id, to_root=True)		
 		next_scroll_id = res['_scroll_id']
 
 		if str(next_scroll_id) == str(_scroll_id):
@@ -95,6 +94,10 @@ class UnveillanceElasticsearchHandler(object):
 		res = self.sendELSRequest(endpoint=endpoint, data=query)
 
 		try:
+			if res['hits']['total'] == 0:
+				if DEBUG: print "NO HITS FOUND."
+				return None
+
 			res = self.iterateOverScroll(res['_scroll_id'],
 				exclude_fields=exclude_fields, cast_as=cast_as)
 

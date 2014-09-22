@@ -166,6 +166,18 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 						}
 					}
 
+				elif a in QUERY_KEYS['filter_ids']:
+					must = {
+						"ids" : {
+							"type" : doc_type,
+							"values" : args[a] if type(args[a]) is list else [args[a]]
+						}
+					}
+					musts = [must]
+					del args[a]
+					
+					break
+
 				if must is not None:
 					del args[a]
 					musts.append(must)
@@ -174,13 +186,16 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 				if 'match_all' in query.keys():
 					del query['match_all']
 
-				if 'bool' not in query.keys():
-					query['bool'] = { "must" : [] }
+				if musts[0].keys()[0] == "ids":
+					query = musts[0]
+				else:
+					if 'bool' not in query.keys():
+						query['bool'] = { "must" : [] }
 
-				if 'must' not in query['bool'].keys():
-					query['bool']['must'] = []
+					if 'must' not in query['bool'].keys():
+						query['bool']['must'] = []
 
-				for must in musts: query['bool']['must'].append(must)
+					for must in musts: query['bool']['must'].append(must)
 
 		if len(args.keys()) > 0:
 			# this becomes a filtered query

@@ -1,0 +1,8 @@
+{
+	"query": {
+		"ids" : {
+			"type" : "uv_document",
+			"values" : ["7e659e1091ec6850b86d9f4f916144f6", "d7706eb8a831ecb99790e41010092a2c"]
+		}
+	}
+}
