@@ -85,6 +85,8 @@ class UnveillanceTask(UnveillanceObject):
 			printAsLog(e)
 			return
 
+		# FOR NOW: we will invoke celery here (overkill; should be consolidated)
+
 	def daemonize(self):
 		if DEBUG: print "TASK %s IS NOW BEING DAEMONIZED. LOG FOUND AT %s" % (self.task_path, self.log_file)
 		

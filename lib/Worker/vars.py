@@ -31,6 +31,9 @@ def buildCeleryTaskList():
 				for func in [(n, t) for n, t in getmembers(sys.modules[submod])]:
 					try:
 						has_stack = func[1].__class__.__dict__['request_stack']
+						
+						print func[1].__class__.__dict__
+
 						if has_stack.__class__.__name__ == "_LocalStack":
 							CELERY_TASKS.append(submod)
 							break
