@@ -180,9 +180,9 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 							"values" : args[a] if type(args[a]) is list else [args[a]]
 						}
 					}
+
 					musts = [must]
-					del args[a]
-					
+					del args[a]					
 					break
 
 				if must is not None:
