@@ -15,8 +15,10 @@ from conf import DEBUG, BASE_DIR, ANNEX_DIR, HOST, API_PORT, MONITOR_ROOT
 class UnveillanceTask(UnveillanceObject):
 	def __init__(self, inflate=None, _id=None):		
 		if inflate is not None:
-			from lib.Core.Utils.funcs import generateMD5Hash
-			inflate['_id'] = generateMD5Hash()
+			if '_id' not in inflate.keys():
+				from lib.Core.Utils.funcs import generateMD5Hash
+				inflate['_id'] = generateMD5Hash()
+	
 			inflate['uv_doc_type'] = UV_DOC_TYPE['TASK']
 			inflate['status'] = 404
 			
@@ -97,6 +99,14 @@ class UnveillanceTask(UnveillanceObject):
 	def unlock(self):
 		self.lock(lock=False)
 
+	def save(self, create=False, built=False):
+		if built:
+			self.built = True
+
+		super(UnveillanceTask, self).save(create=create)
+
+		if built: self.finish()
+
 	def die(self):
 		if hasattr(self, "daemonized") and self.daemonized:
 			stopDaemon(self.pid_file)
@@ -149,8 +159,9 @@ class UnveillanceTask(UnveillanceObject):
 		sleep(20)
 		self.die()
 
-		if not hasattr(self, 'persist') or not self.persist:
-			self.delete()
+		if not hasattr(self, 'uv_cluster') or not self.uv_cluster:
+			if not hasattr(self, 'persist') or not self.persist:
+				self.delete()
 	
 	def delete(self):
 		'''

@@ -174,6 +174,15 @@ ELASTICSEARCH_MAPPINGS = {
 			}
 		}
 	},
+	"uv_cluster" : {
+		"properties" : {
+			"uv_task" : {
+				"type" : "string",
+				"index" : "not_analyzed",
+				"store" : True
+			}
+		}
+	},
 	"uv_document" : {
 		"properties": {
 			"uv_type": {

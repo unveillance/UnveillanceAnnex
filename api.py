@@ -28,36 +28,43 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 			must !missing asset.tags.file_metadata/key_words/topics, etc.
 		"""
 		args = parseRequestEntity(request.query)
-		if len(args.keys()) == 0: return None
-		
-		if len(args.keys()) == 1 and '_id' in args.keys():
-			return self.get(_id=args['_id'])
-					
-		if 'around' not in args.keys(): return None
-		asset_tag = args['around']
-		del args['around']
-		
-		query = "assets.tags=%s" % asset_tag
-		
+
+		if len(args.keys()) == 0: return None					
+		if 'task_path' not in args.keys(): return None
+
+
+		task_path = args['task_path']
+		del args['task_path']
+
+		documents = None
+
 		if '_ids' in args.keys():
 			documents = args['_ids'].split(",")	
-		else:	
+		elif 'around' in args.keys():
+			asset_tags = args['around']
+			del args['around']
+
+			if type(asset_tags) is not list:
+				asset_tags = [asset_tags]
+		
+			query = "assets.tags=%s" % asset_tags
+		
 			list = self.do_documents(QueryBatchRequestStub(query))
 			if list is None: return None
 			
 			documents = [d['_id'] for d in list['documents']]
+
+		if documents is None or len(documents) == 0:
+			if DEBUG: print "No documents could be found for cluster"
+			return None
 			
 		cluster = UnveillanceCluster(inflate={
 			'documents' : documents,
-			'asset_tag' : asset_tag
+			'task_path' : task_path
 		})
-		if cluster is None: return None
 		
 		try:
-			return {
-				'_id' : cluster._id, 
-				'cluster' : cluster.getAssetsByTagName("metadata_fingerprint")[0]
-			}
+			return { '_id' : cluster._id }
 		
 		except Exception as e:
 			if DEBUG: print e
@@ -318,7 +325,7 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 			# TODO: XXX: IF REFERER IS LOCALHOST ONLY (and other auth TBD)!
 			if 'task_path' in args.keys():
 				args['queue'] = UUID
-				uv_task = UnveillanceTask(args)
+				uv_task = UnveillanceTask(inflate=args)
 		
 		if uv_task is None: return None
 		
