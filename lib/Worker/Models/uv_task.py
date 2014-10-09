@@ -13,7 +13,7 @@ from vars import EmitSentinel, UV_DOC_TYPE, TASKS_ROOT
 from conf import DEBUG, BASE_DIR, ANNEX_DIR, HOST, API_PORT, MONITOR_ROOT
 
 class UnveillanceTask(UnveillanceObject):
-	def __init__(self, inflate=None, _id=None):		
+	def __init__(self, inflate=None, _id=None):
 		if inflate is not None:
 			if '_id' not in inflate.keys():
 				from lib.Core.Utils.funcs import generateMD5Hash

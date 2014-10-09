@@ -29,42 +29,14 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		"""
 		args = parseRequestEntity(request.query)
 
-		if len(args.keys()) == 0: return None					
-		if 'task_path' not in args.keys(): return None
-
-
-		task_path = args['task_path']
-		del args['task_path']
-
-		documents = None
-
-		if '_ids' in args.keys():
-			documents = args['_ids'].split(",")	
-		elif 'around' in args.keys():
-			asset_tags = args['around']
-			del args['around']
-
-			if type(asset_tags) is not list:
-				asset_tags = [asset_tags]
-		
-			query = "assets.tags=%s" % asset_tags
-		
-			list = self.do_documents(QueryBatchRequestStub(query))
-			if list is None: return None
+		if len(args.keys()) == 0: return None
+		for required in ['task_path', 'documents']:
+			if required not in args.keys(): return None
 			
-			documents = [d['_id'] for d in list['documents']]
-
-		if documents is None or len(documents) == 0:
-			if DEBUG: print "No documents could be found for cluster"
-			return None
-			
-		cluster = UnveillanceCluster(inflate={
-			'documents' : documents,
-			'task_path' : task_path
-		})
+		cluster = UnveillanceCluster(inflate=args)
 		
 		try:
-			return { '_id' : cluster._id }
+			return cluster.emit()
 		
 		except Exception as e:
 			if DEBUG: print e

@@ -32,7 +32,7 @@ def buildCeleryTaskList():
 					try:
 						has_stack = func[1].__class__.__dict__['request_stack']
 						
-						print func[1].__class__.__dict__
+						#print func[1].__class__.__dict__
 
 						if has_stack.__class__.__name__ == "_LocalStack":
 							CELERY_TASKS.append(submod)
