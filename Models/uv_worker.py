@@ -23,7 +23,7 @@ class UnveillanceWorker(object):
 		sys.argv.extend(['worker', '-l', 'info', '-Q', ",".join([ALL_WORKERS, UUID])])
 		if DEBUG: print sys.argv
 		
-		startDaemon(self.worker_log_file, self.worker_pid_file)
+		#startDaemon(self.worker_log_file, self.worker_pid_file)
 		
 		#self.celery_app = Celery(TASKS_ROOT, 
 		#	broker='amqp://guest@%s' % SERVER_HOST, include=self.celery_tasks)
@@ -31,8 +31,8 @@ class UnveillanceWorker(object):
 		self.celery_app = Celery(TASKS_ROOT,
 			broker='amqp://guest@localhost//', include=self.celery_tasks)
 
-		self.celery_app.start()
+		#self.celery_app.start()
 	
 	def stopWorker(self):
 		printAsLog("WORKER EXHAUSTED. FINISHING!")
-		stopDaemon(self.worker_pid_file)
+		#stopDaemon(self.worker_pid_file)
