@@ -41,7 +41,9 @@ def exportFrontendConfig(with_config=None, with_secrets=None):
 		'server_host' : SERVER_HOST,
 		'server_port' : API_PORT,
 		'annex_remote' : ANNEX_DIR,
-		'uv_uuid' : UUID
+		'uv_uuid' : UUID,
+		'annex_remote_port' : 22,
+		'server_use_ssl' : False
 	}
 	
 	if with_config is not None:
