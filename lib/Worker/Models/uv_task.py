@@ -10,7 +10,7 @@ from Utils.funcs import printAsLog
 from lib.Core.Utils.funcs import stopDaemon, startDaemon
 
 from vars import EmitSentinel, UV_DOC_TYPE, TASKS_ROOT
-from conf import DEBUG, BASE_DIR, ANNEX_DIR, HOST, API_PORT, MONITOR_ROOT
+from conf import DEBUG, BASE_DIR, ANNEX_DIR, HOST, API_PORT, TASK_CHANNEL_PORT, MONITOR_ROOT
 
 class UnveillanceTask(UnveillanceObject):
 	def __init__(self, inflate=None, _id=None):
@@ -33,6 +33,13 @@ class UnveillanceTask(UnveillanceObject):
 			self.log_file = os.path.join(ANNEX_DIR, self.base_path, "log.txt")
 		else:
 			if DEBUG: print "INHERITED A LOG FILE: %s" % self.log_file
+
+	def communicate(self, message):
+		if DEBUG: print message
+		#task_con = httplib.HTTPConnection("localhost", TASK_CHANNEL_PORT)
+		#task_con.request('POST')
+		#return task_con.getresponse()
+
 	
 	def routeNext(self, inflate=None):
 		if DEBUG: print "ROUTING NEXT TASK FROM QUEUE\nCLONING SOME VARS FROM SELF:\n%s" % self.emit()
