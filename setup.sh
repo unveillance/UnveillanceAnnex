@@ -37,6 +37,9 @@ pip install --upgrade -r requirements.txt
 cd lib/Core
 pip install --upgrade -r requirements.txt
 
+cd lib/sockjs-tornado
+python setup.py install
+
 cd $THIS_DIR
 echo "**************************************************"
 python setup.py $WITH_CONFIG
