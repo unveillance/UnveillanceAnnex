@@ -7,7 +7,7 @@ def evaluateDocument(uv_task):
 	task_tag = "DOCUMENT EVALUATION"
 	print "\n\n************** %s [START] ******************\n" % task_tag
 	print "evaluating document at %s" % uv_task.file_name
-	uv_task.setStatus(412)
+	uv_task.setStatus(302)
 	
 	from lib.Worker.Models.uv_document import UnveillanceDocument
 	from conf import DEBUG, UUID

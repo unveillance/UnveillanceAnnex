@@ -7,7 +7,7 @@ def evaluateFile(task):
 	task_tag = "EVALUATING DOCUMENT (INFORMACAM)"
 	print "\n\n************** %s [START] ******************\n" % task_tag
 	print "image preprocessing at %s" % task.doc_id
-	task.setStatus(412)
+	task.setStatus(302)
 		
 	from lib.Worker.Models.uv_document import UnveillanceDocument
 	

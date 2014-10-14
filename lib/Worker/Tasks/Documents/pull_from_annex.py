@@ -7,7 +7,7 @@ def pullFromAnnex(uv_task):
 	task_tag = "PULL FROM ANNEX"
 	print "\n\n************** %s [START] ******************\n" % task_tag
 	print "pulling file from document %s from annex" % uv_task.doc_id
-	uv_task.setStatus(412)
+	uv_task.setStatus(302)
 	
 	from lib.Worker.Models.uv_document import UnveillanceDocument
 	

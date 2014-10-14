@@ -21,7 +21,7 @@ class UnveillanceTask(UnveillanceObject):
 				inflate['_id'] = generateMD5Hash()
 	
 			inflate['uv_doc_type'] = UV_DOC_TYPE['TASK']
-			inflate['status'] = 404
+			inflate['status'] = 201
 			
 		super(UnveillanceTask, self).__init__(_id=_id, inflate=inflate, 
 			emit_sentinels=[
@@ -41,7 +41,6 @@ class UnveillanceTask(UnveillanceObject):
 		#task_con = httplib.HTTPConnection("localhost", TASK_CHANNEL_PORT)
 		#task_con.request('POST')
 		#return task_con.getresponse()
-
 	
 	def routeNext(self, inflate=None):
 		if DEBUG: print "ROUTING NEXT TASK FROM QUEUE\nCLONING SOME VARS FROM SELF:\n%s" % self.emit()
@@ -89,9 +88,13 @@ class UnveillanceTask(UnveillanceObject):
 			
 			#p = Process(target=func.apply_async, args=args)
 			p = Process(target=func, args=args)
+			self.communicate(self.emit())
+			sleep(1)
 			p.start()
+
 		except Exception as e:
 			printAsLog(e)
+			self.fail()
 			return
 
 		# start a websocket for the task
@@ -131,6 +134,7 @@ class UnveillanceTask(UnveillanceObject):
 			self.err_message = message
 			self.save()
 
+		self.communicate(self.emit())
 		self.die()
 
 	def die(self):
@@ -187,6 +191,7 @@ class UnveillanceTask(UnveillanceObject):
 				local("crontab %s" % os.path.join(MONITOR_ROOT, "uv_cron.tab"))
 
 		sleep(20)
+		self.communicate(self.emit())
 		self.die()
 
 		if not hasattr(self, 'uv_cluster') or not self.uv_cluster:
