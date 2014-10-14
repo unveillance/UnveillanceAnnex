@@ -201,20 +201,6 @@ class UnveillanceTask(UnveillanceObject):
 		sleep(20)
 		self.communicate(self.emit())
 		self.die()
-
-		if not hasattr(self, 'uv_cluster') or not self.uv_cluster:
-			if not hasattr(self, 'persist') or not self.persist:
-				self.delete()
-	
-	def delete(self):
-		'''
-		if DEBUG: print "DELETING MYSELF"
-
-		with settings(warn_only=True):
-			local("rm -rf %s" % os.path.join(ANNEX_DIR, self.base_path))
-		'''
-
-		return super(UnveillanceTask, self).delete(self._id)
 	
 	def setStatus(self, status):
 		self.status = status
