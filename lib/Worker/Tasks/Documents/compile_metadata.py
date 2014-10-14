@@ -7,7 +7,7 @@ def compileMetadata(task):
 	task_tag = "COMPILING METADATA"
 	print "\n\n************** %s [START] ******************\n" %  task_tag
 	print "compiling metadata for %s" % task.doc_id
-	task.setStatus(412)
+	task.setStatus(302)
 	
 	from lib.Worker.Models.uv_document import UnveillanceDocument
 	from conf import DEBUG

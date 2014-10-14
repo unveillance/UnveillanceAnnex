@@ -7,7 +7,7 @@ def preprocessNLP(task):
 	task_tag = "TEXT NLP PREPROCESSING"
 	print "\n\n************** %s [START] ******************\n" % task_tag
 	print "nlp preprocessing text at %s" % task.doc_id
-	task.setStatus(412)
+	task.setStatus(302)
 	
 	import re
 	from json import loads
