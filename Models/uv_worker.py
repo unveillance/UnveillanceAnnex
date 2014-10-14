@@ -57,30 +57,21 @@ class UnveillanceWorker(object):
 		self.celery_tasks = buildCeleryTaskList()
 		
 		sys.argv.extend(['worker', '-l', 'info', '-Q', ",".join([ALL_WORKERS, UUID])])
-		if DEBUG: print sys.argv
-		
-		#self.celery_app = Celery(TASKS_ROOT, 
-		#	broker='amqp://guest@%s' % SERVER_HOST, include=self.celery_tasks)
 		
 		self.celery_app = Celery(TASKS_ROOT,
 			broker='amqp://guest@localhost//', include=self.celery_tasks)
-
-		logging.getLogger().setLevel(logging.DEBUG)
-		self.task_channel = sockjs.tornado.SockJSRouter(TaskChannel, '/(?:[a-z0-9]{32})')
-
-		startDaemon(self.worker_log_file, self.worker_pid_file)
 		
+		startDaemon(self.worker_log_file, self.worker_pid_file)
+		logging.getLogger().setLevel(logging.DEBUG)
 
+		self.task_channel = sockjs.tornado.SockJSRouter(TaskChannel, '/(?:[a-z0-9]{32})')
 		tc = tornado.web.Application(
 			[(r'/info', TaskChannel.InfoHandler)] + self.task_channel.urls)
 		tc.listen(TASK_CHANNEL_PORT, no_keep_alive=True)
 
-		if DEBUG: print "TaskChannel started on port %d" % TASK_CHANNEL_PORT
-		
+		if DEBUG: print "TaskChannel started on port %d" % TASK_CHANNEL_PORT		
 		tornado.ioloop.IOLoop.instance().start()
 
-		#self.celery_app.start()
-	
 	def stopWorker(self):
 		printAsLog("WORKER EXHAUSTED. FINISHING!")
 		stopDaemon(self.worker_pid_file)
