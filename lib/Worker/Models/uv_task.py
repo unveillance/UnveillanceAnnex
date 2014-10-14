@@ -88,9 +88,13 @@ class UnveillanceTask(UnveillanceObject):
 			
 			#p = Process(target=func.apply_async, args=args)
 			p = Process(target=func, args=args)
+			self.communicate(self.emit())
+			sleep(1)
 			p.start()
+
 		except Exception as e:
 			printAsLog(e)
+			self.fail()
 			return
 
 		# start a websocket for the task
