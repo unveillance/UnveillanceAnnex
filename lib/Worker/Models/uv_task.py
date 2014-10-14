@@ -1,5 +1,6 @@
 import os, requests
 from crontab import CronTab
+from json import dumps
 from time import sleep
 from importlib import import_module
 from multiprocessing import Process
@@ -38,9 +39,17 @@ class UnveillanceTask(UnveillanceObject):
 
 	def communicate(self, message):
 		if DEBUG: print message
-		#task_con = httplib.HTTPConnection("localhost", TASK_CHANNEL_PORT)
-		#task_con.request('POST')
-		#return task_con.getresponse()
+
+		if not hasattr(self, "task_channel"): return
+
+		url = "/%s" % '/'.join([
+			self._id, self.task_channel._session, self.task_channel._id, "xhr_send"])
+
+		con = httplib.HTTPConnection(self.task_channel.host, self.task_channel.port)
+		con.request('POST', url, dumps(message), { 'Content-Type' : 'application/json'})
+
+		r = con.getresponse()
+		print r.status
 	
 	def routeNext(self, inflate=None):
 		if DEBUG: print "ROUTING NEXT TASK FROM QUEUE\nCLONING SOME VARS FROM SELF:\n%s" % self.emit()
@@ -76,6 +85,9 @@ class UnveillanceTask(UnveillanceObject):
 		task_path = ".".join([TASKS_ROOT, self.task_path])
 		p, f = task_path.rsplit(".", 1)
 
+		# start a websocket for the task
+		self.task_channel = UnveillanceTaskChannel(self._id, "localhost", API_PORT + 1)
+
 		try:
 			module = import_module(p)
 			func = getattr(module, f)
@@ -95,10 +107,6 @@ class UnveillanceTask(UnveillanceObject):
 		except Exception as e:
 			printAsLog(e)
 			self.fail()
-			return
-
-		# start a websocket for the task
-		#self.task_channel = UnveillanceTaskChannel(self._id, "localhost", API_PORT + 1)
 
 	def daemonize(self):
 		if DEBUG: print "TASK %s IS NOW BEING DAEMONIZED. LOG FOUND AT %s" % (self.task_path, self.log_file)
