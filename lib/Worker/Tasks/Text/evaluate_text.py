@@ -26,6 +26,7 @@ def evaluateText(task):
 	if content is None:
 		print "no text to evaluate :("
 		print "\n\n************** %s [ERROR] ******************\n" % task_tag
+		task.fail()
 		return
 	
 	new_mime_type = None

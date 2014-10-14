@@ -14,8 +14,11 @@ def compileMetadata(task):
 	
 	document = UnveillanceDocument(_id=task.doc_id)
 	if document is None:
-		print "DOC IS NONE"
+		err = "DOC IS NONE"
+		print err
 		print "\n\n************** %s [ERROR] ******************\n" % task_tag
+
+		task.fail(message=err)
 		return
 	
 	metadata = document.loadAsset(task.md_file)
@@ -110,6 +113,7 @@ def compileMetadata(task):
 		if md_asset is None or not document.addFile(md_asset, None, sync=True):
 			print "Could not save the Metadata"
 			print "\n\n************** %s [ERROR] ******************\n" % task_tag
+			task.fail()
 			return
 		
 		document.addCompletedTask(task.task_path)
@@ -124,4 +128,5 @@ def compileMetadata(task):
 		if DEBUG: print e
 		print "No metadata aspects for %s" % task.md_namespace
 		print "\n\n************** %s [ERROR] ******************\n" % task_tag
+		task.fail()
 		return

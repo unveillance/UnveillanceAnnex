@@ -17,11 +17,13 @@ def pullFromAnnex(uv_task):
 	if document is None:
 		print "DOC IS NONE"
 		print "\n\n************** %s [ERROR] ******************\n" % task_tag
+		uv_task.fail()
 		return
 	
 	if not document.getFile(document.file_name):
 		print "NO FILE CONTENT"
 		print "\n\n************** %s [ERROR] ******************\n" % task_tag
+		uv_task.fail()
 		return
 	
 	if hasattr(uv_task, "atttempt_sync") and uv_task.attempt_sync:
