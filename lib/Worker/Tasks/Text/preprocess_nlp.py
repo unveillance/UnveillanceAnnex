@@ -21,6 +21,7 @@ def preprocessNLP(task):
 	document = UnveillanceDocument(_id=task.doc_id)
 	if document is None: 
 		print "DOC IS NONE"
+		task.fail()
 		return
 		
 	#	1. get all the words (bag of words)
@@ -29,6 +30,7 @@ def preprocessNLP(task):
 	except Exception as e:
 		print "ERROR GETTING DOC-TEXTS: %s" % e
 		print "\n\n************** %s [ERROR] ******************\n" % task_tag
+		task.fail()
 		return
 	
 	word_groups = [cleanAndSplitLine(text) for text in texts if text is not None]

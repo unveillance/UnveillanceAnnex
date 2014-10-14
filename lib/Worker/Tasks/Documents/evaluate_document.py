@@ -26,6 +26,7 @@ def evaluateDocument(uv_task):
 		print "DOCUMENT INVALID (is None)"
 		
 		uv_task.invalidate(error="DOCUMUENT INVALID (is none)")
+		uv_task.fail()
 		return
 			
 	from lib.Worker.Models.uv_task import UnveillanceTask

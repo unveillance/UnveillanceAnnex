@@ -8,6 +8,7 @@ from fabric.api import local, settings
 from Models.uv_object import UnveillanceObject
 from Utils.funcs import printAsLog
 from lib.Core.Utils.funcs import stopDaemon, startDaemon
+from lib.Core.Models.uv_task_channel import UnveillanceTaskChannel
 
 from vars import EmitSentinel, UV_DOC_TYPE, TASKS_ROOT
 from conf import DEBUG, BASE_DIR, ANNEX_DIR, HOST, API_PORT, MONITOR_ROOT
@@ -25,7 +26,8 @@ class UnveillanceTask(UnveillanceObject):
 		super(UnveillanceTask, self).__init__(_id=_id, inflate=inflate, 
 			emit_sentinels=[
 				EmitSentinel("ctx", "Worker", None),
-				EmitSentinel("log_file", "str", None)])
+				EmitSentinel("log_file", "str", None),
+				EmitSentinel("task_channel", "UnveillanceTaskChannel", None)])
 
 		self.pid_file = os.path.join(ANNEX_DIR, self.base_path, "pid.txt")
 
@@ -85,7 +87,8 @@ class UnveillanceTask(UnveillanceObject):
 			printAsLog(e)
 			return
 
-		# FOR NOW: we will invoke celery here (overkill; should be consolidated)
+		# start a websocket for the task
+		#self.task_channel = UnveillanceTaskChannel(self._id, "localhost", API_PORT + 1)
 
 	def daemonize(self):
 		if DEBUG: print "TASK %s IS NOW BEING DAEMONIZED. LOG FOUND AT %s" % (self.task_path, self.log_file)
@@ -109,11 +112,29 @@ class UnveillanceTask(UnveillanceObject):
 
 		if built: self.finish()
 
+	def fail(self, status=None, message=None):
+		if DEBUG:
+			print "*** FAILING OUT EXPLICITLY ***"
+
+		if status is None: status = 404
+
+		self.setStatus(status)
+		
+		if message is not None:
+			self.err_message = message
+			self.save()
+
+		self.die()
+
 	def die(self):
 		if hasattr(self, "daemonized") and self.daemonized:
 			stopDaemon(self.pid_file)
 			self.daemonized = False
 			self.save()
+
+		if hasattr(self, "task_channel"):
+			print "also closing task_channel"
+			self.task_channel.die()
 	
 	def finish(self):
 		if DEBUG: print "task finished!"
