@@ -31,12 +31,11 @@ class UnveillanceElasticsearchHandler(object):
 		if with_documents is None: with_documents = []
 		
 		if type(limit) is int and len(with_documents) >= limit:
-			print "LIMIT REACHED!"
 			return with_documents
 
 		scroll = self.iterateOverScroll(_scroll_id, exclude_fields=exclude_fields, cast_as=cast_as)
 		
-		if scroll is not None:
+		if scroll is not None and not scroll['scroll_end']:
 			return self.buildDocumentsFromScroll(scroll['_scroll_id'],
 				with_documents=(with_documents + scroll['documents']), limit=limit)
 
@@ -45,10 +44,6 @@ class UnveillanceElasticsearchHandler(object):
 	def iterateOverScroll(self, _scroll_id, exclude_fields=True, cast_as=None):		
 		res = self.sendELSRequest(endpoint="_search/scroll?scroll=600s&scroll_id=%s" % _scroll_id, to_root=True)		
 		next_scroll_id = res['_scroll_id']
-
-		if str(next_scroll_id) == str(_scroll_id):
-			if DEBUG: print "!!!!  MAXIMUM SCROLL!  PEAK RESULTS! !!!!"
-			return None
 
 		documents = [d['_source'] for d in res['hits']['hits']]
 
@@ -71,7 +66,8 @@ class UnveillanceElasticsearchHandler(object):
 
 		return {
 			"documents" : documents,
-			"_scroll_id" : next_scroll_id
+			"_scroll_id" : next_scroll_id,
+			"scroll_end" : True if str(next_scroll_id) == str(_scroll_id) else False
 		}
 
 	def getScroll(self, query, build=True, doc_type=None, sort=None, exclude_fields=False, cast_as=None):
