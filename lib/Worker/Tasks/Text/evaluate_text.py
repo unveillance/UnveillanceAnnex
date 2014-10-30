@@ -88,17 +88,6 @@ def evaluateText(task):
 				print e
 	
 	document.addCompletedTask(task.task_path)
-	
-	if task_path is not None and not hasattr(task, "no_continue"):
-		from lib.Worker.Models.uv_task import UnveillanceTask
-		from conf import UUID
-		
-		new_task = UnveillanceTask(inflate={
-			'doc_id' : document._id,
-			'task_path' : task_path,
-			'queue' : UUID})
-		
-		new_task.run()
-	
+	task.routeNext()
 	task.finish()
 	print "\n\n************** %s [END] ******************\n" % task_tag
