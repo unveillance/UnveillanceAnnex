@@ -1,4 +1,4 @@
-import os, requests
+import os, requests, httplib
 from crontab import CronTab
 from json import dumps
 from time import sleep
