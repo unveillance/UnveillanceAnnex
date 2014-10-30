@@ -66,6 +66,9 @@ def evaluateText(task):
 					txt_json.append(" ".join(txt_pages))
 					txt_pages = []
 					line_count = 0
+
+			document.total_pages = len(txt_json)
+			document.save()
 						
 			asset_path = document.addAsset(txt_json, "doc_texts.json", as_literal=False,
 				description="jsonified text of original document, segment by segment",
