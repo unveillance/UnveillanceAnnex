@@ -12,6 +12,7 @@ CONF_ROOT = os.path.join(this_dir, "conf")
 with open(os.path.join(CONF_ROOT, "annex.settings.yaml"), 'rb') as C:
 	config = yaml.load(C.read())
 	API_PORT = config['api.port']
+	TASK_CHANNEL_PORT = API_PORT + 1
 	NUM_PROCESSES = config['api.num_processes']
 	DEBUG = config['flags.debug']
 

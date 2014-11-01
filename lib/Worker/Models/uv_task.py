@@ -1,5 +1,6 @@
 import os, requests
 from crontab import CronTab
+from json import dumps
 from time import sleep
 from importlib import import_module
 from multiprocessing import Process
@@ -11,7 +12,7 @@ from lib.Core.Utils.funcs import stopDaemon, startDaemon
 from lib.Core.Models.uv_task_channel import UnveillanceTaskChannel
 
 from vars import EmitSentinel, UV_DOC_TYPE, TASKS_ROOT
-from conf import DEBUG, BASE_DIR, ANNEX_DIR, HOST, API_PORT, MONITOR_ROOT
+from conf import DEBUG, BASE_DIR, ANNEX_DIR, HOST, API_PORT, TASK_CHANNEL_PORT, MONITOR_ROOT
 
 class UnveillanceTask(UnveillanceObject):
 	def __init__(self, inflate=None, _id=None):
@@ -36,11 +37,22 @@ class UnveillanceTask(UnveillanceObject):
 		else:
 			if DEBUG: print "INHERITED A LOG FILE: %s" % self.log_file
 
-	def communicate(self, message):
-		if DEBUG: print message
-		#task_con = httplib.HTTPConnection("localhost", TASK_CHANNEL_PORT)
-		#task_con.request('POST')
-		#return task_con.getresponse()
+	def communicate(self, message=None):
+		if message is None:
+			message = {}
+
+		for i in ["_id", "doc_id", "status"]:
+			message[i] = getattr(self, i)
+
+		if DEBUG: print dumps(message)
+
+		if not hasattr(self, "task_channel"): return
+
+		url = '/'.join([
+			self._id, self.task_channel._session, self.task_channel._id, "xhr_send"])
+
+		r = requests.post("http://%s:%d/%s" % (self.task_channel.host, self.task_channel.port, url),
+			data="[%s]" % dumps(message))
 	
 	def routeNext(self, inflate=None):
 		if DEBUG: print "ROUTING NEXT TASK FROM QUEUE\nCLONING SOME VARS FROM SELF:\n%s" % self.emit()
@@ -76,6 +88,10 @@ class UnveillanceTask(UnveillanceObject):
 		task_path = ".".join([TASKS_ROOT, self.task_path])
 		p, f = task_path.rsplit(".", 1)
 
+		# start a websocket for the task
+		self.task_channel = UnveillanceTaskChannel(self._id if not hasattr(self, 'doc_id') else self.doc_id, 
+			"localhost", API_PORT + 1)
+
 		try:
 			module = import_module(p)
 			func = getattr(module, f)
@@ -88,17 +104,13 @@ class UnveillanceTask(UnveillanceObject):
 			
 			#p = Process(target=func.apply_async, args=args)
 			p = Process(target=func, args=args)
-			self.communicate(self.emit())
+			self.communicate()
 			sleep(1)
 			p.start()
 
 		except Exception as e:
 			printAsLog(e)
 			self.fail()
-			return
-
-		# start a websocket for the task
-		#self.task_channel = UnveillanceTaskChannel(self._id, "localhost", API_PORT + 1)
 
 	def daemonize(self):
 		if DEBUG: print "TASK %s IS NOW BEING DAEMONIZED. LOG FOUND AT %s" % (self.task_path, self.log_file)
@@ -134,6 +146,7 @@ class UnveillanceTask(UnveillanceObject):
 			self.err_message = message
 			self.save()
 
+		self.communicate()
 		self.die()
 
 	def die(self):
@@ -190,6 +203,7 @@ class UnveillanceTask(UnveillanceObject):
 				local("crontab %s" % os.path.join(MONITOR_ROOT, "uv_cron.tab"))
 
 		sleep(20)
+		self.communicate()
 		self.die()
 
 		if not hasattr(self, 'uv_cluster') or not self.uv_cluster:

@@ -14,7 +14,7 @@ def forceQuitUnveillance(target=None):
 			if re.match(r".*\d{1,2}:\d{2}[:|\.]\d{2}\s+grep", k) is not None: continue
 			if re.match(r".*\d{1,2}:\d{2}[:|\.]\d{2}\s+.*[Pp]ython\sshutdown.py", k) is not None: continue
 
-			pid = re.findall(re.compile("(?:\d{3,4}|\w{1,8})\s+(\d{4,6}).*%s\.py" % target), k)			
+			pid = re.findall(re.compile("(?:\d{3,4}|[a-zA-Z0-9_\-\+]{1,8})\s+(\d{4,6}).*%s\.py" % target), k)			
 			if len(pid) == 1:
 				try:
 					pid = int(pid[0])
@@ -63,7 +63,9 @@ def exportFrontendConfig(with_config=None, with_secrets=None):
 		'server_host' : SERVER_HOST,
 		'server_port' : API_PORT,
 		'annex_remote' : ANNEX_DIR,
-		'uv_uuid' : UUID
+		'uv_uuid' : UUID,
+		'annex_remote_port' : 22,
+		'server_use_ssl' : False
 	}
 	
 	if with_config is not None:

@@ -20,7 +20,7 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		UnveillanceElasticsearch.__init__(self)
 		sleep(1)
 		UnveillanceWorker.__init__(self)
-		sleep(5)
+		sleep(2)
 
 	def do_cluster(self, request):
 		"""
@@ -281,7 +281,8 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		
 		uv_task = UnveillanceTask(inflate=inflate)
 		uv_task.run()
-		return True
+		
+		return uv_task.emit()
 	
 	def runTask(self, handler):
 		try:

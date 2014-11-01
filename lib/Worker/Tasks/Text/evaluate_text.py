@@ -66,6 +66,9 @@ def evaluateText(task):
 					txt_json.append(" ".join(txt_pages))
 					txt_pages = []
 					line_count = 0
+
+			document.total_pages = len(txt_json)
+			document.save()
 						
 			asset_path = document.addAsset(txt_json, "doc_texts.json", as_literal=False,
 				description="jsonified text of original document, segment by segment",
@@ -87,18 +90,7 @@ def evaluateText(task):
 				print "ERROR HERE GENERATING DOC TEXTS:"
 				print e
 	
-	document.addComletedTask(task.task_path)
-	
-	if task_path is not None and not hasattr(task, "no_continue"):
-		from lib.Worker.Models.uv_task import UnveillanceTask
-		from conf import UUID
-		
-		new_task = UnveillanceTask(inflate={
-			'doc_id' : document._id,
-			'task_path' : task_path,
-			'queue' : UUID})
-		
-		new_task.run()
-	
+	document.addCompletedTask(task.task_path)
+	task.routeNext()
 	task.finish()
 	print "\n\n************** %s [END] ******************\n" % task_tag
