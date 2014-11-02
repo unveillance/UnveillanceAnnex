@@ -371,15 +371,18 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 					'queue' : UUID
 				}))
 			
+			'''
 			task_update = re.findall(task_update_rx, file_name)
 			if len(task_update) == 1:
-				if DEBUG: print "UPDATING TASK BY PATH %s" % task_update[0]
+				if DEBUG:
+					print "UPDATING TASK BY PATH %s" % task_update[0]
 				
 				matching_tasks = self.do_tasks(QueryBatchRequestStub(
 					"update_file=%s" % task_update[0]))
-				print matching_tasks
+				
 				if matching_tasks is not None:
 					matching_task = matching_tasks['documents'][0]			
+					
 					try:
 						uv_tasks.append(UnveillanceTask(inflate={
 							'task_path' : matching_task['on_update'],
@@ -389,6 +392,6 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 						}))
 					except KeyError as e:
 						print e
-		
+			'''
 		if len(uv_tasks) > 0:
 			for uv_task in uv_tasks: uv_task.run()
