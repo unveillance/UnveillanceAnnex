@@ -51,7 +51,7 @@ class UnveillanceTask(UnveillanceObject):
 				pass		
 
 		url = '/'.join([
-			self._id, self.task_channel._session, self.task_channel._id, "xhr_send"])
+			"annex_channel", self.task_channel._session, self.task_channel._id, "xhr_send"])
 
 		r = requests.post("http://%s:%d/%s" % (self.task_channel.host, self.task_channel.port, url),
 			data="[%s]" % dumps(message))
@@ -125,8 +125,8 @@ class UnveillanceTask(UnveillanceObject):
 		p, f = task_path.rsplit(".", 1)
 
 		# start a websocket for the task
-		self.task_channel = UnveillanceTaskChannel(self._id if not hasattr(self, 'doc_id') else self.doc_id, 
-			"localhost", API_PORT + 1)
+		self.task_channel = UnveillanceTaskChannel("annex_channel", "localhost",
+			API_PORT + 1, use_ssl=False)
 
 		try:
 			module = import_module(p)
