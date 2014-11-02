@@ -253,9 +253,6 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		
 		document = self.get(_id=query['_id'])
 		if document is None: return None
-				
-		from vars import MIME_TYPE_TASKS
-		print MIME_TYPE_TASKS
 		
 		inflate={
 			'doc_id' : document['_id'],
@@ -263,14 +260,8 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		}
 		
 		if 'task_path' not in query.keys():
-			if 'original_mime_type' in document.keys():
-				mime_type = document['original_mime_type']
-			else:
-				mime_type = document['mime_type']
-				
 			inflate.update({
-				'task_path' : MIME_TYPE_TASKS[mime_type][0],
-				'task_queue' : MIME_TYPE_TASKS[mime_type]
+				'task_path' : "Documents.evaluate_document.evaluateDocument"
 			})
 			
 		else:

@@ -36,6 +36,14 @@ def inflateVars(path):
 			print ELASTICSEARCH_SOURCE_EXCLUDES
 			continue
 
+		elif k == "TASK_PERSIST_KEYS":
+			for exclude in vars_extras[k]:
+				TASK_PERSIST_KEYS.append(exclude)
+				
+			print "NEW TASK_PERSIST_KEYS"
+			print TASK_PERSIST_KEYS
+			continue
+
 		elif k == "QUERY_KEYS":
 			for key in vars_extras[k].keys():
 				qts = vars_extras[k][key]

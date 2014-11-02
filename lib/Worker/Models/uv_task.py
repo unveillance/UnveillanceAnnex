@@ -74,7 +74,7 @@ class UnveillanceTask(UnveillanceObject):
 		next_task_path = self.get_next()
 		if next_task_path is None:
 			if DEBUG:
-				print "TASK QUEUE EXHAUSTED. NO ROUTING POSSIBLE.\n%s" % e
+				print "TASK QUEUE EXHAUSTED. NO ROUTING POSSIBLE."
 
 			self.signal_terminate()
 			return
@@ -105,6 +105,18 @@ class UnveillanceTask(UnveillanceObject):
 				print e
 		
 		return None
+
+	def put_next(self, task_paths, after=None):
+		if type(task_paths) is not list:
+			task_paths = [task_paths]
+
+		if not hasattr(self, "task_queue"):
+			self.task_queue = []
+
+		for t in task_paths:
+			self.task_queue.append(t)
+
+		self.save()
 		
 	def run(self):		
 		# otherwise...		
