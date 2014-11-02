@@ -76,6 +76,7 @@ if __name__ == "__main__":
 		os.chdir(ANNEX_DIR)
 		local("rm -rf .data")
 
+		# TODO: this should be sudoered for the unveillance user
 		print "****************************** [ IMPORTANT!!!! ] ******************************"
 		print "The next command requires sudo."
 		print "If you can do sudo without a password, press ENTER."

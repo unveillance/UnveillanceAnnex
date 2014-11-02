@@ -164,7 +164,9 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 				if line == asset_path:
 					# 3. if it was already added, sync=True
 					sync = True
-					local("git-annex unlock %s" % asset_path)
+					with settings(hide('everything'), warn_only=True):
+						local("git-annex unlock %s" % asset_path)
+					
 					break
 
 			try:
