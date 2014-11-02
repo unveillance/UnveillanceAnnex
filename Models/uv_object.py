@@ -95,7 +95,8 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 		
 		with settings(warn_only=True):
 			ga_find = local("git-annex find %s" % asset_path, capture=True)
-			if ga_find == asset_path: res = True
+			if ga_find == asset_path:
+				res = True
 			else:
 				ga_query = local("git-annex status", capture=True)
 				
@@ -107,6 +108,9 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 							print "...AND SUCCEEDED...\n"
 						res = True
 						break
+
+			if not res:
+				res = os.path.exists(os.path.join(ANNEX_DIR, asset_path))
 		
 		os.chdir(this_dir)
 		return res
