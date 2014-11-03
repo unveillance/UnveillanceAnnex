@@ -26,31 +26,29 @@ class TaskChannel(sockjs.tornado.SockJSConnection):
 
 		self.clients.add(self)
 
+		print dir(self.clients[0])
 		for c in self.clients:
 			print c.session
 
-		self.broadcast(self.clients, "OK")
+		self.send({'status' : "open"})
 
 	def on_close(self):
 		if DEBUG: print "on_close"
 
 		self.clients.remove(self)
-		self.broadcast(self.clients, "goodbye")
+		self.send({'status' : "closed"})
 
 	def on_message(self, message):
-		if DEBUG:
-			print "INCOMING MESSAGE>>>" 
-
 		self.broadcast(self.clients, message)
 
 	class InfoHandler(tornado.web.RequestHandler):
-		def get(self): self.finish({ 'status' : 'OK' })
+		def get(self):
+			self.finish({ 'status' : 'OK' })
 
 class UnveillanceWorker(object):
 	def __init__(self):		
 		self.worker_pid_file = os.path.join(MONITOR_ROOT, "worker.pid.txt")
 		self.worker_log_file = os.path.join(MONITOR_ROOT, "worker.log.txt")
-
 	
 	def startWorker(self):
 		printAsLog("STARTING CELERY WORKER!")
@@ -71,7 +69,9 @@ class UnveillanceWorker(object):
 			[(r'/info', TaskChannel.InfoHandler)] + self.task_channel.urls)
 		tc.listen(TASK_CHANNEL_PORT, no_keep_alive=True)
 
-		if DEBUG: print "TaskChannel started on port %d" % TASK_CHANNEL_PORT		
+		if DEBUG:
+			print "TaskChannel started on port %d" % TASK_CHANNEL_PORT		
+		
 		tornado.ioloop.IOLoop.instance().start()
 
 	def stopWorker(self):

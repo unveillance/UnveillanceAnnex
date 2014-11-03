@@ -260,10 +260,16 @@ class UnveillanceElasticsearch(UnveillanceElasticsearchHandler):
 				from lib.Worker.Models.uv_task import UnveillanceTask
 				for i_task in json.loads(IT.read()):
 					task = UnveillanceTask(inflate=i_task)
-					task.run()
+
+					try:
+						task.run()
+					except Exception as e:
+						if DEBUG:
+							print "TASK ERROR: %s" % e
 
 		except Exception as e:
-			if DEBUG: print "No initial tasks...\n%s" % e
+			if DEBUG:
+				print "No initial tasks...\n%s" % e
 			
 		if catch:
 			while True: sleep(1)
