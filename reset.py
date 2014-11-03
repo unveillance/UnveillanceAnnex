@@ -6,6 +6,7 @@ from crontab import CronTab
 
 from conf import DEBUG, ANNEX_DIR, MONITOR_ROOT, BASE_DIR, getConfig
 from Utils.funcs import forceQuitUnveillance
+from setup import initAnnex
 
 if __name__ == "__main__":
 	this_dir = os.getcwd()
@@ -35,7 +36,8 @@ if __name__ == "__main__":
 			restore_from = evacuate(evac_root=evac_root, omit_list=annex_includes)[0]
 		except:
 			print "Evacuation failed.  Continue? (y or n)"
-			if prompt("[DEFAULT n]: ") != "y": exit(-1)
+			if prompt("[DEFAULT n]: ") != "y":
+				exit(-1)
 	
 	print "Force-Quitting old instance"
 	forceQuitUnveillance()
@@ -73,25 +75,30 @@ if __name__ == "__main__":
 	with settings(warn_only=True):
 		os.chdir(ANNEX_DIR)
 		local("rm -rf .data")
-		local("git annex add .")
-		local("git annex sync")
-		local("rm *")
-		local("git annex add .")
-		local("git annex sync")
-		local("mkdir .data")
-		local("git annex add .")
-		local("git annex sync")
 
+		# TODO: this should be sudoered for the unveillance user
+		print "****************************** [ IMPORTANT!!!! ] ******************************"
+		print "The next command requires sudo."
+		print "If you can do sudo without a password, press ENTER."
+		print "Or else, type it in here"
+		sudo_pwd = prompt("[DEFAULT None]: ")
+
+		local("%s rm -rf .git" % ("sudo" if len(sudo_pwd) == 0 else "echo \"%s\n\" | sudo -S" % sudo_pwd))
+		local("rm *")
+
+		initAnnex(ANNEX_DIR, BASE_DIR, getConfig('git_annex_bin'), MONITOR_ROOT, getConfig('python_home'))
+
+		os.chdir(ANNEX_DIR)
 		if annex_includes is not None:
 			for _, _, files in os.walk(annex_includes):
 				for f in files:
 					local("cp %s ." % os.path.join(annex_includes, f))
-					local("git annex add %s" % f)
+					local("%s add %s" % (os.path.join(getConfig('git_annex_bin'), "git-annex"), f))
 
 				# this should not be recursive.
 				break
 
-		local("git annex sync")
+		local("%s sync" % os.path.join(getConfig('git_annex_bin'), "git-annex"))
 		os.chdir(this_dir)
 
 	if restore_from is not None: exit(1)

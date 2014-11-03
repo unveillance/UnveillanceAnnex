@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 
-import os, sys, signal, logging
+import os, sys, signal, logging, json
 from time import sleep
 
 from celery import Celery
@@ -66,7 +66,7 @@ class UnveillanceWorker(object):
 		startDaemon(self.worker_log_file, self.worker_pid_file)
 		logging.getLogger().setLevel(logging.DEBUG)
 
-		self.task_channel = sockjs.tornado.SockJSRouter(TaskChannel, '/(?:[a-z0-9]{32})')
+		self.task_channel = sockjs.tornado.SockJSRouter(TaskChannel, '/annex_channel')
 		tc = tornado.web.Application(
 			[(r'/info', TaskChannel.InfoHandler)] + self.task_channel.urls)
 		tc.listen(TASK_CHANNEL_PORT, no_keep_alive=True)

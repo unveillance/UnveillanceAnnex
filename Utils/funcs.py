@@ -33,6 +33,28 @@ def printAsLog(message, as_error=False):
 	
 	print message
 
+def exportAnnexConfig(with_config=None):
+	import json
+	from conf import DEBUG
+
+	config = {}
+	required_config = ['uv_log_cron', 'uv_admin_email']
+	
+	if with_config is not None:
+		required_config += with_config if type(with_config) is list else [with_config]
+
+	for c in required_config:
+		config[c] = getConfig(c)
+	
+	for key in [k for k in config.keys() if config[k] is None]:
+		del config[key]
+	
+	print "***********************************************"
+	print json.dumps(config)
+	print "***********************************************"
+
+	return config
+
 def exportFrontendConfig(with_config=None, with_secrets=None):
 	import json
 	from conf import DEBUG, SERVER_HOST, UUID, ANNEX_DIR, API_PORT
@@ -74,3 +96,5 @@ def exportFrontendConfig(with_config=None, with_secrets=None):
 	print "***********************************************"
 	print json.dumps(config)
 	print "***********************************************"
+
+	return config

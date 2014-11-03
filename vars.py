@@ -36,6 +36,14 @@ def inflateVars(path):
 			print ELASTICSEARCH_SOURCE_EXCLUDES
 			continue
 
+		elif k == "TASK_PERSIST_KEYS":
+			for exclude in vars_extras[k]:
+				TASK_PERSIST_KEYS.append(exclude)
+				
+			print "NEW TASK_PERSIST_KEYS"
+			print TASK_PERSIST_KEYS
+			continue
+
 		elif k == "QUERY_KEYS":
 			for key in vars_extras[k].keys():
 				qts = vars_extras[k][key]
@@ -94,6 +102,8 @@ class QueryBatchStub(object):
 		self.request = QueryBatchRequestStub(query)
 
 GIT_ANNEX_METADATA = ['uv_file_alias', 'importer_source', 'imported_by', 'uv_local_only']
+
+TASK_PERSIST_KEYS = ["doc_id", "queue", "task_queue", "log_file"]
 
 QUERY_KEYS = {
 	'match' : ['assets.tags', 'task_path', 'update_file', 'file_name', 'media_id'],

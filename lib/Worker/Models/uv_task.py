@@ -1,4 +1,4 @@
-import os, requests, httplib
+import os, requests
 from crontab import CronTab
 from json import dumps
 from time import sleep
@@ -11,7 +11,7 @@ from Utils.funcs import printAsLog
 from lib.Core.Utils.funcs import stopDaemon, startDaemon
 from lib.Core.Models.uv_task_channel import UnveillanceTaskChannel
 
-from vars import EmitSentinel, UV_DOC_TYPE, TASKS_ROOT
+from vars import EmitSentinel, UV_DOC_TYPE, TASKS_ROOT, TASK_PERSIST_KEYS
 from conf import DEBUG, BASE_DIR, ANNEX_DIR, HOST, API_PORT, TASK_CHANNEL_PORT, MONITOR_ROOT
 
 class UnveillanceTask(UnveillanceObject):
@@ -37,56 +37,86 @@ class UnveillanceTask(UnveillanceObject):
 		else:
 			if DEBUG: print "INHERITED A LOG FILE: %s" % self.log_file
 
-	def communicate(self, message):
-		if DEBUG: print message
+	def communicate(self, message=None):
+		if not hasattr(self, "task_channel"):
+			return
+		
+		if message is None:
+			message = {}
 
-		if not hasattr(self, "task_channel"): return
+		for i in ["_id", "doc_id", "status", "task_path"]:
+			try:
+				message[i] = getattr(self, i)
+			except Exception as e:
+				pass		
 
-		url = "/%s" % '/'.join([
-			self._id, self.task_channel._session, self.task_channel._id, "xhr_send"])
+		url = '/'.join([
+			"annex_channel", self.task_channel._session, self.task_channel._id, "xhr_send"])
 
-		con = httplib.HTTPConnection(self.task_channel.host, self.task_channel.port)
-		con.request('POST', url, dumps(message), { 'Content-Type' : 'application/json'})
+		r = requests.post("http://%s:%d/%s" % (self.task_channel.host, self.task_channel.port, url),
+			data="[%s]" % dumps(message))
 
-		r = con.getresponse()
-		print r.status
+	def signal_terminate(self):
+		# meaning, the task should be gone!
+		self.setStatus(410)
+		self.communicate()
 	
 	def routeNext(self, inflate=None):
 		if DEBUG: print "ROUTING NEXT TASK FROM QUEUE\nCLONING SOME VARS FROM SELF:\n%s" % self.emit()
 		
 		if hasattr(self, "no_continue"):
-			if DEBUG: print "NO CONTINUE FLAG DETECTED.  NO ROUTING POSSIBLE."
+			if DEBUG:
+				print "NO CONTINUE FLAG DETECTED.  NO ROUTING POSSIBLE."
+			
+			self.signal_terminate()
+			return		
+		
+		next_task_path = self.get_next()
+		if next_task_path is None:
+			if DEBUG:
+				print "TASK QUEUE EXHAUSTED. NO ROUTING POSSIBLE."
+
+			self.signal_terminate()
 			return
+
+		if inflate is None:
+			inflate = {}			
 		
-		if not hasattr(self, "task_queue"):
-			if DEBUG: print "TASK HAS NO TASK QUEUE. NO ROUTING POSSIBLE."
-			return
-		
-		if inflate is None: inflate = {}
-		task_index = self.task_queue.index(self.task_path) + 1
-		
-		try:
-			inflate['task_path'] = self.task_queue[task_index]
-			print "TASK %s AT INDEX %d" % (inflate['task_path'], task_index)
-		except Exception as e:
-			if DEBUG: print "TASK QUEUE EXHAUSTED. NO ROUTING POSSIBLE.\n%s" % e
-			return
-		
-		for a in ["doc_id", "queue", "task_queue", "log_file"]:
+		for a in TASK_PERSIST_KEYS:
 			if hasattr(self, a):
 				inflate[a] = getattr(self, a)
-		
-		next_task = UnveillanceTask(inflate=inflate)
-		
-		if hasattr(self, "daemonized") and self.daemonized:
-			attempts = 0
-			
-			while self.daemonized:
-				print "still daemonized == %s (attampt #%d)" % (self.daemonized, attempts)
-				attempts += 1
-				sleep(2)
 
+		inflate['task_path'] = next_task_path
+		next_task = UnveillanceTask(inflate=inflate)
 		next_task.run()
+
+	def get_next(self):
+		if not hasattr(self, "task_queue"):
+			if DEBUG:
+				print "TASK HAS NO TASK QUEUE. NO ROUTING POSSIBLE."
+
+			return None
+
+		try:
+			task_index = self.task_queue.index(self.task_path) + 1
+			return self.task_queue[task_index]
+		except Exception as e:
+			if DEBUG:
+				print e
+		
+		return None
+
+	def put_next(self, task_paths, after=None):
+		if type(task_paths) is not list:
+			task_paths = [task_paths]
+
+		if not hasattr(self, "task_queue"):
+			self.task_queue = []
+
+		for t in task_paths:
+			self.task_queue.append(t)
+
+		self.save()
 		
 	def run(self):		
 		# otherwise...		
@@ -95,7 +125,8 @@ class UnveillanceTask(UnveillanceObject):
 		p, f = task_path.rsplit(".", 1)
 
 		# start a websocket for the task
-		self.task_channel = UnveillanceTaskChannel(self._id, "localhost", API_PORT + 1)
+		self.task_channel = UnveillanceTaskChannel("annex_channel", "localhost",
+			API_PORT + 1, use_ssl=False)
 
 		try:
 			module = import_module(p)
@@ -109,7 +140,7 @@ class UnveillanceTask(UnveillanceObject):
 			
 			#p = Process(target=func.apply_async, args=args)
 			p = Process(target=func, args=args)
-			self.communicate(self.emit())
+			self.communicate()
 			sleep(1)
 			p.start()
 
@@ -143,15 +174,12 @@ class UnveillanceTask(UnveillanceObject):
 		if DEBUG:
 			print "*** FAILING OUT EXPLICITLY ***"
 
-		if status is None: status = 404
+		if status is None:
+			status = 404
 
 		self.setStatus(status)
-		
-		if message is not None:
-			self.err_message = message
-			self.save()
-
-		self.communicate(self.emit())
+		self.communicate(message=None if message is None else {'error_message' : message})
+		self.signal_terminate()
 		self.die()
 
 	def die(self):
@@ -165,10 +193,14 @@ class UnveillanceTask(UnveillanceObject):
 			self.task_channel.die()
 	
 	def finish(self):
-		if DEBUG: print "task finished!"
+		if DEBUG:
+			print "task finished!"
+		
 		if not hasattr(self, 'persist') or not self.persist:
+			if DEBUG: print "task will be deleted!"
 			self.setStatus(200)
 		else:
+			write_to_crontab = True
 			self.setStatus(205)
 			if DEBUG: print "task will run again after %d minutes" % self.persist
 			
@@ -182,7 +214,7 @@ class UnveillanceTask(UnveillanceObject):
 				if DEBUG:
 					print "this task %s is already registered in our crontab" % self._id
 				
-				return
+				write_to_crontab = False
 				
 			except IOError as e:
 				if DEBUG: print "no crontab yet..."
@@ -191,24 +223,38 @@ class UnveillanceTask(UnveillanceObject):
 				if DEBUG: print "this job isn't in cron yet..."
 				pass
 			
-			with settings(warn_only=True):
-				PYTHON_PATH = local("which python", capture=True)
-	
-			task_script = os.path.join(BASE_DIR, "run_task.py")
-			job = cron.new(
-				command="%s %s %s >> %s" % (PYTHON_PATH, task_script, self._id, os.path.join(MONITOR_ROOT, "api.log.txt")),
-				comment=self.task_path)
-			
-			job.every(self.persist).minutes()
-			job.enable()
-			cron.write(os.path.join(MONITOR_ROOT, "uv_cron.tab"))
-			
-			with settings(warn_only=True):
-				local("crontab %s" % os.path.join(MONITOR_ROOT, "uv_cron.tab"))
+			if write_to_crontab:
+				with settings(warn_only=True):
+					PYTHON_PATH = local("which python", capture=True)
+		
+				task_script = os.path.join(BASE_DIR, "run_task.py")
+				job = cron.new(
+					command="%s %s %s >> %s" % (PYTHON_PATH, task_script, self._id, os.path.join(MONITOR_ROOT, "api.log.txt")),
+					comment=self.task_path)
+				
+				job.every(self.persist).minutes()
+				job.enable()
+				cron.write(os.path.join(MONITOR_ROOT, "uv_cron.tab"))
+				
+				with settings(warn_only=True):
+					local("crontab %s" % os.path.join(MONITOR_ROOT, "uv_cron.tab"))
 
-		sleep(5)
-		self.communicate(self.emit())
+		self.communicate()
 		self.die()
+
+		if not hasattr(self, 'uv_cluster') or not self.uv_cluster:
+			if not hasattr(self, 'persist') or not self.persist:
+				self.delete()
+	
+	def delete(self):
+		'''
+		if DEBUG: print "DELETING MYSELF"
+
+		with settings(warn_only=True):
+			local("rm -rf %s" % os.path.join(ANNEX_DIR, self.base_path))
+		'''
+
+		return super(UnveillanceTask, self).delete(self._id)
 	
 	def setStatus(self, status):
 		self.status = status
