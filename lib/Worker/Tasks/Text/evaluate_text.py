@@ -91,6 +91,6 @@ def evaluateText(task):
 				print e
 	
 	document.addCompletedTask(task.task_path)
-	task.routeNext()
 	task.finish()
+	task.routeNext()
 	print "\n\n************** %s [END] ******************\n" % task_tag

@@ -38,7 +38,9 @@ class TaskChannel(sockjs.tornado.SockJSConnection):
 		self.broadcast(self.clients, "goodbye")
 
 	def on_message(self, message):
-		if DEBUG: print message
+		if DEBUG:
+			print "INCOMING MESSAGE>>>" 
+
 		self.broadcast(self.clients, message)
 
 	class InfoHandler(tornado.web.RequestHandler):

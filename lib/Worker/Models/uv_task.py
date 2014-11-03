@@ -77,6 +77,15 @@ class UnveillanceTask(UnveillanceObject):
 				inflate[a] = getattr(self, a)
 		
 		next_task = UnveillanceTask(inflate=inflate)
+		
+		if hasattr(self, "daemonized") and self.daemonized:
+			attempts = 0
+			
+			while self.daemonized:
+				print "still daemonized == %s (attampt #%d)" % (self.daemonized, attempts)
+				attempts += 1
+				sleep(2)
+
 		next_task.run()
 		
 	def run(self):		
@@ -158,7 +167,6 @@ class UnveillanceTask(UnveillanceObject):
 	def finish(self):
 		if DEBUG: print "task finished!"
 		if not hasattr(self, 'persist') or not self.persist:
-			if DEBUG: print "task will be deleted!"
 			self.setStatus(200)
 		else:
 			self.setStatus(205)
@@ -198,7 +206,7 @@ class UnveillanceTask(UnveillanceObject):
 			with settings(warn_only=True):
 				local("crontab %s" % os.path.join(MONITOR_ROOT, "uv_cron.tab"))
 
-		sleep(20)
+		sleep(5)
 		self.communicate(self.emit())
 		self.die()
 	
