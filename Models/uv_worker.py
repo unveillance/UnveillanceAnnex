@@ -26,7 +26,6 @@ class TaskChannel(sockjs.tornado.SockJSConnection):
 
 		self.clients.add(self)
 
-		print dir(self.clients[0])
 		for c in self.clients:
 			print c.session
 
