@@ -97,7 +97,8 @@ class UnveillanceAnnex(tornado.web.Application, UnveillanceAPI):
 			res.data = self.application.runTask(self)
 			if res.data is None:
 				del res.data
-			elif res.data: res.result = 200
+			elif res.data:
+				res.result = 200
 			
 			self.set_status(res.result)
 			self.finish(res.emit())

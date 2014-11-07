@@ -36,10 +36,11 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		cluster = UnveillanceCluster(inflate=args)
 		
 		try:
-			return cluster.emit()
+			return cluster.communicate()
 		
 		except Exception as e:
-			if DEBUG: print e
+			if DEBUG:
+				print e
 			return None
 
 	def do_tasks(self, request):

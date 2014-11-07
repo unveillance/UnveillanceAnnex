@@ -11,7 +11,7 @@ from Utils.funcs import printAsLog
 from lib.Core.Utils.funcs import stopDaemon, startDaemon
 from lib.Core.Models.uv_task_channel import UnveillanceTaskChannel
 
-from vars import EmitSentinel, UV_DOC_TYPE, TASKS_ROOT, TASK_PERSIST_KEYS
+from vars import EmitSentinel, UV_DOC_TYPE, TASKS_ROOT, TASK_PERSIST_KEYS, ASSET_TAGS
 from conf import DEBUG, BASE_DIR, ANNEX_DIR, HOST, API_PORT, TASK_CHANNEL_PORT, MONITOR_ROOT
 
 class UnveillanceTask(UnveillanceObject):
@@ -48,13 +48,22 @@ class UnveillanceTask(UnveillanceObject):
 			try:
 				message[i] = getattr(self, i)
 			except Exception as e:
-				pass		
+				pass
+
+		message['task_type'] = type(self).__name__
+
+		if self.status == 200:
+			result_assets = self.getAssetsByTagName(ASSET_TAGS['C_RES'])
+			if result_assets is not None:
+				message['result_assets'] = [os.path.join(self.base_path, r['file_name']) for r in result_assets]
 
 		url = '/'.join([
 			"annex_channel", self.task_channel._session, self.task_channel._id, "xhr_send"])
 
 		r = requests.post("http://%s:%d/%s" % (self.task_channel.host, self.task_channel.port, url),
 			data="[%s]" % dumps(message))
+
+		return message
 
 	def signal_terminate(self):
 		# meaning, the task should be gone!
@@ -118,7 +127,8 @@ class UnveillanceTask(UnveillanceObject):
 
 		self.save()
 		
-	def run(self):		
+	def run(self):
+		self.setStatus(201)	
 		# otherwise...		
 		# i.e. "lib.Worker.Tasks.Documents.evaluate_document"
 		task_path = ".".join([TASKS_ROOT, self.task_path])
@@ -242,7 +252,7 @@ class UnveillanceTask(UnveillanceObject):
 		self.communicate()
 		self.die()
 
-		if not hasattr(self, 'uv_cluster') or not self.uv_cluster:
+		if type(self).__name__ != "UnveillanceCluster":
 			if not hasattr(self, 'persist') or not self.persist:
 				self.delete()
 	
