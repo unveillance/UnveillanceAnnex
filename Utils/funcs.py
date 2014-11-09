@@ -50,6 +50,7 @@ def exportAnnexConfig(with_config=None):
 		del config[key]
 	
 	print "***********************************************"
+	print "THE FOLLOWING LINES MAKE FOR YOUR ANNEX CONFIG\n\n"
 	print json.dumps(config)
 	print "***********************************************"
 
@@ -72,6 +73,7 @@ def exportFrontendConfig(with_config=None, with_secrets=None):
 		'uv_uuid' : UUID,
 		'annex_remote_port' : 22,
 		'server_use_ssl' : False,
+		'gdrive_auth_no_ask' : True,
 		'server_message_port' : (API_PORT + 1) if server_message_port is None else server_message_port
 	}
 	
@@ -100,6 +102,7 @@ def exportFrontendConfig(with_config=None, with_secrets=None):
 		del config[key]
 	
 	print "***********************************************"
+	print "THE FOLLOWING LINES MAKE FOR YOUR FRONTEND CONFIG\n\n"
 	print json.dumps(config)
 	print "***********************************************"
 

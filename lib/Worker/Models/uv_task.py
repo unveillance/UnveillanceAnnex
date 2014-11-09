@@ -269,3 +269,4 @@ class UnveillanceTask(UnveillanceObject):
 	def setStatus(self, status):
 		self.status = status
 		self.save()
+		self.communicate()
