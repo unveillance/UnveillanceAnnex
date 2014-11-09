@@ -32,17 +32,18 @@ class TaskChannel(sockjs.tornado.SockJSConnection):
 		self.broadcast(self.clients, "OK")
 
 	def on_close(self):
-		if DEBUG: print "on_close"
+		if DEBUG:
+			print "on_close"
 
 		self.clients.remove(self)
 		self.broadcast(self.clients, "goodbye")
 
 	def on_message(self, message):
-		if DEBUG: print message
 		self.broadcast(self.clients, message)
 
 	class InfoHandler(tornado.web.RequestHandler):
-		def get(self): self.finish({ 'status' : 'OK' })
+		def get(self):
+			self.finish({ 'status' : 'OK' })
 
 class UnveillanceWorker(object):
 	def __init__(self):		
