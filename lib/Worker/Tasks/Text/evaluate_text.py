@@ -7,7 +7,7 @@ def evaluateText(task):
 	task_tag = "TEXT EVALUATION"
 	print "\n\n************** %s [START] ******************\n" % task_tag
 	print "evaluating text at %s" % task.doc_id
-	task.setStatus(412)
+	task.setStatus(302)
 	
 	from lib.Worker.Models.uv_document import UnveillanceDocument
 	from conf import DEBUG
@@ -26,6 +26,7 @@ def evaluateText(task):
 	if content is None:
 		print "no text to evaluate :("
 		print "\n\n************** %s [ERROR] ******************\n" % task_tag
+		task.fail()
 		return
 	
 	new_mime_type = None
@@ -57,10 +58,7 @@ def evaluateText(task):
 			# this is arbitrary
 			MAX_LINES_PER_PAGE = 80
 			
-			for line in content.splitlines(): 
-				if DEBUG: 
-					print "parsing line..."
-					print line
+			for line in content.splitlines():
 				txt_pages.append(cleanLine(line))
 				line_count += 1
 				
@@ -68,9 +66,10 @@ def evaluateText(task):
 					txt_json.append(" ".join(txt_pages))
 					txt_pages = []
 					line_count = 0
-			
-			if DEBUG: print txt_json
-			
+
+			document.total_pages = len(txt_json)
+			document.save()
+						
 			asset_path = document.addAsset(txt_json, "doc_texts.json", as_literal=False,
 				description="jsonified text of original document, segment by segment",
 				tags=[ASSET_TAGS['TXT_JSON']])
@@ -91,18 +90,7 @@ def evaluateText(task):
 				print "ERROR HERE GENERATING DOC TEXTS:"
 				print e
 	
-	document.addComletedTask(task.task_path)
-	
-	if task_path is not None and not hasattr(task, "no_continue"):
-		from lib.Worker.Models.uv_task import UnveillanceTask
-		from conf import UUID
-		
-		new_task = UnveillanceTask(inflate={
-			'doc_id' : document._id,
-			'task_path' : task_path,
-			'queue' : UUID})
-		
-		new_task.run()
-	
+	document.addCompletedTask(task.task_path)
 	task.finish()
+	task.routeNext()
 	print "\n\n************** %s [END] ******************\n" % task_tag

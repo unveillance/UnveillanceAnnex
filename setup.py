@@ -18,6 +18,31 @@ def locateLibrary(lib_rx):
 	
 	return None
 
+def initAnnex(annex_dir, base_dir, git_annex_dir, monitor_root, python_home):
+	os.chdir(annex_dir)
+	with settings(warn_only=True):
+		local("git init")
+		local("mkdir .git/hooks")
+		
+	with open(os.path.join(annex_dir, ".git", "hooks", "post-receive"), 'wb+') as HOOK:
+		# TODO: not yet sure what we're doing for git-annex sync...
+		HOOK.write("echo $1 >> %s" % os.path.join(monitor_root, "test_post_receive.txt"))
+
+	with open(os.path.join(annex_dir, ".git", "hooks", "post-update"), 'wb+') as HOOK:
+		# TODO: not yet sure what we're doing for git-annex sync...
+		HOOK.write("echo $1 >> %s" % os.path.join(monitor_root, "test_post_update.txt"))
+
+	with open(os.path.join(annex_dir, ".git", "hooks", "uv-post-netcat"), 'wb+') as HOOK:
+		HOOK.write("cd %s\n%s sync_file.py $1" % (base_dir, python_home))
+		
+	with settings(warn_only=True):
+		for hook in ["post-receive", "post-update", "uv-post-netcat"]:
+			local("chmod +x .git/hooks/%s" % hook)
+			
+		local("%s init \"unveillance_remote\"" % os.path.join(git_annex_dir, "git-annex"))
+		local("%s untrust web" % os.path.join(git_annex_dir, "git-annex"))
+		local("%s direct" % os.path.join(git_annex_dir, "git-annex"))
+
 if __name__ == "__main__":
 	base_dir = os.getcwd()
 	monitor_root = os.path.join(base_dir, ".monitor")
@@ -77,13 +102,6 @@ if __name__ == "__main__":
 		
 		if len(uv_log_cron) == 0:
 			uv_log_cron = 3
-	
-	if 'dstk_url' not in extras.keys():
-		print "What is the complete URL of your Data Science Toolkit instance?"
-		dstk_url = prompt("[DEFAULT: http://datasciencetoolkit.org]")
-		
-		if len(dstk_url) == 0:
-			dstk_url = "http://www.datasciencetoolkit.org"
 
 	with settings(warn_only=True):
 		local("mkdir %s" % annex_dir)	
@@ -140,7 +158,6 @@ if __name__ == "__main__":
 		CONFIG.write("els_root: %s\n" % os.path.join(els_root, "bin", "elasticsearch"))
 		CONFIG.write("git_annex_bin: %s\n" % git_annex_dir)
 		CONFIG.write("monitor_root: %s\n" % monitor_root)
-		CONFIG.write("dstk_url: %s\n" % dstk_url)
 		CONFIG.write("sys_arch: %s\n" % SYS_ARCH)
 		CONFIG.write("python_home: %s\n" % PYTHON_HOME)
 		CONFIG.write("ssh_root: %s\n" % SSH_ROOT)
@@ -150,30 +167,7 @@ if __name__ == "__main__":
 		from lib.Core.Utils.funcs import generateNonce
 		CONFIG.write("document_salt: \"%s\"\n" % generateNonce())
 	
-	os.chdir(annex_dir)
-	with settings(warn_only=True):
-		local("git init")
-		local("mkdir .git/hooks")
-		
-	with open(os.path.join(annex_dir, ".git", "hooks", "post-receive"), 'wb+') as HOOK:
-		# TODO: not yet sure what we're doing for git-annex sync...
-		HOOK.write("echo $1 >> %s" % os.path.join(monitor_root, "test_post_receive.txt"))
-
-	with open(os.path.join(annex_dir, ".git", "hooks", "post-update"), 'wb+') as HOOK:
-		# TODO: not yet sure what we're doing for git-annex sync...
-		HOOK.write("echo $1 >> %s" % os.path.join(monitor_root, "test_post_update.txt"))
-
-	with open(os.path.join(annex_dir, ".git", "hooks", "uv-post-netcat"), 'wb+') as HOOK:
-		HOOK.write("cd %s\n%s sync_file.py $1" % (base_dir, PYTHON_HOME))
-		
-	with settings(warn_only=True):
-		for hook in ["post-receive", "post-update", "uv-post-netcat"]:
-			local("chmod +x .git/hooks/%s" % hook)
-			
-		local("%s init \"unveillance_remote\"" % os.path.join(git_annex_dir, "git-annex"))
-		local("%s untrust web" % os.path.join(git_annex_dir, "git-annex"))
-		local("%s watch" % os.path.join(git_annex_dir, "git-annex"))
-
+	initAnnex(annex_dir, base_dir, git_annex_dir, monitor_root, PYTHON_HOME)
 	os.chdir(base_dir)
 	
 	exit(0)

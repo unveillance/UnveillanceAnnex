@@ -7,15 +7,18 @@ def compileMetadata(task):
 	task_tag = "COMPILING METADATA"
 	print "\n\n************** %s [START] ******************\n" %  task_tag
 	print "compiling metadata for %s" % task.doc_id
-	task.setStatus(412)
+	task.setStatus(302)
 	
 	from lib.Worker.Models.uv_document import UnveillanceDocument
 	from conf import DEBUG
 	
 	document = UnveillanceDocument(_id=task.doc_id)
 	if document is None:
-		print "DOC IS NONE"
+		err = "DOC IS NONE"
+		print err
 		print "\n\n************** %s [ERROR] ******************\n" % task_tag
+
+		task.fail(message=err)
 		return
 	
 	metadata = document.loadAsset(task.md_file)
@@ -86,11 +89,12 @@ def compileMetadata(task):
 			for key, value in task.md_extras.iteritems():
 				labels.append(key)
 				values.append(value)
-		
+		"""
 		if DEBUG:
 			print "labels %s" % labels
 			print "values %s" % values
-			
+		"""
+
 		from cStringIO import StringIO
 		
 		md_csv_file = StringIO()
@@ -109,6 +113,7 @@ def compileMetadata(task):
 		if md_asset is None or not document.addFile(md_asset, None, sync=True):
 			print "Could not save the Metadata"
 			print "\n\n************** %s [ERROR] ******************\n" % task_tag
+			task.fail()
 			return
 		
 		document.addCompletedTask(task.task_path)
@@ -123,4 +128,5 @@ def compileMetadata(task):
 		if DEBUG: print e
 		print "No metadata aspects for %s" % task.md_namespace
 		print "\n\n************** %s [ERROR] ******************\n" % task_tag
+		task.fail()
 		return

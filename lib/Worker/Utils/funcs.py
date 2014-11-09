@@ -60,7 +60,12 @@ def getFileType(file, as_buffer=False):
 			
 		return mime_type
 		
-	except: pass
+	except Exception as e:
+		if DEBUG:
+			print "** ERROR GETTING MIME TYPE : %s (type %s)***" % (e, type(e))
+
+		pass
+	
 	m.close()
 	return None
 

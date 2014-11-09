@@ -1,4 +1,4 @@
 #! /bin/bash
 ./shutdown.sh
 sleep 5
-./startup.sh
+./startup.sh $1

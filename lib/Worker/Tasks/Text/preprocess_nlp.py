@@ -7,7 +7,7 @@ def preprocessNLP(task):
 	task_tag = "TEXT NLP PREPROCESSING"
 	print "\n\n************** %s [START] ******************\n" % task_tag
 	print "nlp preprocessing text at %s" % task.doc_id
-	task.setStatus(412)
+	task.setStatus(302)
 	
 	import re
 	from json import loads
@@ -21,15 +21,16 @@ def preprocessNLP(task):
 	document = UnveillanceDocument(_id=task.doc_id)
 	if document is None: 
 		print "DOC IS NONE"
+		task.fail()
 		return
 		
 	#	1. get all the words (bag of words)
 	try:
 		texts = loads(document.loadAsset("doc_texts.json"))
-		if DEBUG: print "TEXTS:\n%s" % texts
 	except Exception as e:
 		print "ERROR GETTING DOC-TEXTS: %s" % e
 		print "\n\n************** %s [ERROR] ******************\n" % task_tag
+		task.fail()
 		return
 	
 	word_groups = [cleanAndSplitLine(text) for text in texts if text is not None]

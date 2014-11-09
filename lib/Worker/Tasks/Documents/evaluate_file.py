@@ -7,7 +7,7 @@ def evaluateFile(task):
 	task_tag = "EVALUATING DOCUMENT (INFORMACAM)"
 	print "\n\n************** %s [START] ******************\n" % task_tag
 	print "image preprocessing at %s" % task.doc_id
-	task.setStatus(412)
+	task.setStatus(302)
 		
 	from lib.Worker.Models.uv_document import UnveillanceDocument
 	
@@ -18,11 +18,13 @@ def evaluateFile(task):
 	if document is None:
 		print "DOC IS NONE"
 		print "\n\n************** %s [ERROR] ******************\n" % task_tag
+		task.fail()
 		return
 	
 	if not document.getFile(task.file_name):
 		print "NO FILE CONTENT"
 		print "\n\n************** %s [ERROR] ******************\n" % task_tag
+		task.fail()
 		return
 		
 	from lib.Worker.Models.uv_task import UnveillanceTask
@@ -43,6 +45,7 @@ def evaluateFile(task):
 	except IndexError as e:
 		print "NO NEXT TASK: %s" % e
 		print "\n\n************** %s [ERROR] ******************\n" % task_tag
+		task.fail()
 		return
 	
 	task.finish()

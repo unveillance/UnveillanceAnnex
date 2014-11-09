@@ -27,26 +27,66 @@ def inflateVars(path):
 			
 			lcl[k]['uv_document']['properties'].update(vars_extras[k])
 			continue
-		elif k == "QUERY_KEYS":			
-			for operator in vars_extras[k].keys():
-				if DEBUG: print "Operator: %s" % operator
+
+		elif k == "ELASTICSEARCH_SOURCE_EXCLUDES":
+			for exclude in vars_extras[k]:
+				ELASTICSEARCH_SOURCE_EXCLUDES.append(exclude)
+
+			print "NEW ELASTICSEARCH_SOURCE_EXCLUDES:"
+			print ELASTICSEARCH_SOURCE_EXCLUDES
+			continue
+
+		elif k == "TASK_PERSIST_KEYS":
+			for exclude in vars_extras[k]:
+				TASK_PERSIST_KEYS.append(exclude)
 				
-				if operator in QUERY_KEYS.keys():
-					for query_type in vars_extras[k][operator].keys():
-						if DEBUG: print "query type: %s" % query_type
-						qts = vars_extras[k][operator][query_type]
-						
-						if type(qts) is not list: qts = [qts]
-						if DEBUG: print qts
-						
-						if query_type in QUERY_KEYS[operator].keys():
-							if DEBUG: print "UPDATING %s" % query_type
-							QUERY_KEYS[operator][query_type].extend(qts)
-						else:
-							QUERY_KEYS[operator][query_type] = qts
+			print "NEW TASK_PERSIST_KEYS"
+			print TASK_PERSIST_KEYS
+			continue
+
+		elif k == "QUERY_KEYS":
+			for key in vars_extras[k].keys():
+				qts = vars_extras[k][key]
+				
+				if type(qts) is not list: qts = [qts]
+				if DEBUG: print qts
+
+				if key in QUERY_KEYS.keys():
+					if DEBUG: print "UPDATING %s" % key
+					QUERY_KEYS[key]= list(set(QUERY_KEYS[key] + qts))
+				
 				else:
-					QUERY_KEYS.update(vars_extras[k][operator])
-			
+					QUERY_KEYS[key] = qts
+			print vars_extras[k]
+			continue
+
+		elif k == "CUSTOM_QUERIES" :
+			for key in vars_extras[k].keys():
+				if key in lcl['CUSTOM_QUERIES'].keys():
+					del vars_extras[k][key]
+
+			if len(vars_extras[k].keys()) == 0: continue
+
+			lcl['CUSTOM_QUERIES'].update(vars_extras[k])
+		elif k == "QUERY_DEFAULTS":
+			for key in vars_extras[k].keys():
+				if key in lcl['QUERY_DEFAULTS'].keys():
+					del vars_extras[k][key]
+
+			if len(vars_extras[k].keys()) == 0: continue
+
+			lcl['QUERY_DEFAULTS'].update(vars_extras[k])
+
+		elif k == "ELASTICSEARCH_MAPPING_STUBS":
+			for key in vars_extras[k].keys():
+				if key in lcl['ELASTICSEARCH_MAPPINGS'].keys():
+					del vars_extras[k][key]
+					continue
+					# no overwriting, again!
+				
+			if len(vars_extras[k].keys()) == 0: continue
+
+			lcl['ELASTICSEARCH_MAPPINGS'].update(vars_extras[k])
 			continue
 			
 		try:
@@ -61,24 +101,21 @@ class QueryBatchStub(object):
 	def __init__(self, query):
 		self.request = QueryBatchRequestStub(query)
 
+GIT_ANNEX_METADATA = ['uv_file_alias', 'importer_source', 'imported_by', 'uv_local_only']
+
+TASK_PERSIST_KEYS = ["doc_id", "queue", "task_queue", "log_file"]
+
 QUERY_KEYS = {
-	'must' : {
-		'match' : ['assets.tags', 'task_path', 'update_file', 'file_name'],
-		'range' : ['date_added'],
-		'geo_distance' : [],
-		'query_string' : [],
-		'filter' : ['mime_type', 'searchable_text']
-	},
-	'must_not' : {
-		'query_string' : ['mime_type'],
-		'filter' : [],
-		'match' : [],
-		'range' : [],
-		'geo_distance' : []
-	}
+	'match' : ['assets.tags', 'task_path', 'update_file', 'file_name', 'media_id'],
+	'range' : ['date_added'],
+	'filter_terms' : ['mime_type', 'searchable_text', 'file_alias'],
+	'filter_ids' : ['in_pool']
 }
 
 QUERY_DEFAULTS = {
+	'MATCH_ALL' : {
+		"match_all" : {}
+	},
 	'UV_DOCUMENT' : {
 		"bool": {
 			"must" : [
@@ -105,9 +142,57 @@ QUERY_DEFAULTS = {
 	}
 }
 
+CUSTOM_QUERIES = {
+	"GET_ALL_WITH_ATTACHMENTS" : {
+		"bool" : {
+			"must_not" : [
+				{
+					"constant_score" : {
+						"filter" : {
+							"missing" : {
+								"field" : "uv_document.documents"
+							}
+						}
+					}
+				}
+			]
+		}
+	},
+	"GET_BY_FILE_NAME" : {
+		"bool" : {
+			"must" : [
+				{
+					"match" : {
+						"uv_document.file_name" : "%s"
+					}
+				}
+			]
+		}
+	}
+}
+
 ELASTICSEARCH_SOURCE_EXCLUDES = ["searchable_text"]
 
 ELASTICSEARCH_MAPPINGS = {
+	"uv_text_stub" : {
+		"_parent" : {
+			"type" : "uv_document"
+		},
+		"properties" : {
+			"searchable_text" : {
+				"type" : "string"
+			}
+		}
+	},
+	"uv_cluster" : {
+		"properties" : {
+			"uv_task" : {
+				"type" : "string",
+				"index" : "not_analyzed",
+				"store" : True
+			}
+		}
+	},
 	"uv_document" : {
 		"properties": {
 			"uv_type": {

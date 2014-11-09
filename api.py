@@ -20,7 +20,7 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		UnveillanceElasticsearch.__init__(self)
 		sleep(1)
 		UnveillanceWorker.__init__(self)
-		sleep(5)
+		sleep(2)
 
 	def do_cluster(self, request):
 		"""
@@ -28,39 +28,19 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 			must !missing asset.tags.file_metadata/key_words/topics, etc.
 		"""
 		args = parseRequestEntity(request.query)
+
 		if len(args.keys()) == 0: return None
-		
-		if len(args.keys()) == 1 and '_id' in args.keys():
-			return self.get(_id=args['_id'])
-					
-		if 'around' not in args.keys(): return None
-		asset_tag = args['around']
-		del args['around']
-		
-		query = "assets.tags=%s" % asset_tag
-		
-		if '_ids' in args.keys():
-			documents = args['_ids'].split(",")	
-		else:	
-			list = self.do_documents(QueryBatchRequestStub(query))
-			if list is None: return None
+		for required in ['task_path', 'documents']:
+			if required not in args.keys(): return None
 			
-			documents = [d['_id'] for d in list['documents']]
-			
-		cluster = UnveillanceCluster(inflate={
-			'documents' : documents,
-			'asset_tag' : asset_tag
-		})
-		if cluster is None: return None
+		cluster = UnveillanceCluster(inflate=args)
 		
 		try:
-			return {
-				'_id' : cluster._id, 
-				'cluster' : cluster.getAssetsByTagName("metadata_fingerprint")[0]
-			}
+			return cluster.communicate()
 		
 		except Exception as e:
-			if DEBUG: print e
+			if DEBUG:
+				print e
 			return None
 
 	def do_tasks(self, request):
@@ -73,23 +53,62 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 	
 	def do_documents(self, request):
 		args = parseRequestEntity(request.query)
-		if len(args.keys()) == 1 and '_id' in args.keys():
-			return self.get(_id=args['_id'])
 		
+		if len(args.keys()) in [1, 2, 3]:
+			doc_type = None
+			try:
+				doc_type = args['doc_type']
+			except KeyError as e: pass
+
+			media_id = None
+			try:
+				media_id = args['media_id']
+				del args['media_id']
+			except KeyError as e: pass
+
+			if '_id' in args.keys():
+				return self.get(_id=args['_id'], els_doc_root=doc_type, parent=media_id)
+			elif '_ids' in args.keys():
+				return self.query({"ids" : {"values" : args['_ids']}}, doc_type=doc_type, exclude_fields=False)
+
 		return self.do_list(request)
 		
 	def do_list(self, request, query=None):
 		count_only = False
 		limit = None
 		cast_as = None
-		
-		if query is None:
-			query = deepcopy(QUERY_DEFAULTS['UV_DOCUMENT'])
+		sort = None
+		doc_type = "uv_document"
+		exclude_fields = True
 
 		args = parseRequestEntity(request.query)
 		if DEBUG: print "\n\nARGS:\n%s\n\n" % args
+
+		try:
+			doc_type = args['doc_type']
+			del args['doc_type']
+		except KeyError as e: pass
+
+		try:
+			exclude_fields = not args['get_all']
+			print exclude_fields
+			del args['get_all']
+		except KeyError as e: pass
+
+		try:
+			sort = args['sort']
+			del args['sort']
+		except KeyError as e: pass
+
+		if query is None:
+			try:
+				query = deepcopy(QUERY_DEFAULTS[doc_type.upper()])
+			except Exception as e:
+				if DEBUG: print "could not find default query for %s" % doc_type.upper()
+				query = deepcopy(QUERY_DEFAULTS['MATCH_ALL'])
 		
 		if len(args.keys()) > 0:
+			# pull out variables that don't go in search
 			try:
 				count_only = args['count']
 				del args['count']
@@ -104,40 +123,82 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 				cast_as = args['cast_as']
 				del args['cast_as']
 			except KeyError as e: pass
-			
-			operator = 'must'
-			try:
-				operator = args['operator']
-				del args['operator']
-			except KeyError as e: pass
-			
+
+		if len(args.keys()) > 0:
+			# extend out top-level query
+			musts = []
+
 			for a in args.keys():
-				if a in QUERY_KEYS[operator]['match']:
-					query['bool'][operator].append({
-						"match": {
-							"uv_document.%s" % a : args[a]
-						}
-					})
-				elif a in QUERY_KEYS[operator]['filter']:
-					terms = args[a]
-					if type(terms) is not list:
-						terms = [terms]
-					
-					query['bool'][operator].append({
+				must = None
+				if a in QUERY_KEYS['match']:
+					must = {
+						"match" : { "%s.%s" % (doc_type, a) : args[a] }
+					}
+
+				elif a in QUERY_KEYS['filter_terms']:
+					must = {
 						"constant_score" : {
 							"filter" : {
 								"terms" : {
-									"uv_document.%s" % a : terms
+									"%s.%s" % (doc_type, a) : args[a] if type(args[a]) is list else [args[a]]
 								}
 							}
 						}
-					})
-				elif a in QUERY_KEYS[operator]['range']:
+					}
+
+				elif a in QUERY_KEYS['filter_ids']:
+					must = {
+						"ids" : {
+							"type" : doc_type,
+							"values" : args[a] if type(args[a]) is list else [args[a]]
+						}
+					}
+
+					musts = [must]
+					del args[a]					
+					break
+
+				if must is not None:
+					del args[a]
+					musts.append(must)
+
+			if len(musts) > 0:
+				if 'match_all' in query.keys():
+					del query['match_all']
+
+				if musts[0].keys()[0] == "ids":
+					query = musts[0]
+				else:
+					if 'bool' not in query.keys():
+						query['bool'] = { "must" : [] }
+
+					if 'must' not in query['bool'].keys():
+						query['bool']['must'] = []
+
+					for must in musts: query['bool']['must'].append(must)
+
+		if len(args.keys()) > 0:
+			# this becomes a filtered query
+			query = {
+				"filtered" : {
+					"query" : query,
+					"filter" : {}
+				}
+			}
+			
+			filters = []
+			for a in args.keys():
+				filter = None
+
+				if 'term' in QUERY_KEYS and a in QUERY_KEYS['term']:
+					filter = { "term": { "%s.%s" % (doc_type, a) : args[a] }}
+
+				elif 'range' in QUERY_KEYS and a in QUERY_KEYS['range']:
 					try:
 						day = datetime.date.fromtimestamp(args[a]/1000)
 					except Exception as e:
 						print "TIME ERROR: %s" % e
-						return None
+						continue
 						
 					if "upper" in args.keys():
 						lte = datetime.date.fromtimestamp(args['upper']/1000)
@@ -146,28 +207,74 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 						lte = datetime.date(day.year, day.month, day.day + 1)
 						gte = datetime.date(day.year, day.month, day.day)
 					
-					query['bool'][operator].append({
+					filter = {
 						"range" : {
-							"uv_document.%s" % a : {
+							"%s.%s" % (doc_type, a) : {
 								"gte" : format(mktime(gte.timetuple()) * 1000, '0.0f'),
 								"lte" : format(mktime(lte.timetuple()) * 1000, '0.0f')
 							}
 						}
-					})
-				elif a in QUERY_KEYS[operator]['geo_distance']:
+					}
+
+				elif 'geo_distance' in QUERY_KEYS and a in QUERY_KEYS['geo_distance']:
 					if "radius" not in args.keys():
 						radius = 3
 					else:
 						radius = args['radius']
 
-					query['bool'][operator].append({
+					filter = {
 						"geo_distance" : {
 							"distance" : "%dmi" % radius,
-							"uv_document.%s" % a : args[a]
+							"%s.%s" % (doc_type, a) : args[a]
 						}
-					})
+					}
+
+				if filter is not None:
+					filters.append(filter)
+
+			if len(filters) > 1:
+				query['filtered']['filter']['and'] = filters
+			else:
+				if len(filters) == 1:
+					try:
+						query['filtered']['filter'] = filters[0]
+					except Exception as e:
+						print "COULD NOT BUILD QUERY: %s" % e
+						return None
 		
-		return self.query(query, count_only=count_only, limit=limit, cast_as=cast_as)
+		return self.query(query, doc_type=doc_type if doc_type != "uv_document" else None,
+			sort=sort, count_only=count_only, cast_as=cast_as, exclude_fields=exclude_fields)
+	
+	def do_reindex(self, request):
+		print "DOING REINDEX"
+		
+		query = parseRequestEntity(request.query)
+		if query is None: return None
+		if '_id' not in query.keys(): return None
+		
+		document = self.get(_id=query['_id'])
+		if document is None: return None
+		
+		inflate={
+			'doc_id' : document['_id'],
+			'queue' : UUID
+		}
+		
+		if 'task_path' not in query.keys():
+			inflate.update({
+				'task_path' : "Documents.evaluate_document.evaluateDocument"
+			})
+			
+		else:
+			inflate.update({
+				'task_path' :  query['task_path'],
+				'no_continue' : True 
+			})
+		
+		uv_task = UnveillanceTask(inflate=inflate)
+		uv_task.run()
+		
+		return uv_task.emit()
 	
 	def runTask(self, handler):
 		try:
@@ -183,51 +290,12 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 			# TODO: XXX: IF REFERER IS LOCALHOST ONLY (and other auth TBD)!
 			if 'task_path' in args.keys():
 				args['queue'] = UUID
-				uv_task = UnveillanceTask(args)
+				uv_task = UnveillanceTask(inflate=args)
 		
 		if uv_task is None: return None
 		
 		uv_task.run()
 		return uv_task.emit()
-	
-	def do_reindex(self, request):
-		print "DOING REINDEX"
-		
-		query = parseRequestEntity(request.query)
-		if query is None: return None
-		if '_id' not in query.keys(): return None
-		
-		document = self.get(_id=query['_id'])
-		if document is None: return None
-				
-		from vars import MIME_TYPE_TASKS
-		print MIME_TYPE_TASKS
-		
-		inflate={
-			'doc_id' : document['_id'],
-			'queue' : UUID
-		}
-		
-		if 'task_path' not in query.keys():
-			if 'original_mime_type' in document.keys():
-				mime_type = document['original_mime_type']
-			else:
-				mime_type = document['mime_type']
-				
-			inflate.update({
-				'task_path' : MIME_TYPE_TASKS[mime_type][0],
-				'task_queue' : MIME_TYPE_TASKS[mime_type]
-			})
-			
-		else:
-			inflate.update({
-				'task_path' :  query['task_path'],
-				'no_continue' : True 
-			})
-		
-		uv_task = UnveillanceTask(inflate=inflate)
-		uv_task.run()
-		return True
 	
 	def fileExistsInAnnex(self, file_path, auto_add=True):
 		if file_path == ".gitignore" :
@@ -295,15 +363,18 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 					'queue' : UUID
 				}))
 			
+			'''
 			task_update = re.findall(task_update_rx, file_name)
 			if len(task_update) == 1:
-				if DEBUG: print "UPDATING TASK BY PATH %s" % task_update[0]
+				if DEBUG:
+					print "UPDATING TASK BY PATH %s" % task_update[0]
 				
 				matching_tasks = self.do_tasks(QueryBatchRequestStub(
 					"update_file=%s" % task_update[0]))
-				print matching_tasks
+				
 				if matching_tasks is not None:
 					matching_task = matching_tasks['documents'][0]			
+					
 					try:
 						uv_tasks.append(UnveillanceTask(inflate={
 							'task_path' : matching_task['on_update'],
@@ -313,6 +384,6 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 						}))
 					except KeyError as e:
 						print e
-		
+			'''
 		if len(uv_tasks) > 0:
 			for uv_task in uv_tasks: uv_task.run()

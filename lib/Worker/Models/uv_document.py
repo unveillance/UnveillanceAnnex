@@ -1,5 +1,4 @@
 from Models.uv_object import UnveillanceObject
-from conf import DEBUG
 
 class UnveillanceDocument(UnveillanceObject):
 	def __init__(self, _id=None, inflate=None, emit_sentinels=None):
@@ -22,17 +21,26 @@ class UnveillanceDocument(UnveillanceObject):
 				self.invalidate(error="COULD NOT GET DOCUMENT FROM ANNEX")
 				return
 				
-			from lib.Worker.Utils.funcs import getFileType
-			self.mime_type = getFileType(os.path.join(ANNEX_DIR, self.file_name))
-			
-			if self.mime_type == "inode/symlink" and self.getFile(self.file_name):
-				self.mime_type = getFileType(os.path.join(ANNEX_DIR, self.file_name))
+			self.mime_type = self.query_mime_type()
 
 			alias = self.getFileMetadata("uv_file_alias")
 			if alias is not None:
 				self.file_alias = alias
 			
 			self.save()
+
+	def query_mime_type(self):
+		import os
+
+		from lib.Worker.Utils.funcs import getFileType
+		from conf import ANNEX_DIR
+		
+		mime_type = getFileType(os.path.join(ANNEX_DIR, self.file_name))
+		
+		if mime_type == "inode/symlink" and self.getFile(self.file_name):
+			mime_type = getFileType(os.path.join(ANNEX_DIR, self.file_name))
+
+		return mime_type
 	
 	def addCompletedTask(self, task_path):
 		if not hasattr(self, "completed_tasks"):

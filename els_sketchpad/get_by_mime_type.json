@@ -1,0 +1,36 @@
+{
+	"query": {
+		"bool": {
+			"must_not": [
+				{
+					"constant_score": {
+						"filter": {
+							"missing": {
+								"field": "uv_document.mime_type"
+							}
+						}
+					}
+				}
+			], 
+			"must": [
+				{
+					"match": {
+						"uv_document.uv_doc_type": "UV_DOCUMENT"
+					}
+				}, 
+				{
+					"constant_score": {
+						"filter": {
+							"terms": {
+								"uv_document.mime_type": [
+									"application/pgp", "image/jpeg", 
+									"video/x-matroska", "informacam/log"
+								]
+							}
+						}
+					}
+				}
+			]
+		}
+	}
+}
