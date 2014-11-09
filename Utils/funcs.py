@@ -57,7 +57,13 @@ def exportAnnexConfig(with_config=None):
 
 def exportFrontendConfig(with_config=None, with_secrets=None):
 	import json
-	from conf import DEBUG, SERVER_HOST, UUID, ANNEX_DIR, API_PORT
+	from conf import DEBUG, SERVER_HOST, UUID, ANNEX_DIR, API_PORT, getConfig
+
+	server_message_port = None
+	try:
+		server_message_port = getConfig('server_message_port')
+	except:
+		pass
 	
 	config = {
 		'server_host' : SERVER_HOST,
@@ -65,11 +71,11 @@ def exportFrontendConfig(with_config=None, with_secrets=None):
 		'annex_remote' : ANNEX_DIR,
 		'uv_uuid' : UUID,
 		'annex_remote_port' : 22,
-		'server_use_ssl' : False
+		'server_use_ssl' : False,
+		'server_message_port' : (API_PORT + 1) if server_message_port is None else server_message_port
 	}
 	
 	if with_config is not None:
-		from conf import getConfig
 		if type(with_config) is not list:
 			with_config = [with_config]
 		
