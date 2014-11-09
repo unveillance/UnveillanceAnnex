@@ -22,13 +22,8 @@ class TaskChannel(sockjs.tornado.SockJSConnection):
 	def on_open(self, info):
 		if DEBUG:
 			print "on_open"
-			print type(self.session)
 
 		self.clients.add(self)
-
-		for c in self.clients:
-			print c.session
-
 		self.send({'status' : "open"})
 
 	def on_close(self):
