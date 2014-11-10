@@ -43,7 +43,6 @@ class UnveillanceELSStub(UnveillanceElasticsearchHandler):
 
 		except Exception as e:
 			if DEBUG: print "ERROR GETTING OBJECT: %s" % e
-			self.invalidate(error="Object does not exist in Elasticsearch")
 
 	def save(self, create=False):
 		if DEBUG: 
