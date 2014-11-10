@@ -1,4 +1,5 @@
 pika==0.9.8
+python-crontab
 pyyaml
 filemagic
 kombu

@@ -26,12 +26,12 @@ else
 	./lib/anaconda.sh
 	sleep 3
 
-	ANACONDA=$(grep -i "anaconda" ~/.bashrc)
+	ANACONDA=$(grep "anaconda" ~/.bashrc)
 	echo $ANACONDA >> ~/.bash_profile
-	source ~/.bash_profile
 	sleep 3
 fi
 
+source ~/.bash_profile
 pip install --upgrade -r requirements.txt
 
 cd lib/Core
