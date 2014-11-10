@@ -35,9 +35,12 @@ class UnveillanceElasticsearchHandler(object):
 
 		scroll = self.iterateOverScroll(_scroll_id, exclude_fields=exclude_fields, cast_as=cast_as)
 		
-		if scroll is not None and not scroll['scroll_end']:
+		try:
 			return self.buildDocumentsFromScroll(scroll['_scroll_id'],
 				with_documents=(with_documents + scroll['documents']), limit=limit)
+		except TypeError as e:
+			if DEBUG:
+				print "SCROLL EXHAUSTED"
 
 		return with_documents
 
@@ -57,7 +60,7 @@ class UnveillanceElasticsearchHandler(object):
 			if DEBUG: print "\nCASTING TO %s:\n%s\n" % (cast_as, query)
 			res = self.sendELSRequest(endpoint=self.buildEndpoint("_search", None, None), 
 				method="post", data=query)
-			
+
 			documents = [d['_source'] for d in res['hits']['hits']]
 
 		if exclude_fields and len(ELASTICSEARCH_SOURCE_EXCLUDES) > 0:
@@ -66,16 +69,17 @@ class UnveillanceElasticsearchHandler(object):
 
 		return {
 			"documents" : documents,
-			"_scroll_id" : next_scroll_id,
-			"scroll_end" : True if str(next_scroll_id) == str(_scroll_id) else False
+			"_scroll_id" : next_scroll_id
 		}
 
 	def getScroll(self, query, build=True, doc_type=None, sort=None, exclude_fields=False, cast_as=None):
-		if sort is None: sort = [{"%s.date_added" % doc_type : {"order" : "desc"}}]
+		if sort is None:
+			sort = [{"%s.date_added" % doc_type : {"order" : "desc"}}]
 		else:
 			if type(sort) is not list: sort = [sort]
 
-		if doc_type is None: doc_type = "uv_document"
+		if doc_type is None:
+			doc_type = "uv_document"
 
 		query = {
 			'query' : json.loads(urllib.unquote(json.dumps(query))),
@@ -91,13 +95,19 @@ class UnveillanceElasticsearchHandler(object):
 
 		try:
 			if res['hits']['total'] == 0:
-				if DEBUG: print "NO HITS FOUND."
+				if DEBUG: 
+					print "NO HITS FOUND."
+				
 				return None
 
+			if DEBUG:
+				print "*************** QUERY TOTAL HITS: %d ***************" % res['hits']['total']
+			
+			count = res['hits']['total']
 			res = self.iterateOverScroll(res['_scroll_id'],
 				exclude_fields=exclude_fields, cast_as=cast_as)
 
-			res['count'] = len(res['documents'])
+			res['count'] = count
 			return res
 
 		except Exception as e:
