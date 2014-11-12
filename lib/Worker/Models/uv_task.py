@@ -122,15 +122,32 @@ class UnveillanceTask(UnveillanceObject):
 		if not hasattr(self, "task_queue"):
 			self.task_queue = []
 
+		if after is not None:
+			try:
+				idx = self.task_queue.index(after) + 1
+				for t in task_paths:
+					self.task_queue.insert(idx, t)
+					idx += 1
+
+				self.save()
+				return
+					
+			except Exception as e:
+				pass
+				
 		for t in task_paths:
 			self.task_queue.append(t)
 
 		self.save()
 		
 	def run(self):
-		self.setStatus(201)	
-		# otherwise...		
-		# i.e. "lib.Worker.Tasks.Documents.evaluate_document"
+		self.setStatus(201)
+
+		if DEBUG:
+			if hasattr(self, "task_queue"):
+				print "NEW TASK QUEUE:"
+				print self.task_queue
+		
 		task_path = ".".join([TASKS_ROOT, self.task_path])
 		p, f = task_path.rsplit(".", 1)
 
