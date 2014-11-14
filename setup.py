@@ -103,6 +103,9 @@ if __name__ == "__main__":
 		if len(uv_log_cron) == 0:
 			uv_log_cron = 3
 
+	if type(uv_log_cron) is not int:
+		uv_log_cron = 3
+
 	with settings(warn_only=True):
 		local("mkdir %s" % annex_dir)	
 		local("mkdir %s" % monitor_root)
