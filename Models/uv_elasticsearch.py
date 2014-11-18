@@ -12,11 +12,9 @@ from vars import ELASTICSEARCH_SOURCE_EXCLUDES
 
 class UnveillanceElasticsearchHandler(object):
 	def __init__(self):
-		if DEBUG: print "elasticsearch handler inited"
+		pass
 		
 	def get(self, _id, els_doc_root=None, parent=None):
-		if DEBUG: print "getting thing"
-
 		res = self.sendELSRequest(endpoint=self.buildEndpoint(_id, els_doc_root, parent))
 
 		try:
@@ -139,9 +137,7 @@ class UnveillanceElasticsearchHandler(object):
 	def updateFields(self, _id, args, els_doc_root=None, parent=None):
 		res = self.sendELSRequest(method="post", data={ "doc" : args },
 			endpoint="/".join([self.buildEndpoint(_id, els_doc_root, None), "_update"]))
-		
-		if DEBUG: print res
-		
+				
 		try: 
 			if 'error' not in res.keys(): return True
 		except Exception as e:
@@ -150,9 +146,7 @@ class UnveillanceElasticsearchHandler(object):
 		
 		return False
 	
-	def update(self, _id, args, els_doc_root=None, parent=None):
-		if DEBUG: print "updating thing"
-		
+	def update(self, _id, args, els_doc_root=None, parent=None):		
 		res = self.sendELSRequest(endpoint=self.buildEndpoint(_id, els_doc_root, parent), 
 			data=args, method="put")
 
@@ -162,15 +156,14 @@ class UnveillanceElasticsearchHandler(object):
 		return False
 	
 	def create(self, _id, args, els_doc_root=None, parent=None):
-		if DEBUG: print "creating thing"
-
 		if hasattr(self, "els_doc_root"):
 			els_doc_root = self.els_doc_root
 			if DEBUG: print "Creating thing on another doc_root:\n%s" % self.emit().keys()
 
 			if hasattr(self, "media_id"): parent = self.media_id
 			else:
-				if DEBUG: print "no parent though..."
+				if DEBUG:
+					print "no parent though..."
 
 		return self.update(_id, args, els_doc_root=els_doc_root, parent=parent)
 		
@@ -194,11 +187,15 @@ class UnveillanceElasticsearchHandler(object):
 	def sendELSRequest(self, data=None, endpoint=None, to_root=False, method="get"):
 		url = "http://localhost:9200/"
 
-		if not to_root: url += "unveillance/"
-		if endpoint is not None: url += endpoint
-		if data is not None: data = json.dumps(data)
+		if not to_root:
+			url += "unveillance/"
+		if endpoint is not None:
+			url += endpoint
+		if data is not None:
+			data = json.dumps(data)
 
-		if DEBUG: print "****\nSENDING ELS REQUEST TO %s\n****" % url
+		if DEBUG: 
+			print "****\nSENDING ELS REQUEST TO %s\n****" % url
 		
 		try:
 			if method == "get":
@@ -210,7 +207,9 @@ class UnveillanceElasticsearchHandler(object):
 			elif method == "delete":
 				r = requests.delete(url, data=data)
 		except Exception as e:
-			if DEBUG: print "ERROR ACCESSING ELASTICSEARCH: %s" % e
+			if DEBUG:
+				print "ERROR ACCESSING ELASTICSEARCH: %s" % e
+			
 			return None
 		
 		if hasattr(r, "content"):

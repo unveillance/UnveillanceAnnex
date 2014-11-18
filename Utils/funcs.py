@@ -14,7 +14,7 @@ def forceQuitUnveillance(target=None):
 			if re.match(r".*\d{1,2}:\d{2}[:|\.]\d{2}\s+grep", k) is not None: continue
 			if re.match(r".*\d{1,2}:\d{2}[:|\.]\d{2}\s+.*[Pp]ython\sshutdown.py", k) is not None: continue
 
-			pid = re.findall(re.compile("(?:\d{3,4}|[a-zA-Z0-9_\-\+]{1,8})\s+(\d{4,6}).*%s\.py" % target), k)			
+			pid = re.findall(re.compile("(?:\d{3,4}|[a-zA-Z0-9_\-\+]{1,8})\s+(\d{2,6}).*%s\.py" % target), k)
 			if len(pid) == 1:
 				try:
 					pid = int(pid[0])
