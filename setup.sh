@@ -10,7 +10,7 @@ else
 	WITH_CONFIG=$1
 fi
 
-sudo apt-get install -y gcc
+sudo apt-get install -y gcc lsof
 
 PYTHON_VERSION=$(which python)
 if [[ $PYTHON_VERSION == *anaconda/bin/python ]]
