@@ -47,7 +47,7 @@ def evaluateDocument(uv_task):
 		uv_task.put_next(MIME_TYPE_TASKS[mime_type])
 		
 	else:
-		uv_task.fail(message="document mime type (%s) not important" % mime_type)
+		uv_task.fail(status=412, message="document mime type (%s) not important" % mime_type)
 		print "\n\n************** %s [ERROR] ******************\n" % task_tag
 		return
 
