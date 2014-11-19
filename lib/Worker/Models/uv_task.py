@@ -43,6 +43,8 @@ class UnveillanceTask(UnveillanceObject):
 		
 		if message is None:
 			message = {}
+		elif type(message) in [str, unicode]:
+			message = { "message" : message }
 
 		for i in ["_id", "doc_id", "status", "task_path"]:
 			try:
