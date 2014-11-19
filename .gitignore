@@ -9,6 +9,7 @@ lib
 lib/Worker/Tasks/*
 !lib/Worker/Tasks/Documents
 !lib/Worker/Tasks/Text
+!lib/Worker/Tasks/Github
 
 lib/Worker/Models/*
 !lib/Worker/Models/__init__.py
