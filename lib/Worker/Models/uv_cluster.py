@@ -10,11 +10,16 @@ class UnveillanceCluster(UnveillanceTask):
 
 			if DEBUG: print "INFLATING CLUSTER"
 			
+			from copy import deepcopy
 			from lib.Core.Utils.funcs import generateMD5Hash
 			from conf import UUID
 
+			ids = deepcopy(inflate['documents'])
+			if "query" in inflate.keys():
+				ids += inflate['query']
+
 			inflate.update({
-				'_id' : generateMD5Hash(content="".join(inflate['documents']), salt=inflate['task_path']),
+				'_id' : generateMD5Hash(content="".join(ids), salt=inflate['task_path']),
 				'queue' : UUID,
 				'uv_cluster' : True
 			})
