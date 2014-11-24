@@ -58,7 +58,7 @@ def exportAnnexConfig(with_config=None):
 
 def exportFrontendConfig(with_config=None, with_secrets=None):
 	import json
-	from conf import DEBUG, SERVER_HOST, UUID, ANNEX_DIR, API_PORT, getConfig
+	from conf import DEBUG, SERVER_HOST, UUID, ANNEX_DIR, API_PORT, getConfig, SHA1_INDEX
 
 	server_message_port = None
 	try:
@@ -82,7 +82,8 @@ def exportFrontendConfig(with_config=None, with_secrets=None):
 		'server_use_ssl' : False,
 		'gdrive_auth_no_ask' : True,
 		'server_message_port' : (API_PORT + 1) if server_message_port is None else server_message_port,
-		'server_user' : server_user
+		'server_user' : server_user,
+		'index.sha1' : SHA1_INDEX
 	}
 	
 	if with_config is not None:
