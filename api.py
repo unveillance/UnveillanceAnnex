@@ -10,7 +10,7 @@ from lib.Core.Utils.funcs import parseRequestEntity
 from lib.Worker.Models.uv_task import UnveillanceTask
 from lib.Worker.Models.uv_cluster import UnveillanceCluster
 
-from conf import API_PORT, HOST, ANNEX_DIR, MONITOR_ROOT, UUID, DEBUG
+from conf import API_PORT, HOST, ANNEX_DIR, MONITOR_ROOT, UUID, DEBUG, SHA1_INDEX
 from vars import QUERY_KEYS, QUERY_DEFAULTS, QueryBatchRequestStub
 
 class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
@@ -349,7 +349,7 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		uv_tasks = []
 		
 		create_rx = r'(?:(?!\.data/.*))([a-zA-Z0-9_\-\./]+)'
-		task_update_rx = r'(.data/[a-zA-Z0-0]{32}/.*)'
+		task_update_rx = re.compile('(.data/[a-zA-Z0-0]{%d}/.*)' % 32 if not SHA1_INDEX else 40)
 
 		if reindex or not self.fileExistsInAnnex(file_name, auto_add=False):
 			create = re.findall(create_rx, file_name)

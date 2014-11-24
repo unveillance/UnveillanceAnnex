@@ -16,6 +16,12 @@ with open(os.path.join(CONF_ROOT, "annex.settings.yaml"), 'rb') as C:
 	NUM_PROCESSES = config['api.num_processes']
 	DEBUG = config['flags.debug']
 
+	SHA1_INDEX = False
+	try:
+		SHA1_INDEX = config['index.sha1']
+	except KeyError as e:
+		pass
+
 with open(os.path.join(CONF_ROOT, "annex.config.yaml"), 'rb') as C:
 	config = yaml.load(C.read())
 	ANNEX_DIR = config['annex_dir']

@@ -139,11 +139,26 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 				local("git-annex add %s" % self.file_name)
 
 			metadata = local("git-annex metadata %s --json --get=%s"  % (self.file_name, key), capture=True)
-			if DEBUG: print "\n***METADATA QUERY: %s = %s ***" % (key, metadata)
-			if metadata == "": metadata = None
+			if DEBUG:
+				print "\n***METADATA QUERY: %s = %s ***" % (key, metadata)
+			if metadata == "":
+				metadata = None
 
 		os.chdir(this_dir)
 		return metadata
+
+	def set_file_metadata(self, key, value):
+		this_dir = os.getcwd()
+		os.chdir(ANNEX_DIR)
+
+		with settings(warn_only=True):
+			metadata = local("git-annex metadata %s --json --set=%s=%s" %(self.file_name, key, value),
+				capture=True)
+			
+			print metadata
+
+		os.chdir(this_dir)
+		return True
 		
 	def addFile(self, asset_path, data, sync=False):
 		"""

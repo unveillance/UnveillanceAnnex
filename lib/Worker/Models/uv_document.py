@@ -29,6 +29,16 @@ class UnveillanceDocument(UnveillanceObject):
 			
 			self.save()
 
+	def set_import_count(self):
+		times_imported = self.getFileMetadata("uv_import_count")
+		if times_imported is None:
+			times_imported = 0
+		
+		int(times_imported) += 1
+		self.set_file_metadata("uv_import_count", times_imported)
+
+		return times_imported
+
 	def query_mime_type(self):
 		import os
 

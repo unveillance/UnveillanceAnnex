@@ -65,6 +65,13 @@ def exportFrontendConfig(with_config=None, with_secrets=None):
 		server_message_port = getConfig('server_message_port')
 	except:
 		pass
+
+	server_user = None
+	try:
+		server_user = getConfig('server_user')
+	except:
+		with settings(warn_only=True):
+			server_user = local('whoami', capture=True)
 	
 	config = {
 		'server_host' : SERVER_HOST,
@@ -74,7 +81,8 @@ def exportFrontendConfig(with_config=None, with_secrets=None):
 		'annex_remote_port' : 22,
 		'server_use_ssl' : False,
 		'gdrive_auth_no_ask' : True,
-		'server_message_port' : (API_PORT + 1) if server_message_port is None else server_message_port
+		'server_message_port' : (API_PORT + 1) if server_message_port is None else server_message_port,
+		'server_user' : server_user
 	}
 	
 	if with_config is not None:
