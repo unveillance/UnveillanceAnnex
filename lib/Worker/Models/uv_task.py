@@ -46,7 +46,7 @@ class UnveillanceTask(UnveillanceObject):
 		elif type(message) in [str, unicode]:
 			message = { "message" : message }
 
-		for i in ["_id", "doc_id", "status", "task_path"]:
+		for i in ["_id", "doc_id", "status", "task_path", "task_queue"]:
 			try:
 				message[i] = getattr(self, i)
 			except Exception as e:

@@ -33,8 +33,10 @@ class UnveillanceDocument(UnveillanceObject):
 		times_imported = self.getFileMetadata("uv_import_count")
 		if times_imported is None:
 			times_imported = 0
+		else:
+			times_imported = int(times_imported)
 		
-		int(times_imported) += 1
+		times_imported += 1
 		self.set_file_metadata("uv_import_count", times_imported)
 
 		return times_imported
