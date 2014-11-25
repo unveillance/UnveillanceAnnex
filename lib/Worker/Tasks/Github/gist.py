@@ -23,7 +23,8 @@ def run_gist(uv_task):
 
 	import json
 	try:
-		gist = json.loads(r.content)['files']['raw_rul']
+		gh_res = json.loads(r.content)
+		gist = gh_res['files']['raw_rul']
 	except Exception as e:
 		error_msg = "Cannot get URL to gist %s" % uv_task.gist_id
 		print "\n\n************** %s [ERROR] ******************\n" % task_tag

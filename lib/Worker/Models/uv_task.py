@@ -91,9 +91,14 @@ class UnveillanceTask(UnveillanceObject):
 			return
 
 		if inflate is None:
-			inflate = {}			
+			inflate = {}
+
+		persist_keys = TASK_PERSIST_KEYS
 		
-		for a in TASK_PERSIST_KEYS:
+		if hasattr(self, "persist_keys"):
+			persist_keys += self.persist_keys
+		
+		for a in persist_keys:
 			if hasattr(self, a):
 				inflate[a] = getattr(self, a)
 

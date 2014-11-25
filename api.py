@@ -260,16 +260,26 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 			'queue' : UUID
 		}
 		
-		if 'task_path' not in query.keys():
+		if 'task_path' not in query.keys() or 'task_queue' not in query.keys():
 			inflate.update({
 				'task_path' : "Documents.evaluate_document.evaluateDocument"
 			})
 			
 		else:
-			inflate.update({
-				'task_path' :  query['task_path'],
-				'no_continue' : True 
-			})
+			if 'task_queue' in query.keys():
+				inflate.update({
+					'task_path' : query['task_queue'][0],
+					'task_queue' : query['task_queue']
+				})
+			else:
+				inflate.update({
+					'task_path' :  query['task_path'],
+					'no_continue' : True 
+				})
+
+		if 'task_extras' in query.keys():
+			inflate.update(query['task_extras'])
+			inflate['persist_keys'] = query['task_extras'].keys()
 		
 		uv_task = UnveillanceTask(inflate=inflate)
 		uv_task.run()
