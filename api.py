@@ -260,7 +260,7 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 			'queue' : UUID
 		}
 		
-		if 'task_path' not in query.keys() or 'task_queue' not in query.keys():
+		if 'task_path' not in query.keys() and 'task_queue' not in query.keys():
 			inflate.update({
 				'task_path' : "Documents.evaluate_document.evaluateDocument"
 			})
@@ -280,6 +280,10 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		if 'task_extras' in query.keys():
 			inflate.update(query['task_extras'])
 			inflate['persist_keys'] = query['task_extras'].keys()
+
+		if DEBUG:
+			print "TASK TO GO THROUGH REINDEXER:"
+			print inflate
 		
 		uv_task = UnveillanceTask(inflate=inflate)
 		uv_task.run()
