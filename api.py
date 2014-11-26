@@ -253,12 +253,15 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		if '_id' not in query.keys(): return None
 		
 		document = self.get(_id=query['_id'])
-		if document is None: return None
+		if document is None:
+			return None
 		
 		inflate={
 			'doc_id' : document['_id'],
 			'queue' : UUID
 		}
+
+		del query['_id']
 		
 		if 'task_path' not in query.keys() and 'task_queue' not in query.keys():
 			inflate.update({
@@ -266,24 +269,17 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 			})
 			
 		else:
-			if 'task_queue' in query.keys():
+			inflate.update(query)
+
+			if 'task_queue' in inflate.keys():
 				inflate.update({
-					'task_path' : query['task_queue'][0],
-					'task_queue' : query['task_queue']
+					'task_path' : inflate['task_queue'][0],
+					'task_queue' : inflate['task_queue']
 				})
 			else:
 				inflate.update({
-					'task_path' :  query['task_path'],
 					'no_continue' : True 
 				})
-
-		if 'task_extras' in query.keys():
-			inflate.update(query['task_extras'])
-			inflate['persist_keys'] = query['task_extras'].keys()
-
-		if DEBUG:
-			print "TASK TO GO THROUGH REINDEXER:"
-			print inflate
 		
 		uv_task = UnveillanceTask(inflate=inflate)
 		uv_task.run()
