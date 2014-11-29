@@ -41,6 +41,9 @@ if __name__ == "__main__":
 	
 	print "Force-Quitting old instance"
 	forceQuitUnveillance()
+
+	with settings(warn_only=True):
+		local("rm %s/*.txt" % MONITOR_ROOT)
 		
 	try:
 		cron = CronTab(tabfile=os.path.join(MONITOR_ROOT, "uv_cron.tab"))
