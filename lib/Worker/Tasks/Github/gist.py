@@ -36,6 +36,7 @@ def run_gist(uv_task):
 		gist_manifest = gh_res['files']
 		gist_raw_url = gist_manifest[gist_manifest.keys()[0]]['raw_url']
 		gist_owner = gh_res['owner']['login']
+		f_name = gh_res['description']
 	except Exception as e:
 		error_msg = "Cannot get URL to gist %s" % uv_task.gist_id
 		print "\n\n************** %s [ERROR] ******************\n" % task_tag
@@ -78,7 +79,7 @@ def run_gist(uv_task):
 		uv_task.fail(status=412, message=error_msg)
 		return
 
-	gist_func = create_function_from_gist(gist_func)
+	gist_func = create_function_from_gist(gist_func, f_name)
 	if gist_func is None:
 		error_msg = "Could not compile function"
 		print "\n\n************** %s [ERROR] ******************\n" % task_tag
@@ -86,7 +87,8 @@ def run_gist(uv_task):
 		return
 
 	try:
-		gist_func.task_from_gist(uv_task)
+		gist_func = getattr(gist_func, f_name)
+		gist_func(uv_task)
 	except Exception as e:
 		error_msg = "GIST FUNCTION FAILED: %s" % e
 		print "\n\n************** %s [ERROR] ******************\n" % task_tag
@@ -102,12 +104,12 @@ def run_gist(uv_task):
 		print e
 		print "\n\n************** %s [WARN] ******************\n" % task_tag
 
-def create_function_from_gist(source):
+def create_function_from_gist(source, f_name):
 	func = None
 	
 	import imp
 	try:
-		func = imp.new_module('task_from_gist')
+		func = imp.new_module(f_name)
 		exec source in func.__dict__
 	except Exception as e:
 		print e
