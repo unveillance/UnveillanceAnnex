@@ -40,6 +40,13 @@ with open(os.path.join(CONF_ROOT, "annex.config.yaml"), 'rb') as C:
 	except KeyError as e:
 		if DEBUG: print "DON'T WORRY: no variable extras..."
 
+	MASTER_GIST = None
+	try:
+		MASTER_GIST = config['master_gist']
+	except KeyError as e:
+		if DEBUG:
+			print "No Master Gist, this is okay..."
+
 def getConfig(key):
 	with open(os.path.join(CONF_ROOT, "annex.config.yaml"), 'rb') as C:
 		config = yaml.load(C.read())

@@ -1,7 +1,7 @@
 import os, requests
 from crontab import CronTab
 from json import dumps
-from time import sleep
+from time import sleep, time
 from importlib import import_module
 from multiprocessing import Process
 from fabric.api import local, settings
@@ -17,7 +17,13 @@ from conf import DEBUG, BASE_DIR, ANNEX_DIR, HOST, API_PORT, TASK_CHANNEL_PORT, 
 class UnveillanceTask(UnveillanceObject):
 	def __init__(self, inflate=None, _id=None):
 		if inflate is not None:
-			if '_id' not in inflate.keys():
+			if 'task_path' in inflate.keys() and 'task_path' == "Github.gist.run_gist":
+				if 'gist_id' not in args.keys():
+					return
+
+				inflate['_id'] = generateMD5Hash(content=inflate['gist_id'], salt=time())
+					
+			elif '_id' not in inflate.keys():
 				from lib.Core.Utils.funcs import generateMD5Hash
 				inflate['_id'] = generateMD5Hash()
 	
