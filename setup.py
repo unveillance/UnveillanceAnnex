@@ -34,9 +34,12 @@ def initAnnex(annex_dir, base_dir, git_annex_dir, monitor_root, python_home):
 
 	with open(os.path.join(annex_dir, ".git", "hooks", "uv-post-netcat"), 'wb+') as HOOK:
 		HOOK.write("cd %s\n%s sync_file.py $1" % (base_dir, python_home))
+
+	with open(os.path.join(annex_dir, ".git", "hooks", "uv-on-upload-attempted"), 'wb+') as HOOK:
+		HOOK.write("cd %s\n%s register_upload_attempt.py $1" % (base_dir, python_home))
 		
 	with settings(warn_only=True):
-		for hook in ["post-receive", "post-update", "uv-post-netcat"]:
+		for hook in ["post-receive", "post-update", "uv-post-netcat", "uv-on-upload-attempted"]:
 			local("chmod +x .git/hooks/%s" % hook)
 			
 		local("%s init \"unveillance_remote\"" % os.path.join(git_annex_dir, "git-annex"))
