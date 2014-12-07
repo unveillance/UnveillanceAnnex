@@ -1,4 +1,4 @@
 api.port : 8889
 api.num_processes: 10
 flags.debug: true
-index.sha1: false
+index.sha1: true
