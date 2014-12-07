@@ -12,7 +12,9 @@ from conf import DEBUG
 
 EMIT_SENTINELS = [
 		EmitSentinel("emit_sentinels", "EmitSentinel", None),
-		EmitSentinel("els_doc_root", "str", None)]
+		EmitSentinel("els_doc_root", "str", None),
+		EmitSentinel("invalid", "bool", None),
+		EmitSentinel("errors", "list", None)]
 
 class UnveillanceELSStub(UnveillanceElasticsearchHandler):
 	def __init__(self, els_doc_root, emit_sentinels=None, _id=None, inflate=None):		
