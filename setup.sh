@@ -39,7 +39,7 @@ pip install -r requirements.txt
 cd $THIS_DIR
 pip install -r requirements.txt
 
-cd lib/sockjs-tornado
+cd lib/socksjs-tornado
 python setup.py install
 
 cd $THIS_DIR
