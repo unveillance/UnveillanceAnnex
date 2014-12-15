@@ -32,10 +32,10 @@ else
 fi
 
 source ~/.bash_profile
-pip install --upgrade -r requirements.txt
+pip install -r requirements.txt
 
 cd lib/Core
-pip install --upgrade -r requirements.txt
+pip install -r requirements.txt
 
 cd lib/sockjs-tornado
 python setup.py install
