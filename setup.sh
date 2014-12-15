@@ -32,9 +32,11 @@ else
 fi
 
 source ~/.bash_profile
-pip install -r requirements.txt
 
 cd lib/Core
+pip install -r requirements.txt
+
+cd $THIS_DIR
 pip install -r requirements.txt
 
 cd lib/sockjs-tornado
