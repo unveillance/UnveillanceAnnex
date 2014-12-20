@@ -119,13 +119,15 @@ class UnveillanceAnnex(tornado.web.Application, UnveillanceAPI):
 				
 				with open(os.path.join(ANNEX_DIR, file_path), 'rb') as file:
 					if mime_type is not None:
-						self.set_header("Content-Type", mime_type)
+						self.set_header("Content-Type", "%s; charset=\"binary\"" % mime_type)
 
 					self.finish(file.read())
 				return
 			
 			# TODO: log this: we want to know who/why is requesting non-entities
-			else: self.set_status(404)
+			else:
+				self.set_status(404)
+
 			res = Result()
 			self.finish(res.emit())
 
