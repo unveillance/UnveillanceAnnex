@@ -103,7 +103,7 @@ class QueryBatchStub(object):
 
 GIT_ANNEX_METADATA = ['uv_file_alias', 'importer_source', 'imported_by', 'uv_local_only']
 
-TASK_PERSIST_KEYS = ["doc_id", "queue", "task_queue", "log_file"]
+TASK_PERSIST_KEYS = ["doc_id", "queue", "task_queue", "log_file", "recurring"]
 
 QUERY_KEYS = {
 	'match' : ['assets.tags', 'task_path', 'update_file', 'file_name', 'media_id'],
