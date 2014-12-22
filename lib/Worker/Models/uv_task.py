@@ -99,7 +99,9 @@ class UnveillanceTask(UnveillanceObject):
 				for r in self.recurring:
 					try:
 						r = UnveillanceTask(_id=r)
-						if generateMD5Hash(content="%s_persist" % r.task_path, salt=str(r.persist * r.persist_until)) == r._id:
+
+						salt = "%s%s" % ("" if r.salt is None else getattr(self, r.salt), str(r.persist * r.persist_until))
+						if generateMD5Hash(content="%s_persist" % r.task_path, salt=salt) == r._id:
 							r.run()
 					except Exception as e:
 						if DEBUG:
@@ -164,7 +166,7 @@ class UnveillanceTask(UnveillanceObject):
 
 		self.save()
 	
-	def set_recurring(self, task_path, persist_period, persist_until, inflate=None):
+	def set_recurring(self, task_path, persist_period, persist_until, inflate=None, salt=None):
 		# persist period in minutes
 		if DEBUG:
 			print "SETTING A RECURRING TASK UNTIL x TIME, PERIOD x"
@@ -194,7 +196,11 @@ class UnveillanceTask(UnveillanceObject):
 			'task_path' : task_path,
 			'persist' : persist_period,
 			'persist_until' : persist_until,
-			'_id' : generateMD5Hash(content="%s_persist" % task_path, salt=str(persist_period * persist_until))})
+			'salt' : None if not hasattr(self, salt) else salt
+		})
+
+		inflate['_id'] = generateMD5Hash(content="%s_persist" % task_path, 
+			salt="%s%s" % ("" if inflate['salt'] is None else getattr(self, salt), str(persist_period * persist_until)))
 
 		if not hasattr(self, "recurring"):
 			self.recurring = []
