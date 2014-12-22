@@ -169,7 +169,7 @@ class UnveillanceTask(UnveillanceObject):
 	def set_recurring(self, task_path, persist_period, persist_until, inflate=None, salt=None):
 		# persist period in minutes
 		if DEBUG:
-			print "SETTING A RECURRING TASK UNTIL x TIME, PERIOD x"
+			print "SETTING A RECURRING TASK UNTIL %d TIME, PERIOD %d" % (persist_until, persist_period)
 
 		# check for reasonability
 		max_time = mktime((date.today() + timedelta(1)).timetuple())
