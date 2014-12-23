@@ -291,6 +291,8 @@ class UnveillanceTask(UnveillanceObject):
 	def finish(self):
 		if DEBUG:
 			print "task finished!"
+
+		has_expired = None
 		
 		if not hasattr(self, 'persist') or not self.persist:
 			if DEBUG: print "task will be deleted!"
@@ -346,7 +348,7 @@ class UnveillanceTask(UnveillanceObject):
 				
 				with settings(warn_only=True):
 					local("crontab %s" % os.path.join(MONITOR_ROOT, "uv_cron.tab"))
-			elif has_expired:
+			elif has_expired is not None and has_expired:
 				try:
 					job.enable(False)
 					cron.remove(job)
