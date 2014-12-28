@@ -45,6 +45,11 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 
 	def do_tasks(self, request):
 		args = parseRequestEntity(request.query)
+		if args is None:
+			if DEBUG:
+				print "Args none. (probably failed some sort of test)"
+
+			return None
 		
 		if len(args.keys()) == 1 and '_id' in args.keys():
 			return self.get(_id=args['_id'])
@@ -53,6 +58,11 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 	
 	def do_documents(self, request):
 		args = parseRequestEntity(request.query)
+		if args is None:
+			if DEBUG:
+				print "Args none. (probably failed some sort of test)"
+
+			return None
 		
 		if len(args.keys()) in [1, 2, 3]:
 			doc_type = None
@@ -82,7 +92,14 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		exclude_fields = True
 
 		args = parseRequestEntity(request.query)
-		if DEBUG: print "\n\nARGS:\n%s\n\n" % args
+		if args is None:
+			if DEBUG:
+				print "Args none. (probably failed some sort of test)"
+
+			return None
+
+		if DEBUG:
+			print "\n\nARGS:\n%s\n\n" % args
 
 		try:
 			doc_type = args['doc_type']
@@ -249,7 +266,9 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		print "DOING REINDEX"
 		
 		query = parseRequestEntity(request.query)
-		if query is None: return None
+		if query is None: 
+			return None
+
 		if '_id' not in query.keys(): return None
 		
 		document = self.get(_id=query['_id'])
@@ -290,7 +309,14 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		try:
 			args = parseRequestEntity(handler.request.body)
 		except AttributeError as e:
-			if DEBUG: print "No body?\n%s" % e
+			if DEBUG: 
+				print "No body?\n%s" % e
+			return None
+
+		if args is None:
+			if DEBUG:
+				print "Args none. (probably failed some sort of test)"
+
 			return None
 		
 		uv_task = None
