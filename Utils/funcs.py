@@ -1,4 +1,4 @@
-import pandas, re, os, json
+import pandas, re
 from datetime import datetime
 from fabric.api import settings, local
 
@@ -23,34 +23,6 @@ def forceQuitUnveillance(target=None):
 					continue
 
 				with settings(warn_only=True): local("kill -9 %d" % pid)
-
-def update_keys(mime_type, keys):
-	if type(keys) in [str, unicode]:
-		keys = [keys]
-
-	if type(keys) is not list:
-		return False
-
-	from conf import ANNEX_DIR
-
-	k = os.path.join(ANNEX_DIR, "key_manifest.json")
-	key_manifest = {}
-
-	try:
-		with open(k, 'rb') as K:
-			key_manifest = json.loads(K.read())
-	except Exception as e:
-		pass
-
-	if mime_type not in key_manifest.keys():
-		key_manifest[mime_type] = []
-
-	for key in keys:
-		if key not in key_manifest[mime_type]:
-			key_manifest[mime_type].append(key)
-
-	with open(k, 'wb+') as K:
-		K.write(json.dumps(key_manifest))
 
 def printAsLog(message, as_error=False):
 	ts = pandas.DatetimeIndex([datetime.utcnow()])
