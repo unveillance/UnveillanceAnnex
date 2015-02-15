@@ -359,7 +359,7 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		uv_tasks = []
 		
 		create_rx = r'(?:(?!\.data/.*))([a-zA-Z0-9_\-\./]+)'
-		task_update_rx = re.compile('(.data/[a-zA-Z0-0]{%d}/.*)' % 32 if not SHA1_INDEX else 40)
+		task_update_rx = re.compile('(.data/[a-zA-Z0-0]{%d}/.*)' % (32 if not SHA1_INDEX else 40))
 
 		if reindex or not self.fileExistsInAnnex(file_name, auto_add=False):
 			create = re.findall(create_rx, file_name)
