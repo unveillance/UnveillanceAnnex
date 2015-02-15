@@ -51,9 +51,11 @@ def evaluateDocument(uv_task):
 		print "\n\n************** %s [ERROR] ******************\n" % task_tag
 		return
 
-	uv_task.routeNext(inflate={
-		'doc_id' : document._id
-	})
+	inflate = {'doc_id' : document._id}
+	if mime_type == MIME_TYPES['symlink']:
+		inflate['attempt_sync'] = True
+		
+	uv_task.routeNext(inflate=inflate)
 
 	uv_task.finish()
 	print "\n\n************** %s [END] ******************\n" % task_tag
