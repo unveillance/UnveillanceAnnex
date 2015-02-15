@@ -11,6 +11,7 @@ import tornado.httpserver
 from api import UnveillanceAPI
 from lib.Core.vars import Result
 from lib.Core.Utils.funcs import startDaemon, stopDaemon
+from lib.Worker.Utils.funcs import getFileType
 from lib.Worker.Models.uv_task import UnveillanceTask
 
 from conf import ANNEX_DIR, API_PORT, NUM_PROCESSES, HOST, MONITOR_ROOT, DEBUG
@@ -110,14 +111,23 @@ class UnveillanceAnnex(tornado.web.Application, UnveillanceAPI):
 			# else, return 404 (file not found)
 
 			if self.application.fileExistsInAnnex(file_path):
+				try:
+					mime_type = getFileType(os.path.join(ANNEX_DIR, file_path))
+				except Exception as e:
+					print e
+					mime_type = None
+				
 				with open(os.path.join(ANNEX_DIR, file_path), 'rb') as file:
-					# TODO: set content-type
-					#self.set_header("Content-Type", "application/octet-stream")
+					if mime_type is not None:
+						self.set_header("Content-Type", "%s; charset=\"binary\"" % mime_type)
+
 					self.finish(file.read())
 				return
 			
 			# TODO: log this: we want to know who/why is requesting non-entities
-			else: self.set_status(404)
+			else:
+				self.set_status(404)
+
 			res = Result()
 			self.finish(res.emit())
 

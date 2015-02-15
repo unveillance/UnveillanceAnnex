@@ -1,4 +1,5 @@
 from Models.uv_object import UnveillanceObject
+from Utils.funcs import update_keys
 
 class UnveillanceDocument(UnveillanceObject):
 	def __init__(self, _id=None, inflate=None, emit_sentinels=None):
@@ -6,7 +7,7 @@ class UnveillanceDocument(UnveillanceObject):
 		if inflate is not None:
 			import os
 			from lib.Core.Utils.funcs import hashEntireFile
-			from conf import ANNEX_DIR, UUID
+			from conf import UUID, ANNEX_DIR
 			from vars import UV_DOC_TYPE
 		
 			inflate['_id'] = hashEntireFile(os.path.join(ANNEX_DIR, inflate['file_name']))
@@ -28,6 +29,10 @@ class UnveillanceDocument(UnveillanceObject):
 				self.file_alias = alias
 			
 			self.save()
+
+	def save(self):
+		super(UnveillanceDocument, self).save()
+		update_keys(self.mime_type, self.emit().keys())
 
 	def set_import_count(self):
 		times_imported = self.getFileMetadata("uv_import_count")

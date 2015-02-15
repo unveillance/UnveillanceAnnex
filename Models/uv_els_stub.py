@@ -6,6 +6,7 @@ from copy import deepcopy
 from time import time
 
 from lib.Core.vars import EmitSentinel
+from Utils.funcs import update_keys
 from Models.uv_elasticsearch import UnveillanceElasticsearchHandler
 
 from conf import DEBUG
@@ -49,6 +50,8 @@ class UnveillanceELSStub(UnveillanceElasticsearchHandler):
 	def save(self, create=False):
 		if DEBUG: 
 			print "\n\n**SAVING AS ELS STUB"
+
+		update_keys(self.els_doc_root, self.emit().keys())
 		
 		if create:
 			return self.create(self._id, self.emit())
@@ -56,7 +59,14 @@ class UnveillanceELSStub(UnveillanceElasticsearchHandler):
 			return self.update(self._id, self.emit())
 
 	def emit(self, remove=None):
-		emit_ = deepcopy(self.__dict__)
+		try:
+			emit_ = deepcopy(self.__dict__)
+		except Exception as ex:
+			emit_ = {}
+
+			for k in self.__dict__.keys():
+				emit_[k] = getattr(self, k)
+				
 		for e in [e for e in self.emit_sentinels if hasattr(self, e.attr)]:				
 			if e.s_replace is None:
 				del emit_[e.attr]

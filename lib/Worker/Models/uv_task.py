@@ -1,14 +1,15 @@
 import os, requests
 from crontab import CronTab
 from json import dumps
-from time import sleep, time
+from time import sleep, time, mktime
+from datetime import date, timedelta
 from importlib import import_module
 from multiprocessing import Process
 from fabric.api import local, settings
 
 from Models.uv_object import UnveillanceObject
 from Utils.funcs import printAsLog
-from lib.Core.Utils.funcs import stopDaemon, startDaemon
+from lib.Core.Utils.funcs import stopDaemon, startDaemon, generateMD5Hash
 from lib.Core.Models.uv_task_channel import UnveillanceTaskChannel
 
 from vars import EmitSentinel, UV_DOC_TYPE, TASKS_ROOT, TASK_PERSIST_KEYS, ASSET_TAGS
@@ -24,7 +25,6 @@ class UnveillanceTask(UnveillanceObject):
 				inflate['_id'] = generateMD5Hash(content=inflate['gist_id'], salt=time())
 					
 			elif '_id' not in inflate.keys():
-				from lib.Core.Utils.funcs import generateMD5Hash
 				inflate['_id'] = generateMD5Hash()
 	
 			inflate['uv_doc_type'] = UV_DOC_TYPE['TASK']
@@ -94,6 +94,19 @@ class UnveillanceTask(UnveillanceObject):
 				print "TASK QUEUE EXHAUSTED. NO ROUTING POSSIBLE."
 
 			self.signal_terminate()
+			
+			if hasattr(self, "recurring"):
+				for r in self.recurring:
+					try:
+						r = UnveillanceTask(_id=r)
+
+						salt = "%s%s" % ("" if r.salt is None else getattr(self, r.salt), str(r.persist * r.persist_until))
+						if generateMD5Hash(content="%s_persist" % r.task_path, salt=salt) == r._id:
+							r.run()
+					except Exception as e:
+						if DEBUG:
+							print e, type(e)
+
 			return
 
 		if inflate is None:
@@ -152,7 +165,50 @@ class UnveillanceTask(UnveillanceObject):
 			self.task_queue.append(t)
 
 		self.save()
-		
+	
+	def set_recurring(self, task_path, persist_period, persist_until, inflate=None, salt=None):
+		# persist period in minutes
+		if DEBUG:
+			print "SETTING A RECURRING TASK UNTIL %d TIME, PERIOD %d" % (persist_until, persist_period)
+
+		# check for reasonability
+		max_time = mktime((date.today() + timedelta(1)).timetuple())
+		if not (persist_until <= max_time and persist_until > time()):
+			if DEBUG:
+				print "TIME NOT REASONABLE."
+				return
+
+		if inflate is None:
+			inflate = {}
+
+		persist_keys = TASK_PERSIST_KEYS
+		if hasattr(self, "persist_keys"):
+			persist_keys += self.persist_keys
+
+		for a in persist_keys:
+			if a == "recurring":
+				continue
+
+			if hasattr(self, a):
+				inflate[a] = getattr(self, a)
+
+		inflate.update({
+			'task_path' : task_path,
+			'persist' : persist_period,
+			'persist_until' : persist_until,
+			'salt' : None if not hasattr(self, salt) else salt
+		})
+
+		inflate['_id'] = generateMD5Hash(content="%s_persist" % task_path, 
+			salt="%s%s" % ("" if inflate['salt'] is None else getattr(self, salt), str(persist_period * persist_until)))
+
+		if not hasattr(self, "recurring"):
+			self.recurring = []
+
+		self.recurring.append(UnveillanceTask(inflate=inflate)._id)
+		self.recurring = list(set(self.recurring))
+		self.save()
+
 	def run(self):
 		self.setStatus(201)
 
@@ -235,12 +291,25 @@ class UnveillanceTask(UnveillanceObject):
 	def finish(self):
 		if DEBUG:
 			print "task finished!"
+
+		has_expired = None
 		
 		if not hasattr(self, 'persist') or not self.persist:
 			if DEBUG: print "task will be deleted!"
 			self.setStatus(200)
 		else:
-			write_to_crontab = True
+			if hasattr(self, 'persist_until'):
+				# check the time.
+				has_expired = time() >= self.persist_until
+
+				# if it is still good:
+				if has_expired:
+					self.persist = False
+				else:
+					write_to_crontab = True
+			else:
+				write_to_crontab = True
+			
 			self.setStatus(205)
 			if DEBUG: print "task will run again after %d minutes" % self.persist
 			
@@ -249,7 +318,8 @@ class UnveillanceTask(UnveillanceObject):
 				
 				# if we already have a cron entry, let's make sure it's on
 				job = cron.find_comment(self.task_path).next()				
-				if not job.is_enabled(): job.enable()
+				if not job.is_enabled():
+					job.enable()
 				
 				if DEBUG:
 					print "this task %s is already registered in our crontab" % self._id
@@ -262,7 +332,7 @@ class UnveillanceTask(UnveillanceObject):
 			except StopIteration as e:
 				if DEBUG: print "this job isn't in cron yet..."
 				pass
-			
+				
 			if write_to_crontab:
 				with settings(warn_only=True):
 					PYTHON_PATH = local("which python", capture=True)
@@ -278,6 +348,20 @@ class UnveillanceTask(UnveillanceObject):
 				
 				with settings(warn_only=True):
 					local("crontab %s" % os.path.join(MONITOR_ROOT, "uv_cron.tab"))
+			elif has_expired is not None and has_expired:
+				try:
+					job.enable(False)
+					cron.remove(job)
+					cron.write(os.path.join(MONITOR_ROOT, "uv_cron.tab"))
+
+					with settings(warn_only=True):
+						local("crontab %s" % os.path.join(MONITOR_ROOT, "uv_cron.tab"))
+
+				except Exception as e:
+					if DEBUG:
+						print "OH NO BAD CRON:"
+						print e, type(e)
+
 
 		self.communicate()
 		self.die()
