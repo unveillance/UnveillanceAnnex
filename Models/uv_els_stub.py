@@ -6,7 +6,7 @@ from copy import deepcopy
 from time import time
 
 from lib.Core.vars import EmitSentinel
-from Utils.funcs import update_keys
+#from Utils.funcs import update_keys
 from Models.uv_elasticsearch import UnveillanceElasticsearchHandler
 
 from conf import DEBUG
@@ -51,7 +51,7 @@ class UnveillanceELSStub(UnveillanceElasticsearchHandler):
 		if DEBUG: 
 			print "\n\n**SAVING AS ELS STUB"
 
-		update_keys(self.els_doc_root, self.emit().keys())
+		#update_keys(self.els_doc_root, self.emit().keys())
 		
 		if create:
 			return self.create(self._id, self.emit())

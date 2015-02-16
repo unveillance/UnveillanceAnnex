@@ -1,5 +1,5 @@
 from Models.uv_object import UnveillanceObject
-from Utils.funcs import update_keys
+#from Utils.funcs import update_keys
 
 class UnveillanceDocument(UnveillanceObject):
 	def __init__(self, _id=None, inflate=None, emit_sentinels=None):
@@ -32,7 +32,7 @@ class UnveillanceDocument(UnveillanceObject):
 
 	def save(self):
 		super(UnveillanceDocument, self).save()
-		update_keys(self.mime_type, self.emit().keys())
+		#update_keys(self.mime_type, self.emit().keys())
 
 	def set_import_count(self):
 		times_imported = self.getFileMetadata("uv_import_count")
