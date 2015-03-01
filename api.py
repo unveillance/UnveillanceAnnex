@@ -9,6 +9,7 @@ from Models.uv_worker import UnveillanceWorker
 from lib.Core.Utils.funcs import parseRequestEntity
 from lib.Worker.Models.uv_task import UnveillanceTask
 from lib.Worker.Models.uv_cluster import UnveillanceCluster
+from lib.Worker.Models.uv_document import UnveillanceDocument
 
 from conf import API_PORT, HOST, ANNEX_DIR, MONITOR_ROOT, UUID, DEBUG, SHA1_INDEX
 from vars import QUERY_KEYS, QUERY_DEFAULTS, QueryBatchRequestStub
@@ -256,8 +257,11 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		if document is None:
 			return None
 		
+		document = UnveillanceDocument(_id=document['_id'])
+		document.reset()
+
 		inflate={
-			'doc_id' : document['_id'],
+			'doc_id' : document._id,
 			'queue' : UUID
 		}
 
