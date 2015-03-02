@@ -51,13 +51,8 @@ class UnveillanceDocument(UnveillanceObject):
 
 		from lib.Worker.Utils.funcs import getFileType
 		from conf import ANNEX_DIR
-		
-		mime_type = getFileType(os.path.join(ANNEX_DIR, self.file_name))
-		
-		if mime_type == "inode/symlink" and self.getFile(self.file_name):
-			mime_type = getFileType(os.path.join(ANNEX_DIR, self.file_name))
 
-		return mime_type
+		return getFileType(os.path.join(ANNEX_DIR, self.file_name))
 	
 	def addCompletedTask(self, task_path):
 		if not hasattr(self, "completed_tasks"):
