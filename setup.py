@@ -18,34 +18,25 @@ def locateLibrary(lib_rx):
 	
 	return None
 
-def initAnnex(annex_dir, base_dir, git_annex_dir, monitor_root, python_home):
+def initAnnex(annex_dir, base_dir, python_home):
 	os.chdir(annex_dir)
 	with settings(warn_only=True):
 		local("git init")
-		local("mkdir .git/hooks")
+		local("cp %s .gitignore" % os.path.join(base_dir, "conf", ".gitignore.example"))
 		
-	with open(os.path.join(annex_dir, ".git", "hooks", "post-receive"), 'wb+') as HOOK:
-		# TODO: not yet sure what we're doing for git-annex sync...
-		HOOK.write("echo $1 >> %s" % os.path.join(monitor_root, "test_post_receive.txt"))
-
-	with open(os.path.join(annex_dir, ".git", "hooks", "post-update"), 'wb+') as HOOK:
-		# TODO: not yet sure what we're doing for git-annex sync...
-		HOOK.write("echo $1 >> %s" % os.path.join(monitor_root, "test_post_update.txt"))
+		if not os.path.exists(".git/hooks"):
+			local("mkdir .git/hooks")
 
 	with open(os.path.join(annex_dir, ".git", "hooks", "uv-post-netcat"), 'wb+') as HOOK:
-		HOOK.write("cd %s\n%s sync_file.py $1" % (base_dir, python_home))
+		HOOK.write("cd %s\n%s sync_file.py \"$@\"" % (base_dir, python_home))
 
 	with open(os.path.join(annex_dir, ".git", "hooks", "uv-on-upload-attempted"), 'wb+') as HOOK:
 		HOOK.write("cd %s\n%s register_upload_attempt.py $1" % (base_dir, python_home))
 		
 	with settings(warn_only=True):
-		for hook in ["post-receive", "post-update", "uv-post-netcat", "uv-on-upload-attempted"]:
+		for hook in ["uv-post-netcat", "uv-on-upload-attempted"]:
 			local("chmod +x .git/hooks/%s" % hook)
 			
-		local("%s init \"unveillance_remote\"" % os.path.join(git_annex_dir, "git-annex"))
-		local("%s untrust web" % os.path.join(git_annex_dir, "git-annex"))
-		local("%s direct" % os.path.join(git_annex_dir, "git-annex"))
-
 if __name__ == "__main__":
 	base_dir = os.getcwd()
 	monitor_root = os.path.join(base_dir, ".monitor")
@@ -137,22 +128,6 @@ if __name__ == "__main__":
 	else:
 		print "Elasticsearch downloaded; moving on..."
 	
-	git_annex_dir = locateLibrary(r'git-annex\.*')
-	if git_annex_dir is None:
-		with settings(warn_only=True):
-			if SYS_ARCH == "i686":
-				arch = "git-annex-standalone-i386.tar.gz"
-			else:
-				arch = "git-annex-standalone-amd64.tar.gz"
-
-			local("wget -O lib/git-annex.tar.gz http://downloads.kitenet.net/git-annex/linux/current/%s" % arch)
-			local("tar -xvzf lib/git-annex.tar.gz -C lib")
-			local("rm lib/git-annex.tar.gz")
-		
-		git_annex_dir = locateLibrary(r'git-annex\.*')
-	else:
-		print "Git Annex downloaded; moving on..."
-	
 	with open(os.path.join(os.path.expanduser("~"), ".bash_profile"), 'ab') as BASHRC:
 		BASHRC.write("export UV_SERVER_HOST=\"%s\"\n" % uv_server_host)
 		BASHRC.write("export UV_UUID=\"%s\"\n" % uv_uuid)
@@ -162,7 +137,6 @@ if __name__ == "__main__":
 		CONFIG.write("base_dir: %s\n" % base_dir)
 		CONFIG.write("annex_dir: %s\n" % annex_dir)
 		CONFIG.write("els_root: %s\n" % os.path.join(els_root, "bin", "elasticsearch"))
-		CONFIG.write("git_annex_bin: %s\n" % git_annex_dir)
 		CONFIG.write("monitor_root: %s\n" % monitor_root)
 		CONFIG.write("sys_arch: %s\n" % SYS_ARCH)
 		CONFIG.write("python_home: %s\n" % PYTHON_HOME)
@@ -173,7 +147,7 @@ if __name__ == "__main__":
 		from lib.Core.Utils.funcs import generateNonce
 		CONFIG.write("document_salt: \"%s\"\n" % generateNonce())
 	
-	initAnnex(annex_dir, base_dir, git_annex_dir, monitor_root, PYTHON_HOME)
+	initAnnex(annex_dir, base_dir, PYTHON_HOME)
 	os.chdir(base_dir)
 	
 	exit(0)

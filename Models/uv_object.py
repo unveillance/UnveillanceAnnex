@@ -67,53 +67,10 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 			self.invalidate(error="Object does not exist in Elasticsearch")
 		
 	def getFile(self, asset_path):
-		res = False
-		this_dir = os.getcwd()
-		os.chdir(ANNEX_DIR)
-		
-		with settings(hide('everything'), warn_only=True):
-			ga_unlock = local("git-annex unlock %s" % asset_path)
-		
-		if DEBUG: print "unlocking asset %s:\n%s\n" % (asset_path, ga_unlock)
-		
-		for line in ga_unlock.splitlines():
-			if re.match(r'add (?:.*) ok', line):
-				if DEBUG: print "...AND SUCCEEDED...\n"
-				res = True
-				break
-		
-		if not res:
-			res = self.queryFile(asset_path)
-		
-		os.chdir(this_dir)
-		return res
+		return self.queryFile(asset_path)
 	
 	def queryFile(self, asset_path):
-		res = False
-		this_dir = os.getcwd()
-		os.chdir(ANNEX_DIR)
-		
-		with settings(warn_only=True):
-			ga_find = local("git-annex find %s" % asset_path, capture=True)
-			if ga_find == asset_path:
-				res = True
-			else:
-				ga_query = local("git-annex status", capture=True)
-				
-				for line in ga_query.splitlines():
-					r = re.match(re.compile("(.{1,2}) %s" % asset_path), line)
-					if r is not None:
-						if DEBUG:
-							print (line, r)
-							print "...AND SUCCEEDED...\n"
-						res = True
-						break
-
-			if not res:
-				res = os.path.exists(os.path.join(ANNEX_DIR, asset_path))
-		
-		os.chdir(this_dir)
-		return res
+		return os.path.exists(os.path.join(ANNEX_DIR, asset_path))
 	
 	def loadFile(self, asset_path):
 		if self.getFile(asset_path):
@@ -127,84 +84,37 @@ class UnveillanceObject(UVO_Stub, UnveillanceElasticsearchHandler):
 		return None
 
 	def getFileMetadata(self, key):
-		this_dir = os.getcwd()
-		os.chdir(ANNEX_DIR)
+		if hasattr(self, "uv_metadata") and key in self.uv_metadata.keys():
+			return self.uv_metadata[key]
 
-		metadata = None
-
-		with settings(warn_only=True):
-			is_pending = local("git-annex status %s" % self.file_name, capture=True)
-			if DEBUG: print "\n*** IS FILE %s CHECKED OUT?\n%s\n**" % (self.file_name, is_pending)
-			if is_pending != "":
-				local("git-annex add %s" % self.file_name)
-
-			metadata = local("git-annex metadata %s --json --get=%s"  % (self.file_name, key), capture=True)
-			if DEBUG:
-				print "\n***METADATA QUERY: %s = %s ***" % (key, metadata)
-			if metadata == "":
-				metadata = None
-
-		os.chdir(this_dir)
-		return metadata
+		return None
 
 	def set_file_metadata(self, key, value):
-		this_dir = os.getcwd()
-		os.chdir(ANNEX_DIR)
+		if not hasattr(self, "uv_metadata"):
+			self.uv_metadata = {}
 
-		with settings(warn_only=True):
-			metadata = local("git-annex metadata %s --json --set=%s=%s" %(self.file_name, key, value),
-				capture=True)
-			
-			print metadata
+		try:
+			self.uv_metadata[key] = value
+			return self.save()
+		except Exception as e:
+			print e, type(e)
 
-		os.chdir(this_dir)
-		return True
+		return False
 		
-	def addFile(self, asset_path, data, sync=False):
-		"""
-			git-annex add [file]
-		"""
-		#if not self.getFile(asset_path): return False
-		
-		this_dir = os.getcwd()
-		os.chdir(ANNEX_DIR)
-		
+	def addFile(self, asset_path, data):
 		if data is not None:
-			# 1. file exists? git-annex find
-			# 2. if so, check out "git-annex get asset_path"
-			with settings(hide('everything'), warn_only=True):
-				ga_find = local("git-annex find %s" % asset_path, capture=True)
-						 
-			for line in ga_find.splitlines():
-				if line == asset_path:
-					# 3. if it was already added, sync=True
-					sync = True
-					with settings(hide('everything'), warn_only=True):
-						local("git-annex unlock %s" % asset_path)
-					
-					break
-
 			try:
 				# 4. write
-				with open(os.path.join(ANNEX_DIR, asset_path), 'wb+') as f: f.write(data)
+				with open(os.path.join(ANNEX_DIR, asset_path), 'wb+') as f:
+					f.write(data)
+					return True
 			except Exception as e:
 				print "FAILED TO WRITE FILE, I D K WHY?"
-				print e
-				os.chdir(this_dir)
-				return False
-		
-		if sync:
-			with settings(hide('everything'), warn_only=True):
-				ga_add = local("git-annex add %s" % asset_path, capture=True)
-				ga_commit = local("git commit %s -m \"saved and synced asset\"",
-					capture=True)
+				print e, type(e)
 
-			if DEBUG: 
-				print "adding asset back: %s\n%s" % (asset_path, ga_add)
-				print "committing to git: %s\n" % ga_commit
-			
-		os.chdir(this_dir)
-		return True
+		# else touch? IDK
+
+		return False
 			
 	def addAsset(self, data, file_name, as_literal=True, **metadata):
 		print "ADDING ASSET AS ANNEX/WORKER OBJECT"

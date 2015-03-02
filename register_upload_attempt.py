@@ -6,12 +6,13 @@ def register_upload_attempt(_id):
 
 	try:
 		doc = UnveillanceDocument(_id=_id)
-		if not hasattr(doc, 'upload_attempts'):
-			doc.upload_attempts = 1
+		if doc.getFileMetadata('upload_attempts') == None:
+			upload_attempts = 1
+		else:
+			upload_attempts += 1
 
-		doc.upload_attempts += 1
-		doc.save()
-
+		doc.set_file_metadata('upload_attempts', upload_attempts)
+		
 	except Exception as e:
 		printAsLog(e, as_error=True)
 		return False

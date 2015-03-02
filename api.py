@@ -311,93 +311,42 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		uv_task.run()
 		return uv_task.emit()
 	
-	def fileExistsInAnnex(self, file_path, auto_add=True):
-		if file_path == ".gitignore" :
-			# WHO IS TRYING TO DO THIS????!
-			print "SOMEONE TRIED .gitignore"
-			return False
-			
-		old_dir = os.getcwd()
-		os.chdir(ANNEX_DIR)
-		
-		with settings(hide('everything'), warn_only=True):
-			find_cmd = local("git-annex find %s" % file_path, capture=True)				
-			if find_cmd == "":
-				find_cmd = local("git-annex status %s" % file_path, capture=True)
-			
-			if find_cmd != "":
-				find_cmd = file_path
-				local("git-annex add %s" % file_path)			
-		
-		for line in find_cmd.splitlines():
-			if line == file_path:				
-				if auto_add:
-					web_match_found = False
-					m_path = re.compile("\s*web: http\://%s:%d/files/%s" % 
-						(HOST, API_PORT, file_path))
-				
-					with settings(hide('everything'), warn_only=True):
-						w_match = local("git-annex whereis %s" % file_path, capture=True)
-							
-					for w_line in w_match.splitlines():
-						# if this file has not already been added to web remote, add it
-						if re.match(m_path, w_line) is not None:
-							web_match_found = True
-							break
-								
-					if not web_match_found:
-						add_cmd = "git-annex addurl --file %s http://%s:%d/files/%s --relaxed" % (file_path, HOST, API_PORT, file_path)
-						
-						with settings(hide('everything'), warn_only=True):
-							add_url = local(add_cmd, capture=True)
-							if DEBUG: print "\nFILE'S URL ADDED: %s" % add_url
-							# TODO: error handling
-							
-				os.chdir(old_dir)
+	def fileExistsInAnnex(self, file_path):
+		if os.path.exists(os.path.join(ANNEX_DIR, file_path)):
+			par_dir = os.path.dirname(os.path.join(ANNEX_DIR, file_path))
+
+			if par_dir == ANNEX_DIR:
 				return True
-		
-		os.chdir(old_dir)
+
+			data_dir = os.path.join(ANNEX_DIR, ".data", "[a-zA-Z0-9]{%s}" % str(40 if SHA1_INDEX else 32))
+			if re.match(re.compile(data_dir), par_dir):
+				return True
+
 		return False
-		
-	def syncAnnex(self, file_name, reindex=False):
+
+	def syncAnnex(self, file_name, with_metadata=None):
 		uv_tasks = []
 		
 		create_rx = r'(?:(?!\.data/.*))([a-zA-Z0-9_\-\./]+)'
 		task_update_rx = re.compile('(.data/[a-zA-Z0-0]{%d}/.*)' % (32 if not SHA1_INDEX else 40))
 
-		if reindex or not self.fileExistsInAnnex(file_name, auto_add=False):
+		if self.fileExistsInAnnex(file_name):
 			create = re.findall(create_rx, file_name)
 			if len(create) == 1:
 				# init new file. here it starts.
-				if DEBUG: print "INIT NEW FILE: %s" % create[0]
+				if DEBUG:
+					print "INIT NEW FILE: %s" % create[0]
 				
-				uv_tasks.append(UnveillanceTask(inflate={
+				inflate = {
 					'task_path' : "Documents.evaluate_document.evaluateDocument",
 					'file_name' : file_name,
 					'queue' : UUID
-				}))
+				}
+
+				if with_metadata is not None:
+					inflate['uv_metadata'] = with_metadata
+				
+				uv_tasks.append(UnveillanceTask(inflate=inflate))
 			
-			'''
-			task_update = re.findall(task_update_rx, file_name)
-			if len(task_update) == 1:
-				if DEBUG:
-					print "UPDATING TASK BY PATH %s" % task_update[0]
-				
-				matching_tasks = self.do_tasks(QueryBatchRequestStub(
-					"update_file=%s" % task_update[0]))
-				
-				if matching_tasks is not None:
-					matching_task = matching_tasks['documents'][0]			
-					
-					try:
-						uv_tasks.append(UnveillanceTask(inflate={
-							'task_path' : matching_task['on_update'],
-							'file_name' : task_update[0],
-							'doc_id' : matching_task['doc_id'],
-							'queue' : UUID
-						}))
-					except KeyError as e:
-						print e
-			'''
 		if len(uv_tasks) > 0:
 			for uv_task in uv_tasks: uv_task.run()

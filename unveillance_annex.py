@@ -71,7 +71,9 @@ class UnveillanceAnnex(tornado.web.Application, UnveillanceAPI):
 		
 		@tornado.web.asynchronous
 		def post(self, file_name):
-			self.application.syncAnnex(file_name, reindex=True)
+			print self.request.body
+
+			self.application.syncAnnex(file_name, with_metadata=self.request.body)
 			res = Result()
 			res.result = 200
 			self.finish(res.emit())
@@ -130,22 +132,9 @@ class UnveillanceAnnex(tornado.web.Application, UnveillanceAPI):
 
 			res = Result()
 			self.finish(res.emit())
-
-		@tornado.web.asynchronous
-		def head(self, file_path):
-			res = Result()
-			
-			# if file exists in git-annex, return 200
-			# else, return 405
-			
-			if self.application.fileExistsInAnnex(file_path): self.set_status(200)
-			else: self.set_status(405)
-			
-			self.finish(res.emit())
 	
 	def startRESTAPI(self):
 		if DEBUG: print "Starting REST API on port %d" % API_PORT
-		
 		
 		rr_group = r"/(?:(?!%s))([a-zA-Z0-9_/]*/$)?" % "|".join(self.reserved_routes)
 		self.routes.append((re.compile(rr_group).pattern, self.RouteHandler))
@@ -179,12 +168,6 @@ class UnveillanceAnnex(tornado.web.Application, UnveillanceAPI):
 	
 	def startup(self):
 		argv.pop()
-		
-		this_dir = os.getcwd()
-		os.chdir(ANNEX_DIR)
-		with settings(warn_only=True):
-			local("git annex watch")
-		os.chdir(this_dir)
 		
 		p = Process(target=self.startWorker)
 		p.start()

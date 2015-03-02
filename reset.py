@@ -89,19 +89,17 @@ if __name__ == "__main__":
 		local("%s rm -rf .git" % ("sudo" if len(sudo_pwd) == 0 else "echo \"%s\n\" | sudo -S" % sudo_pwd))
 		local("rm *")
 
-		initAnnex(ANNEX_DIR, BASE_DIR, getConfig('git_annex_bin'), MONITOR_ROOT, getConfig('python_home'))
+		initAnnex(ANNEX_DIR, BASE_DIR, getConfig('python_home'))
 
 		os.chdir(ANNEX_DIR)
 		if annex_includes is not None:
 			for _, _, files in os.walk(annex_includes):
 				for f in files:
 					local("cp %s ." % os.path.join(annex_includes, f))
-					local("%s add %s" % (os.path.join(getConfig('git_annex_bin'), "git-annex"), f))
 
 				# this should not be recursive.
 				break
 
-		local("%s sync" % os.path.join(getConfig('git_annex_bin'), "git-annex"))
 		os.chdir(this_dir)
 
 	if restore_from is not None: exit(1)
