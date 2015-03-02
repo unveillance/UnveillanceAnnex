@@ -131,7 +131,6 @@ if __name__ == "__main__":
 	with open(os.path.join(os.path.expanduser("~"), ".bash_profile"), 'ab') as BASHRC:
 		BASHRC.write("export UV_SERVER_HOST=\"%s\"\n" % uv_server_host)
 		BASHRC.write("export UV_UUID=\"%s\"\n" % uv_uuid)
-		BASHRC.write("export PATH=$PATH:%s\n" % git_annex_dir)
 	
 	with open(os.path.join(base_dir, "conf", "annex.config.yaml"), "wb+") as CONFIG:
 		CONFIG.write("base_dir: %s\n" % base_dir)
