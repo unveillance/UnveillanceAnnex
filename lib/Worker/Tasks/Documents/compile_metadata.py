@@ -110,7 +110,7 @@ def compileMetadata(task):
 		
 		md_csv_file.close()	
 		
-		if md_asset is None or not document.addFile(md_asset, None, sync=True):
+		if md_asset is None or not document.addFile(md_asset, None):
 			print "Could not save the Metadata"
 			print "\n\n************** %s [ERROR] ******************\n" % task_tag
 			task.fail()
