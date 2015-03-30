@@ -22,7 +22,6 @@ def initAnnex(annex_dir, base_dir, python_home):
 	os.chdir(annex_dir)
 	with settings(warn_only=True):
 		local("git init")
-		local("cp %s .gitignore" % os.path.join(base_dir, "conf", ".gitignore.example"))
 		
 		if not os.path.exists(".git/hooks"):
 			local("mkdir .git/hooks")
