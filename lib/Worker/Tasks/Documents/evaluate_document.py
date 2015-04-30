@@ -38,6 +38,9 @@ def evaluateDocument(uv_task):
 	uv_task.put_next(uv_task.task_path)
 	
 	mime_type = document.query_mime_type()
+
+	print "\n\n************** %s [INFO] ******************\n" % task_tag
+	print "MIME TYPE: %s" % mime_type
 		
 	if mime_type in MIME_TYPE_TASKS.keys():
 		if DEBUG:
