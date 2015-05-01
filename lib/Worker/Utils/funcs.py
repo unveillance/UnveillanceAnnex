@@ -42,6 +42,9 @@ def getFileType(file, as_buffer=False):
 			mime_type = m.id_buffer(file)
 
 		m.close()
+
+		if mime_type in ["application/vnd.openxmlformats-officedocument.wordprocessingml.document"]:
+			mime_type = "application/word"
 		
 		if re.match(r'text/x\-.*', mime_type) is not None:
 			mime_type = "text/plain"
