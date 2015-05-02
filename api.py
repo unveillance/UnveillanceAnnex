@@ -258,7 +258,6 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 			return None
 		
 		document = UnveillanceDocument(_id=document['_id'])
-		document.reset()
 
 		inflate={
 			'doc_id' : document._id,
@@ -268,6 +267,7 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		del query['_id']
 		
 		if 'task_path' not in query.keys() and 'task_queue' not in query.keys():
+			document.reset()
 			inflate.update({
 				'task_path' : "Documents.evaluate_document.evaluateDocument"
 			})
