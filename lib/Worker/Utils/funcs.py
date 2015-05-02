@@ -43,7 +43,7 @@ def getFileType(file, as_buffer=False):
 
 		m.close()
 
-		if mime_type in ["application/vnd.openxmlformats-officedocument.wordprocessingml.document"]:
+		if mime_type in ["application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]:
 			mime_type = "application/word"
 		
 		if re.match(r'text/x\-.*', mime_type) is not None:
