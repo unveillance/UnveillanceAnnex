@@ -65,7 +65,8 @@ def inflateVars(path):
 				if key in lcl['CUSTOM_QUERIES'].keys():
 					del vars_extras[k][key]
 
-			if len(vars_extras[k].keys()) == 0: continue
+			if len(vars_extras[k].keys()) == 0:
+				continue
 
 			lcl['CUSTOM_QUERIES'].update(vars_extras[k])
 		elif k == "QUERY_DEFAULTS":
