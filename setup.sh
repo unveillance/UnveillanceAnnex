@@ -10,14 +10,14 @@ else
 	WITH_CONFIG=$1
 fi
 
-sudo apt-get install -y gcc lsof
+brew install wget libmagic
 
 PYTHON_VERSION=$(which python)
 if [[ $PYTHON_VERSION == *anaconda/bin/python ]]
 then
 	echo "ANACONDA already installed.  Skipping"
 else
-	wget -O lib/anaconda.sh http://09c8d0b2229f813c1b93-c95ac804525aac4b6dba79b00b39d1d3.r79.cf1.rackcdn.com/Anaconda-2.0.1-Linux-x86_64.sh
+	wget -O lib/anaconda.sh https://3230d63b5fc54e62148e-c95ac804525aac4b6dba79b00b39d1d3.ssl.cf1.rackcdn.com/Anaconda-2.3.0-MacOSX-x86_64.sh
 	chmod +x lib/anaconda.sh
 	echo "**************************************************"
 	echo "Installing Python Framework via ANACONDA"
