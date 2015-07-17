@@ -4,3 +4,6 @@
 [submodule "lib/socksjs-tornado"]
 	path = lib/socksjs-tornado
 	url = git@github.com:mrjoes/sockjs-tornado.git
+[submodule "lib/python-magic"]
+	path = lib/python-magic
+	url = git@github.com:ahupp/python-magic.git
