@@ -34,14 +34,14 @@ def routeNextTask(task, document, task_extras=None):
 			next_task.run()
 
 def getFileType(file, as_buffer=False):
-	m = magic.Magic(flags=magic.MAGIC_MIME_TYPE)
+	m = magic.Magic(mime=True)
 	try:
 		if not as_buffer:
-			mime_type = m.id_filename(file)
+			mime_type = m.from_file(file)
 		else:
-			mime_type = m.id_buffer(file)
+			mime_type = m.from_buffer(file)
 
-		m.close()
+		#m.close()
 
 		if mime_type in ["application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]:
 			mime_type = "application/word"
@@ -69,7 +69,7 @@ def getFileType(file, as_buffer=False):
 
 		pass
 	
-	m.close()
+	#m.close()
 	return None
 
 def gzipFile(path):

@@ -42,6 +42,9 @@ pip install -r requirements.txt
 cd lib/socksjs-tornado
 python setup.py install
 
+cd ../python-magic
+python setup.py install
+
 cd $THIS_DIR
 echo "**************************************************"
 python setup.py $WITH_CONFIG
