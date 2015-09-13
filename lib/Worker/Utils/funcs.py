@@ -33,7 +33,7 @@ def routeNextTask(task, document, task_extras=None):
 			next_task = UnveillanceTask(inflate=inflate)
 			next_task.run()
 
-def getFileType(file, as_buffer=False):
+def getFileType(file, as_buffer=False, force_json=False):
 	m = magic.Magic(flags=magic.MAGIC_MIME_TYPE)
 	try:
 		if not as_buffer:
@@ -49,7 +49,10 @@ def getFileType(file, as_buffer=False):
 		if re.match(r'text/x\-.*', mime_type) is not None:
 			mime_type = "text/plain"
 		
-		if mime_type == "text/plain":
+		if mime_type == "text/plain" or (force_json and mime_type in ["text/plain", "application/octet-stream"]):
+			if DEBUG:
+				print "FORCING JSON ON MIME TYPE %s" % mime_type
+				
 			content = file
 			if not as_buffer:
 				with open(file, 'rb') as C:
@@ -59,7 +62,9 @@ def getFileType(file, as_buffer=False):
 				loads(content)
 				mime_type = "application/json"
 			except Exception as e:
-				if DEBUG: print "NOT JSON"
+				if DEBUG:
+					print e, type(e)
+					print "NOT JSON"
 			
 		return mime_type
 		

@@ -193,9 +193,6 @@ class UnveillanceElasticsearchHandler(object):
 			url += endpoint
 		if data is not None:
 			data = json.dumps(data)
-
-		if DEBUG: 
-			print "****\nSENDING ELS REQUEST TO %s\n****" % url
 		
 		try:
 			if method == "get":
