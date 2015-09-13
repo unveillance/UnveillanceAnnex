@@ -1,6 +1,6 @@
 [submodule "lib/Core"]
 	path = lib/Core
-	url = git@github.com:harlo/UnveillanceCore.git
+	url = git@github.com:unveillance/UnveillanceCore.git
 [submodule "lib/socksjs-tornado"]
 	path = lib/socksjs-tornado
 	url = git@github.com:mrjoes/sockjs-tornado.git
