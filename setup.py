@@ -35,6 +35,30 @@ def initAnnex(annex_dir, base_dir, python_home):
 	with settings(warn_only=True):
 		for hook in ["uv-post-netcat", "uv-on-upload-attempted"]:
 			local("chmod +x .git/hooks/%s" % hook)
+
+def initRedis(redis_root, redis_port, monitor_root):
+	os.makedirs(os.path.join(monitor_root, "redis", str(redis_port)))
+
+	redis_conf = []
+	redis_repl = [
+		("daemonize no", "no", "yes"),
+		("pidfile /var/run/redis.pid", "/var/run/redis.pid", \
+			os.path.join(monitor_root, "redis", "redis_%d.pid" % redis_port)),
+		("port 6379", "6379", str(redis_port)),
+		("logfile \"\"", "\"\"", \
+			os.path.join(monitor_root, "redis", "redis_%d.log" % redis_port)),
+		("dir ./", "./", os.path.join(monitor_root, "redis", str(redis_port)))
+	]
+
+	with open(os.path.join(redis_root, "redis.conf"), 'rb') as R:
+		for line in R.read().splitlines():
+			for rr in redis_repl:
+				if line == rr[0]:
+					line = line.replace(rr[1], rr[2])
+			redis_conf.append(line)
+
+	with open(os.path.join(redis_root, "%d.conf" % redis_port), 'wb+') as R:
+		R.write("\n".join(redis_conf))
 			
 if __name__ == "__main__":
 	base_dir = os.getcwd()
@@ -126,12 +150,32 @@ if __name__ == "__main__":
 		els_root = locateLibrary(r'elasticsearch*')
 	else:
 		print "Elasticsearch downloaded; moving on..."
+
+	try:
+		redis_port = extras['redis_port']
+	except Exception as e:
+		redis_port = 6379
+
+	redis_root = locateLibrary(r'redis-stable')
+	if redis_root is None:
+		with settings(warn_only=True):
+			local("wget -O lib/redis-stable.tar.gz http://download.redis.io/redis-stable.tar.gz")
+			local("tar -xvzf lib/redis-stable.tar.gz -C lib")
+			local("rm lib/redis-stable.tar.gz")
+
+		redis_root = locateLibrary(r'redis-stable')
+	else:
+		print "Redis downloaded; moving on..."
+
+	initRedis(redis_root, redis_port, monitor_root)
 	
 	with open(os.path.join(os.path.expanduser("~"), ".bash_profile"), 'ab') as BASHRC:
 		BASHRC.write("export UV_SERVER_HOST=\"%s\"\n" % uv_server_host)
 		BASHRC.write("export UV_UUID=\"%s\"\n" % uv_uuid)
 	
 	with open(os.path.join(base_dir, "conf", "annex.config.yaml"), "wb+") as CONFIG:
+		from lib.Core.Utils.funcs import generateNonce
+
 		CONFIG.write("base_dir: %s\n" % base_dir)
 		CONFIG.write("annex_dir: %s\n" % annex_dir)
 		CONFIG.write("els_root: %s\n" % os.path.join(els_root, "bin", "elasticsearch"))
@@ -140,9 +184,8 @@ if __name__ == "__main__":
 		CONFIG.write("python_home: %s\n" % PYTHON_HOME)
 		CONFIG.write("ssh_root: %s\n" % SSH_ROOT)
 		CONFIG.write("uv_log_cron: %d\n" % uv_log_cron)
-	
-	with open(os.path.join(base_dir, "conf", "annex.config.yaml"), "ab") as CONFIG:
-		from lib.Core.Utils.funcs import generateNonce
+		CONFIG.write("redis_port: %d\n" % redis_port)
+		CONFIG.write("ampq_port: 5672\n")
 		CONFIG.write("document_salt: \"%s\"\n" % generateNonce())
 	
 	initAnnex(annex_dir, base_dir, PYTHON_HOME)
