@@ -174,8 +174,6 @@ if __name__ == "__main__":
 		BASHRC.write("export UV_UUID=\"%s\"\n" % uv_uuid)
 	
 	with open(os.path.join(base_dir, "conf", "annex.config.yaml"), "wb+") as CONFIG:
-		from lib.Core.Utils.funcs import generateNonce
-
 		CONFIG.write("base_dir: %s\n" % base_dir)
 		CONFIG.write("annex_dir: %s\n" % annex_dir)
 		CONFIG.write("els_root: %s\n" % os.path.join(els_root, "bin", "elasticsearch"))
