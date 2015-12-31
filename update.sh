@@ -9,14 +9,16 @@ update_config(){
 
 # update setup scripts if changed
 update_setup(){
-	if [ $(ls $PROJECT_DIR/setup_extras)? -eq 0 ]; then
+	ls $PROJECT_DIR/setup_extras
+	if [ $? -eq 0 ]; then
 		cd $PROJECT_DIR/setup && ./setup_extras.sh
 	fi
 }
 
 # update tasks if changed
 update_tasks(){
-	if [ $(ls $PROJECT_DIR/Tasks)? -eq 0 ]; then
+	ls $PROJECT_DIR/Tasks
+	if [ $? -eq 0 ]; then
 		cd $THIS_DIR/lib/Worker/Tasks
 		ln -s $PROJECT_DIR/Tasks/* .
 		ls -la
@@ -25,7 +27,8 @@ update_tasks(){
 
 # update models if changed
 update_models(){
-	if [ $(ls $PROJECT_DIR/Models)? -eq 0 ]; then
+	ls $PROJECT_DIR/Models
+	if [ $? -eq 0 ]; then
 		cd $THIS_DIR/lib/Worker/Models
 		ln -s $PROJECT_DIR/Models/* .
 		ls -la
