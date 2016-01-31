@@ -37,6 +37,9 @@ with open(os.path.join(CONF_ROOT, "annex.config.yaml"), 'rb') as C:
 	
 	try:
 		VARS_EXTRAS = config['vars_extras']
+		if not os.path.exists(VARS_EXTRAS):
+			del VARS_EXTRAS
+
 	except KeyError as e:
 		if DEBUG: print "DON'T WORRY: no variable extras..."
 
