@@ -40,7 +40,7 @@ show_usage(){
 	echo "Updater Help"
 	echo "_________________________"
 
-	echo "./update.sh [config|setup|tasks|models|all]"
+	echo "./update.sh [config|tasks|models|modules|all]"
 }
 
 case "$1" in
