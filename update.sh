@@ -1,24 +1,19 @@
 #! /bin/bash
 THIS_DIR=`pwd`
-PROJECT_DIR=../../
-
-# update config if changed
-update_config(){
-	echo "CONFIG UPDATE TBD"
-}
+PROJECT_DIR=$(dirname $(dirname $THIS_DIR))
 
 # update setup scripts if changed
-update_setup(){
-	ls $PROJECT_DIR/setup_extras
-	if [ $? -eq 0 ]; then
-		cd $PROJECT_DIR/setup && ./setup_extras.sh
+update_modules(){
+	if [ -d $PROJECT_DIR/Modules ]; then
+		echo "updating modules..."
+		cd $PROJECT_DIR/Modules && ls
 	fi
 }
 
 # update tasks if changed
 update_tasks(){
-	ls $PROJECT_DIR/Tasks
-	if [ $? -eq 0 ]; then
+	if [ -d $PROJECT_DIR/Tasks ]; then
+		echo "updating tasks..."
 		cd $THIS_DIR/lib/Worker/Tasks
 		ln -s $PROJECT_DIR/Tasks/* .
 		ls -la
@@ -27,8 +22,8 @@ update_tasks(){
 
 # update models if changed
 update_models(){
-	ls $PROJECT_DIR/Models
-	if [ $? -eq 0 ]; then
+	if [ -d $PROJECT_DIR/Models ]; then
+		echo "updating models..."
 		cd $THIS_DIR/lib/Worker/Models
 		ln -s $PROJECT_DIR/Models/* .
 		ls -la
@@ -40,15 +35,12 @@ show_usage(){
 	echo "Updater Help"
 	echo "_________________________"
 
-	echo "./update.sh [config|tasks|models|modules|all]"
+	echo "./update.sh [tasks|models|modules|all]"
 }
 
 case "$1" in
-	config)
-		update_config
-		;;
-	setup)
-		update_setup
+	modules)
+		update_modules
 		;;
 	tasks)
 		update_tasks
@@ -57,8 +49,7 @@ case "$1" in
 		update_models
 		;;
 	all)
-		update_config
-		update_setup
+		update_modules
 		update_tasks
 		update_models
 		;;
