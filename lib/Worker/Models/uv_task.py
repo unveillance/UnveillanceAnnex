@@ -19,7 +19,7 @@ class UnveillanceTask(UnveillanceObject):
 	def __init__(self, inflate=None, _id=None):
 		if inflate is not None:
 			if 'task_path' in inflate.keys() and 'task_path' == "Github.gist.run_gist":
-				if 'gist_id' not in args.keys():
+				if 'gist_id' not in inflate.keys():
 					return
 
 				inflate['_id'] = generateMD5Hash(content=inflate['gist_id'], salt=time())

@@ -67,14 +67,14 @@ def evaluateText(task):
 					txt_pages = []
 					line_count = 0
 
+			txt_json.append(" ".join(txt_pages))
+
 			document.total_pages = len(txt_json)
 			document.save()
 						
 			asset_path = document.addAsset(txt_json, "doc_texts.json", as_literal=False,
 				description="jsonified text of original document, segment by segment",
 				tags=[ASSET_TAGS['TXT_JSON']])
-
-			task_path = MIME_TYPE_TASKS[document.mime_type][1]
 
 			from lib.Worker.Models.uv_text import UnveillanceText
 			uv_text = UnveillanceText(inflate={

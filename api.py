@@ -290,6 +290,8 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		
 		return uv_task.emit()
 	
+	# don't need?
+	'''
 	def runTask(self, handler):
 		try:
 			args = parseRequestEntity(handler.request.body)
@@ -310,6 +312,7 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		
 		uv_task.run()
 		return uv_task.emit()
+	'''
 	
 	def fileExistsInAnnex(self, file_path):
 		if os.path.exists(os.path.join(ANNEX_DIR, file_path)):
