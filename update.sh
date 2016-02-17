@@ -5,8 +5,18 @@ PROJECT_DIR=$(dirname $(dirname $THIS_DIR))
 # update setup scripts if changed
 update_plugins(){
 	if [ -d $PROJECT_DIR/Plugins ]; then
-		echo "updating plugins..."
-		cd $PROJECT_DIR/Plugins && ls
+		python $THIS_DIR/update_plugins.py $PROJECT_DIR
+		if [ $? -eq 0 ] && [ -f $PROJECT_DIR/.routine.sh ]; then
+			echo "updating plugins..."
+
+			source ~/.bash_profile
+			sudo apt-get -yq update
+			
+			cd $PROJECT_DIR
+			chmod +x .routine.sh
+			./.routine.sh
+			rm .routine.sh
+		fi
 	fi
 }
 
@@ -30,6 +40,13 @@ update_models(){
 	fi
 }
 
+update_framework(){
+	cd $THIS_DIR
+	git pull origin master
+	cd $THIS_DIR/lib/Core
+	git pull origin master
+}
+
 show_usage(){
 	echo "_________________________"
 	echo "Updater Help"
@@ -51,6 +68,9 @@ case "$1" in
 		;;
 	models)
 		update_models
+		;;
+	framework)
+		update_framework
 		;;
 	all)
 		update_plugins
