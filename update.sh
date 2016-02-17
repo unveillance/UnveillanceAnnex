@@ -3,10 +3,10 @@ THIS_DIR=`pwd`
 PROJECT_DIR=$(dirname $(dirname $THIS_DIR))
 
 # update setup scripts if changed
-update_modules(){
-	if [ -d $PROJECT_DIR/Modules ]; then
-		echo "updating modules..."
-		cd $PROJECT_DIR/Modules && ls
+update_plugins(){
+	if [ -d $PROJECT_DIR/Plugins ]; then
+		echo "updating plugins..."
+		cd $PROJECT_DIR/Plugins && ls
 	fi
 }
 
@@ -38,9 +38,13 @@ show_usage(){
 	echo "./update.sh [tasks|models|modules|all]"
 }
 
+# pull from head
+cd $PROJECT_DIR
+git reset --hard HEAD
+
 case "$1" in
-	modules)
-		update_modules
+	plugins)
+		update_plugins
 		;;
 	tasks)
 		update_tasks
@@ -49,7 +53,7 @@ case "$1" in
 		update_models
 		;;
 	all)
-		update_modules
+		update_plugins
 		update_tasks
 		update_models
 		;;
