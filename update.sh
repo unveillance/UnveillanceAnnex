@@ -3,10 +3,20 @@ THIS_DIR=`pwd`
 PROJECT_DIR=$(dirname $(dirname $THIS_DIR))
 
 # update setup scripts if changed
-update_modules(){
-	if [ -d $PROJECT_DIR/Modules ]; then
-		echo "updating modules..."
-		cd $PROJECT_DIR/Modules && ls
+update_plugins(){
+	if [ -d $PROJECT_DIR/Plugins ]; then
+		python $THIS_DIR/update_plugins.py $PROJECT_DIR
+		if [ $? -eq 0 ] && [ -f $PROJECT_DIR/.routine.sh ]; then
+			echo "updating plugins..."
+
+			source ~/.bash_profile
+			sudo apt-get -yq update
+			
+			cd $PROJECT_DIR
+			chmod +x .routine.sh
+			./.routine.sh
+			rm .routine.sh
+		fi
 	fi
 }
 
@@ -30,6 +40,13 @@ update_models(){
 	fi
 }
 
+update_framework(){
+	cd $THIS_DIR
+	git pull origin master
+	cd $THIS_DIR/lib/Core
+	git pull origin master
+}
+
 show_usage(){
 	echo "_________________________"
 	echo "Updater Help"
@@ -38,9 +55,13 @@ show_usage(){
 	echo "./update.sh [tasks|models|modules|all]"
 }
 
+# pull from head
+cd $PROJECT_DIR
+git reset --hard HEAD
+
 case "$1" in
-	modules)
-		update_modules
+	plugins)
+		update_plugins
 		;;
 	tasks)
 		update_tasks
@@ -48,8 +69,11 @@ case "$1" in
 	models)
 		update_models
 		;;
+	framework)
+		update_framework
+		;;
 	all)
-		update_modules
+		update_plugins
 		update_tasks
 		update_models
 		;;
