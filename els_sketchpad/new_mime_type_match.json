@@ -1,0 +1,11 @@
+{
+	"query" : {
+		"constant_score" : {
+			"filter" : {
+				"term" : {
+					"uv_document.mime_type": "application/pdf"
+				}
+			}
+		}
+	}
+}

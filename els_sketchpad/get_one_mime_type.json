@@ -22,7 +22,7 @@
 					"constant_score": {
 						"filter": {
 							"terms": {
-								"uv_document.mime_type": ["image/jpeg"]
+								"uv_document.mime_type": ["application/pdf"]
 							}
 						}
 					}

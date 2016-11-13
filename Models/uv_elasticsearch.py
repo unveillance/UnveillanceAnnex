@@ -91,6 +91,8 @@ class UnveillanceElasticsearchHandler(object):
 		endpoint = "%s?search_type=scan&scroll=600s" % self.buildEndpoint("_search", doc_type, None)
 		res = self.sendELSRequest(endpoint=endpoint, data=query)
 
+		print res
+
 		try:
 			if res['hits']['total'] == 0:
 				if DEBUG: 
@@ -193,6 +195,10 @@ class UnveillanceElasticsearchHandler(object):
 			url += endpoint
 		if data is not None:
 			data = json.dumps(data)
+
+		print ""
+		print url
+		print ""
 		
 		try:
 			if method == "get":
