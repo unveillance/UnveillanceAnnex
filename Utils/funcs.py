@@ -33,6 +33,12 @@ def printAsLog(message, as_error=False):
 	
 	print message
 
+def getTaskPool():
+	from lib.Worker.vars import buildCeleryTaskList
+	task_pool = [t.replace("lib.Worker.Tasks.", "") for t in buildCeleryTaskList()]
+
+	return task_pool
+
 def exportAnnexConfig(with_config=None):
 	import json
 	from conf import DEBUG

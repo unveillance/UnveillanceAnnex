@@ -10,6 +10,7 @@ from lib.Core.Utils.funcs import parseRequestEntity
 from lib.Worker.Models.uv_task import UnveillanceTask
 from lib.Worker.Models.uv_cluster import UnveillanceCluster
 from lib.Worker.Models.uv_document import UnveillanceDocument
+from Utils.funcs import getTaskPool
 
 from conf import API_PORT, HOST, ANNEX_DIR, MONITOR_ROOT, UUID, DEBUG, SHA1_INDEX
 from vars import QUERY_KEYS, QUERY_DEFAULTS, QueryBatchRequestStub
@@ -22,6 +23,9 @@ class UnveillanceAPI(UnveillanceWorker, UnveillanceElasticsearch):
 		sleep(1)
 		UnveillanceWorker.__init__(self)
 		sleep(2)
+
+	def do_get_task_pool(self, request):
+		return getTaskPool()
 
 	def do_cluster(self, request):
 		"""
