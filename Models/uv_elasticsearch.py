@@ -241,8 +241,8 @@ class UnveillanceElasticsearch(UnveillanceElasticsearchHandler):
 		UnveillanceElasticsearchHandler.__init__(self)
 		
 	def startElasticsearch(self, catch=True):
-		cmd = [ELS_ROOT, '-Des.max-open-files=true', 
-			'-Des.config=%s' % os.path.join(CONF_ROOT, "els.settings.yaml")]
+		#cmd = [ELS_ROOT, '-Des.max-open-files=true', '-Des.config=%s' % os.path.join(CONF_ROOT, "els.settings.yaml")]
+		cmd = [ELS_ROOT, '-Epath.conf=%s' % os.path.join(CONF_ROOT, "els.settings.yaml")]
 		
 		print "elasticsearch running in daemon."
 		print cmd
